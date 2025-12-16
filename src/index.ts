@@ -268,14 +268,16 @@ server.tool(
             };
         }
 
-        const projects = data._embedded.projects;
-        const projectList = projects.map((p) => `ID: ${p.id}, Name: ${p.name}`).join("\n");
+        const projects = data._embedded.projects.map((p) => ({
+            id: p.id,
+            name: p.name,
+        }));
 
         return {
             content: [
                 {
                     type: "text",
-                    text: `Projects:\n${projectList}`,
+                    text: JSON.stringify(projects, null, 2),
                 },
             ],
         };
