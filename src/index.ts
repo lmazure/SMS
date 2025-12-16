@@ -1,10 +1,18 @@
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
-import { McpError, ErrorCode } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+    ErrorCode,
+    McpError
+} from "@modelcontextprotocol/sdk/types.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import "dotenv/config";
 
-const SQUASHTM_API_URL = process.env.SQUASHTM_API_URL || "http://localhost:8090/squash";
+// Validate required environment variables
+if (!process.env.SQUASHTM_API_KEY) {
+    throw new Error("SQUASHTM_API_KEY environment variable is required");
+}
+
+const SQUASHTM_API_URL = (process.env.SQUASHTM_API_URL || "http://localhost:8090/squash").replace(/\/$/, '');
 
 // Create server instance
 const server = new McpServer({
@@ -31,6 +39,21 @@ interface SquashProjectsResponse {
     };
 }
 
+// Zod schemas for validation
+const ListProjectsSchema = z.object({});
+
+const CreateTestCasesSchema = z.object({
+    project_id: z.number().describe("The ID of the project where the test cases will be created"),
+    test_cases: z.array(z.object({
+        name: z.string().describe("The name of the test case"),
+        description: z.string().describe("Description of the test case"),
+        steps: z.array(z.object({
+            action: z.string().describe("The action to perform"),
+            expected_result: z.string().describe("The expected result"),
+        })).min(1).describe("List of test steps"),
+    })).min(1).describe("List of test cases to create"),
+});
+
 async function makeSquashRequest<T>(url: string, method: string, body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${process.env.SQUASHTM_API_KEY}`,
@@ -49,12 +72,22 @@ async function makeSquashRequest<T>(url: string, method: string, body?: any): Pr
         });
 
         if (!response.ok) {
-            console.error(`SquashTM Request failed: ${response.status} ${response.statusText}`);
-            throw new McpError(ErrorCode.InternalError, `SquashTM Request failed: ${response.status} ${response.statusText}`);
+            const text = await response.text();
+            console.error(`SquashTM Request failed: ${response.status} ${response.statusText} - ${text}`);
+            throw new McpError(
+                ErrorCode.InternalError,
+                `SquashTM Request failed: ${response.status} ${response.statusText}`
+            );
         }
-        return (await response.json()) as T;
+
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+            return (await response.json()) as T;
+        } else {
+            const text = await response.text();
+            throw new McpError(ErrorCode.InternalError, `Unexpected response format: ${text}`);
+        }
     } catch (error) {
-        // Re-throw McpErrors as-is
         if (error instanceof McpError) {
             throw error;
         }
@@ -63,10 +96,14 @@ async function makeSquashRequest<T>(url: string, method: string, body?: any): Pr
     }
 }
 
-server.tool(
+// Register list_projects tool
+server.registerTool(
     "list_projects",
-    "Get list of SquashTM projects",
-    {},
+    {
+        title: "List Projects",
+        description: "Get list of SquashTM projects",
+        inputSchema: ListProjectsSchema,
+    },
     async () => {
         const url = `${SQUASHTM_API_URL}/api/rest/latest/projects?type=STANDARD`;
         const data = await makeSquashRequest<SquashProjectsResponse>(url, "GET");
@@ -105,45 +142,40 @@ server.tool(
                 },
             ],
         };
-    },
+    }
 );
 
-server.tool(
+// Register create_test_cases tool
+server.registerTool(
     "create_test_cases",
-    "Create test cases in a project in SquashTM",
     {
-        project_id: z.number().describe("The ID of the project where the test cases will be created"),
-        test_cases: z.array(z.object({
-            name: z.string().describe("The name of the test case"),
-            description: z.string().describe("Description of the test case"),
-            steps: z.array(z.object({
-                action: z.string().describe("The action to perform"),
-                expected_result: z.string().describe("The expected result"),
-            })).min(1).describe("List of test steps"),
-        })).min(1).describe("List of test cases to create"),
+        title: "Create Test Cases",
+        description: "Create test cases in a project in SquashTM",
+        inputSchema: CreateTestCasesSchema,
     },
-    async ({ project_id, test_cases }) => {
+    async (args) => {
         const url = `${SQUASHTM_API_URL}/api/rest/latest/test-cases`;
 
-        const createdTestCases = await Promise.all(test_cases.map(async (testCase) => {
-            const payload: any = {
-                _type: "test-case",
-                name: testCase.name,
-                parent: {
-                    _type: "project",
-                    id: project_id,
-                },
-                description: testCase.description,
-            };
+        const createdTestCases = await Promise.all(
+            args.test_cases.map(async (testCase) => {
+                const payload: any = {
+                    _type: "test-case",
+                    name: testCase.name,
+                    parent: {
+                        _type: "project",
+                        id: args.project_id,
+                    },
+                    description: testCase.description,
+                    steps: testCase.steps.map((step) => ({
+                        _type: "action-step",
+                        action: step.action,
+                        expected_result: step.expected_result,
+                    })),
+                };
 
-            payload.steps = testCase.steps.map(step => ({
-                _type: "action-step",
-                action: step.action,
-                expected_result: step.expected_result,
-            }));
-
-            return await makeSquashRequest(url, "POST", payload);
-        }));
+                return await makeSquashRequest<any>(url, "POST", payload);
+            })
+        );
 
         return {
             content: [
