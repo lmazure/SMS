@@ -109,43 +109,47 @@ server.tool(
 );
 
 server.tool(
-    "create_test_case",
-    "Create a new test case in SquashTM",
+    "create_test_cases",
+    "Create test cases in a project in SquashTM",
     {
-        project_id: z.number().describe("The ID of the project where the test case will be created"),
-        name: z.string().describe("The name of the test case"),
-        description: z.string().describe("Description of the test case"),
-        steps: z.array(z.object({
-            action: z.string().describe("The action to perform"),
-            expected_result: z.string().describe("The expected result"),
-        })).min(1).describe("List of test steps"),
+        project_id: z.number().describe("The ID of the project where the test cases will be created"),
+        test_cases: z.array(z.object({
+            name: z.string().describe("The name of the test case"),
+            description: z.string().describe("Description of the test case"),
+            steps: z.array(z.object({
+                action: z.string().describe("The action to perform"),
+                expected_result: z.string().describe("The expected result"),
+            })).min(1).describe("List of test steps"),
+        })).min(1).describe("List of test cases to create"),
     },
-    async ({ project_id, name, description, steps }) => {
+    async ({ project_id, test_cases }) => {
         const url = `${SQUASHTM_API_URL}/api/rest/latest/test-cases`;
 
-        const payload: any = {
-            _type: "test-case",
-            name: name,
-            parent: {
-                _type: "project",
-                id: project_id,
-            },
-            description: description,
-        };
+        const createdTestCases = await Promise.all(test_cases.map(async (testCase) => {
+            const payload: any = {
+                _type: "test-case",
+                name: testCase.name,
+                parent: {
+                    _type: "project",
+                    id: project_id,
+                },
+                description: testCase.description,
+            };
 
-        payload.steps = steps.map(step => ({
-            _type: "action-step",
-            action: step.action,
-            expected_result: step.expected_result,
+            payload.steps = testCase.steps.map(step => ({
+                _type: "action-step",
+                action: step.action,
+                expected_result: step.expected_result,
+            }));
+
+            return await makeSquashRequest(url, "POST", payload);
         }));
-
-        const createdTestCase = await makeSquashRequest(url, "POST", payload);
 
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(createdTestCase, null, 2),
+                    text: JSON.stringify(createdTestCases, null, 2),
                 },
             ],
         };
