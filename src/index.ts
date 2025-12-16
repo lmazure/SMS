@@ -84,6 +84,8 @@ interface SquashProject {
     _type: string;
     id: number;
     name: string;
+    description: string;
+    label: string;
     _links: {
         self: {
             href: string;
@@ -268,16 +270,26 @@ server.tool(
             };
         }
 
-        const projects = data._embedded.projects.map((p) => ({
-            id: p.id,
-            name: p.name,
-        }));
+        const projects = data._embedded.projects;
+
+        const detailedProjects = await Promise.all(
+            projects.map(async (p) => {
+                const detailsUrl = `${SQUASHTM_API_URL}/api/rest/latest/projects/${p.id}`;
+                const details = await makeSquashRequest<SquashProject>(detailsUrl);
+                return {
+                    id: p.id,
+                    name: p.name,
+                    label: details?.label || "",
+                    description: details?.description || "",
+                };
+            })
+        );
 
         return {
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(projects, null, 2),
+                    text: JSON.stringify(detailedProjects, null, 2),
                 },
             ],
         };
