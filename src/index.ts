@@ -31,7 +31,7 @@ interface SquashProjectsResponse {
     };
 }
 
-async function makeSquashRequest<T>(url: string, method: string = "GET", body?: any): Promise<T> {
+async function makeSquashRequest<T>(url: string, method: string, body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${process.env.SQUASHTM_API_KEY}`,
         Accept: "application/json",
@@ -69,7 +69,7 @@ server.tool(
     {},
     async () => {
         const url = `${SQUASHTM_API_URL}/api/rest/latest/projects?type=STANDARD`;
-        const data = await makeSquashRequest<SquashProjectsResponse>(url);
+        const data = await makeSquashRequest<SquashProjectsResponse>(url, "GET");
 
         if (!data || !data._embedded || !data._embedded.projects) {
             return {
@@ -87,7 +87,7 @@ server.tool(
         const detailedProjects = await Promise.all(
             projects.map(async (p) => {
                 const detailsUrl = `${SQUASHTM_API_URL}/api/rest/latest/projects/${p.id}`;
-                const details = await makeSquashRequest<SquashProject>(detailsUrl);
+                const details = await makeSquashRequest<SquashProject>(detailsUrl, "GET");
                 return {
                     id: p.id,
                     name: p.name,
@@ -115,11 +115,15 @@ server.tool(
         project_id: z.number().describe("The ID of the project where the test case will be created"),
         name: z.string().describe("The name of the test case"),
         description: z.string().describe("Description of the test case"),
+        steps: z.array(z.object({
+            action: z.string().describe("The action to perform"),
+            expected_result: z.string().describe("The expected result"),
+        })).min(1).describe("List of test steps"),
     },
-    async ({ project_id, name, description }) => {
+    async ({ project_id, name, description, steps }) => {
         const url = `${SQUASHTM_API_URL}/api/rest/latest/test-cases`;
 
-        const payload = {
+        const payload: any = {
             _type: "test-case",
             name: name,
             parent: {
@@ -128,6 +132,12 @@ server.tool(
             },
             description: description,
         };
+
+        payload.steps = steps.map(step => ({
+            _type: "action-step",
+            action: step.action,
+            expected_result: step.expected_result,
+        }));
 
         const createdTestCase = await makeSquashRequest(url, "POST", payload);
 
