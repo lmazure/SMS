@@ -1,9 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import "dotenv/config";
 
 const NWS_API_BASE = "https://api.weather.gov";
 const USER_AGENT = "weather-app/1.0";
+const SQUASHTM_API_URL = process.env.SQUASHTM_API_URL || "http://localhost:8090/squash";
 
 // Create server instance
 const server = new McpServer({
@@ -76,6 +78,42 @@ interface ForecastResponse {
     properties: {
         periods: ForecastPeriod[];
     };
+}
+
+interface SquashProject {
+    _type: string;
+    id: number;
+    name: string;
+    _links: {
+        self: {
+            href: string;
+        };
+    };
+}
+
+interface SquashProjectsResponse {
+    _embedded?: {
+        projects?: SquashProject[];
+    };
+}
+
+async function makeSquashRequest<T>(url: string): Promise<T | null> {
+    const headers = {
+        Authorization: `Bearer ${process.env.SQUASHTM_API_KEY}`,
+        Accept: "application/json",
+    };
+
+    try {
+        const response = await fetch(url, { headers });
+        if (!response.ok) {
+            console.error(`SquashTM Request failed: ${response.status} ${response.statusText}`);
+            return null;
+        }
+        return (await response.json()) as T;
+    } catch (error) {
+        console.error("Error making SquashTM request:", error);
+        return null;
+    }
 }
 
 // Register weather tools
@@ -205,6 +243,39 @@ server.tool(
                 {
                     type: "text",
                     text: forecastText,
+                },
+            ],
+        };
+    },
+);
+
+server.tool(
+    "get_projects",
+    "Get list of standard SquashTM projects",
+    {},
+    async () => {
+        const url = `${SQUASHTM_API_URL}/api/rest/latest/projects?type=STANDARD`;
+        const data = await makeSquashRequest<SquashProjectsResponse>(url);
+
+        if (!data || !data._embedded || !data._embedded.projects) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Failed to retrieve projects or no projects found.",
+                    },
+                ],
+            };
+        }
+
+        const projects = data._embedded.projects;
+        const projectList = projects.map((p) => `ID: ${p.id}, Name: ${p.name}`).join("\n");
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Projects:\n${projectList}`,
                 },
             ],
         };

@@ -20,9 +20,11 @@
   "description": "",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.24.2",
+    "dotenv": "^17.2.3",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@types/dotenv": "^6.1.1",
     "@types/node": "^24.10.1",
     "typescript": "^5.9.3"
   }
