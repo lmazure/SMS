@@ -252,8 +252,8 @@ server.tool(
 );
 
 server.tool(
-    "get_projects",
-    "Get list of standard SquashTM projects",
+    "list_projects",
+    "Get list of SquashTM projects",
     {},
     async () => {
         const url = `${SQUASHTM_API_URL}/api/rest/latest/projects?type=STANDARD`;
