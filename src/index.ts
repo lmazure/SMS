@@ -31,14 +31,23 @@ interface SquashProjectsResponse {
     };
 }
 
-async function makeSquashRequest<T>(url: string): Promise<T> {
-    const headers = {
+async function makeSquashRequest<T>(url: string, method: string = "GET", body?: any): Promise<T> {
+    const headers: Record<string, string> = {
         Authorization: `Bearer ${process.env.SQUASHTM_API_KEY}`,
         Accept: "application/json",
     };
 
+    if (body) {
+        headers["Content-Type"] = "application/json";
+    }
+
     try {
-        const response = await fetch(url, { headers });
+        const response = await fetch(url, {
+            method,
+            headers,
+            body: body ? JSON.stringify(body) : undefined,
+        });
+
         if (!response.ok) {
             console.error(`SquashTM Request failed: ${response.status} ${response.statusText}`);
             throw new McpError(ErrorCode.InternalError, `SquashTM Request failed: ${response.status} ${response.statusText}`);
@@ -97,6 +106,40 @@ server.tool(
             ],
         };
     },
+);
+
+server.tool(
+    "create_test_case",
+    "Create a new test case in SquashTM",
+    {
+        project_id: z.number().describe("The ID of the project where the test case will be created"),
+        name: z.string().describe("The name of the test case"),
+        description: z.string().describe("Description of the test case"),
+    },
+    async ({ project_id, name, description }) => {
+        const url = `${SQUASHTM_API_URL}/api/rest/latest/test-cases`;
+
+        const payload = {
+            _type: "test-case",
+            name: name,
+            parent: {
+                _type: "project",
+                id: project_id,
+            },
+            description: description,
+        };
+
+        const createdTestCase = await makeSquashRequest(url, "POST", payload);
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(createdTestCase, null, 2),
+                },
+            ],
+        };
+    }
 );
 
 async function main() {
