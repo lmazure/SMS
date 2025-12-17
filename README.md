@@ -2,6 +2,11 @@
 
 ⚠️☠️ Do not use this server for production. It is a playground for learning MCP.
 
+## Environment variables
+
+- `SQUASHTM_URL`: The URL of the SquashTM server
+- `SQUASHTM_API_KEY`: Your API key for SquashTM
+
 ## Build
 ```bash
 npm run build

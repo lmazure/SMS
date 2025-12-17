@@ -11,13 +11,17 @@ import "dotenv/config";
 if (!process.env.SQUASHTM_API_KEY) {
     throw new Error("SQUASHTM_API_KEY environment variable is required");
 }
-
-const SQUASHTM_API_URL = (process.env.SQUASHTM_API_URL || "http://localhost:8090/squash").replace(/\/$/, '');
+if (!process.env.SQUASHTM_URL) {
+    throw new Error("SQUASHTM_URL environment variable is required");
+}
+const SQUASHTM_API_KEY = process.env.SQUASHTM_API_KEY;
+const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
+const SQUASHTM_API_URL = `${SQUASHTM_URL}/api/rest/latest`;
 
 // Create server instance
 const server = new McpServer({
     name: "SquashTM",
-    version: "1.0.0",
+    version: "0.0.1",
 });
 
 interface SquashProject {
@@ -54,9 +58,9 @@ const CreateTestCasesSchema = z.object({
     })).min(1).describe("List of test cases to create"),
 });
 
-async function makeSquashRequest<T>(url: string, method: string, body?: any): Promise<T> {
+async function makeSquashRequest<T>(endpoint: string, method: string, body?: any): Promise<T> {
     const headers: Record<string, string> = {
-        Authorization: `Bearer ${process.env.SQUASHTM_API_KEY}`,
+        Authorization: `Bearer ${SQUASHTM_API_KEY}`,
         Accept: "application/json",
     };
 
@@ -65,7 +69,7 @@ async function makeSquashRequest<T>(url: string, method: string, body?: any): Pr
     }
 
     try {
-        const response = await fetch(url, {
+        const response = await fetch(SQUASHTM_API_URL + "/" + endpoint, {
             method,
             headers,
             body: body ? JSON.stringify(body) : undefined,
@@ -105,8 +109,7 @@ server.registerTool(
         inputSchema: ListProjectsSchema,
     },
     async () => {
-        const url = `${SQUASHTM_API_URL}/api/rest/latest/projects?type=STANDARD`;
-        const data = await makeSquashRequest<SquashProjectsResponse>(url, "GET");
+        const data = await makeSquashRequest<SquashProjectsResponse>("projects?type=STANDARD", "GET");
 
         if (!data || !data._embedded || !data._embedded.projects) {
             return {
@@ -123,8 +126,7 @@ server.registerTool(
 
         const detailedProjects = await Promise.all(
             projects.map(async (p) => {
-                const detailsUrl = `${SQUASHTM_API_URL}/api/rest/latest/projects/${p.id}`;
-                const details = await makeSquashRequest<SquashProject>(detailsUrl, "GET");
+                const details = await makeSquashRequest<SquashProject>(`projects/${p.id}`, "GET");
                 return {
                     id: p.id,
                     name: p.name,
@@ -154,8 +156,6 @@ server.registerTool(
         inputSchema: CreateTestCasesSchema,
     },
     async (args) => {
-        const url = `${SQUASHTM_API_URL}/api/rest/latest/test-cases`;
-
         const createdTestCases = await Promise.all(
             args.test_cases.map(async (testCase) => {
                 const payload: any = {
@@ -173,7 +173,7 @@ server.registerTool(
                     })),
                 };
 
-                return await makeSquashRequest<any>(url, "POST", payload);
+                return await makeSquashRequest<any>("test-cases", "POST", payload);
             })
         );
 
