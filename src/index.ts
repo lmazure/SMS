@@ -77,10 +77,19 @@ async function makeSquashRequest<T>(endpoint: string, method: string, body?: any
 
         if (!response.ok) {
             const text = await response.text();
-            console.error(`SquashTM Request failed: ${response.status} ${response.statusText} - ${text}`);
+            console.error(`SquashTM Request failed: ${response.status} - ${text}`);
+            // if the response is JSON, extract the message from the "message" field
+            // otherwise, use the text
+            let message = text;
+            try {
+                const json = JSON.parse(text);
+                message = json.message || text;
+            } catch {
+                // Not JSON
+            }
             throw new McpError(
                 ErrorCode.InternalError,
-                `SquashTM Request failed: ${response.status} ${response.statusText}`
+                `SquashTM Request failed:\nstatus=${response.status}\nerror=${message}`
             );
         }
 
@@ -89,6 +98,7 @@ async function makeSquashRequest<T>(endpoint: string, method: string, body?: any
             return (await response.json()) as T;
         } else {
             const text = await response.text();
+            console.error(`Unexpected response format: ${text}`);
             throw new McpError(ErrorCode.InternalError, `Unexpected response format: ${text}`);
         }
     } catch (error) {
