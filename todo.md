@@ -1,9 +1,16 @@
+- create a rules.md (?)
+    - complete/update README.md in case a tool is modified
+    - complete/update unit tests in case a tool is modified
+- return to the LLM the error code and message in case of error
+- describe the tools in the README.md file
+- handle the deployment and complete the README.md file to describe the deployment process
 - add unit tests
 - complete create_test_cases tool with
-    - reference - probably optional
-    - type and nature - probably optional
+    - reference - probably optional - not present in the doc!!
+    - importance, type, and nature - probably optional
     - datasets
-- then tool: list_project_requirements
+    - verified requirements
+- add tool get_project_requirements
 
 ------
 
