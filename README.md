@@ -1,41 +1,96 @@
-# SMS - SquashTM MCP Server
+# SquashTM MCP Server
 
-⚠️☠️ Do not use this server for production. It is a playground for learning MCP.
+A Model Context Protocol (MCP) server for SquashTM that allows AI assistants like Claude to create and manage test cases.
 
-## Environment variables
+⚠️ **Note:** This is a learning/playground project. Do not use!
 
-- `SQUASHTM_URL`: The URL of the SquashTM server
-- `SQUASHTM_API_KEY`: Your API key for SquashTM
+## Installation & Configuration
 
-## Build
+### For Claude Desktop
+
+Add this configuration to your Claude Desktop config file:
+
+**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
+**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "squashtm": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "github:lmazure/SMS#v0.0.1"
+      ],
+      "env": {
+        "SQUASHTM_URL": "https://your-squashtm-instance.com/squash",
+        "SQUASHTM_API_KEY": "your-api-key-here"
+      }
+    }
+  }
+}
+```
+
+Replace `your-squashtm-instance.com` and `your-api-key-here` with your actual SquashTM URL and API key.
+
+## Available Tools
+
+### `list_projects`
+
+Retrieves a list of all SquashTM projects you have access to.
+
+**Input:** None
+
+### `create_test_cases`
+
+Creates one or more test cases in a specified SquashTM project.
+
+**Input:**
+- `project_id` (number): The ID of the target project
+- `test_cases` (array): List of test cases to create, each containing:
+  - `name` (string): Test case name
+  - `description` (string): Test case description
+  - `steps` (array): One or more test steps, each with:
+    - `action` (string): What action to perform
+    - `expected_result` (string): Expected outcome
+
+## Development
+
+### Setup
+
 ```bash
+# Clone the repository
+git clone https://github.com/lmazure/SMS.git
+cd SMS
+
+# Install dependencies
+npm install
+
+# Build the project
 npm run build
 ```
 
-## Tools
+### Testing with MCP Inspector
 
-### list_projects
-Get list of SquashTM projects.
-- **Input**: None
+The MCP Inspector allows you to test your server locally:
 
-### create_test_cases
-Create test cases in a project in SquashTM.
-- **Input**:
-  - `project_id` (number): The ID of the project where the test cases will be created.
-  - `test_cases` (array): List of test cases to create (minimum 1).
-    - `name` (string): The name of the test case.
-    - `description` (string): Description of the test case.
-    - `steps` (array): List of test steps (minimum 1).
-      - `action` (string): The action to perform.
-      - `expected_result` (string): The expected result.
-
-## Launch MCP Inspector
 ```bash
 npm run inspect
 ```
-- Option 1
-  - Copy the token from the console.
-  - If the MCP Inspector runs in WSL2, you can access it at `http://localhost:<port>` instead of `http://127.0.0.1:<port>`.
-  - Open the "Configuration" panel and paste the token in the "Proxy Session Token" field.
-- Option 2
-  - Click on the link  `http://localhost:<port>/?MCP_PROXY_AUTH_TOKEN=<token>` displayed in the console.
+
+Then either:
+- **Option 1:** Copy the token from the console and paste it in the Inspector's Configuration panel
+- **Option 2:** Click the link displayed in the console (format: `http://localhost:<port>/?MCP_PROXY_AUTH_TOKEN=<token>`)
+
+**Note for WSL2 users:** Access at `http://localhost:<port>` instead of `http://127.0.0.1:<port>`
+
+## Project Structure
+
+```
+SMS/
+├── src/              # Source TypeScript files
+├── build/            # Compiled JavaScript (generated)
+├── package.json      # Dependencies and scripts
+├── tsconfig.json     # TypeScript configuration
+└── README.md         # This file
+```
