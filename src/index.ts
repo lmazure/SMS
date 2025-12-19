@@ -203,23 +203,41 @@ server.registerTool(
         inputSchema: ListProjectsSchema,
     },
     async () => {
-        const data = await makeSquashRequest<SquashProjectsResponse>("projects?type=STANDARD", "GET");
+        let allProjects: SquashProject[] = [];
+        let currentPage = 0;
+        let totalPages = 1;
 
-        if (!data || !data._embedded || !data._embedded.projects) {
+        while (currentPage < totalPages) {
+            const data = await makeSquashRequest<SquashPaginatedResponse<SquashProject>>(
+                `projects?type=STANDARD&page=${currentPage}&size=50`,
+                "GET"
+            );
+
+            if (data?._embedded?.projects) {
+                allProjects.push(...data._embedded.projects);
+            }
+
+            if (data?.page) {
+                totalPages = data.page.totalPages;
+                currentPage++;
+            } else {
+                break;
+            }
+        }
+
+        if (allProjects.length === 0) {
             return {
                 content: [
                     {
                         type: "text",
-                        text: "Failed to retrieve projects or no projects found.",
+                        text: "No projects found.",
                     },
                 ],
             };
         }
 
-        const projects = data._embedded.projects;
-
         const detailedProjects = await Promise.all(
-            projects.map(async (p) => {
+            allProjects.map(async (p) => {
                 const details = await makeSquashRequest<SquashProject>(`projects/${p.id}`, "GET");
                 return {
                     id: p.id,
