@@ -214,47 +214,6 @@ server.registerTool(
     }
 );
 
-// Register create_test_cases tool
-server.registerTool(
-    "create_test_cases",
-    {
-        title: "Create Test Cases",
-        description: "Create test cases in a project in SquashTM",
-        inputSchema: CreateTestCasesSchema,
-    },
-    async (args) => {
-        const createdTestCases = await Promise.all(
-            args.test_cases.map(async (testCase) => {
-                const payload: any = {
-                    _type: "test-case",
-                    name: testCase.name,
-                    parent: {
-                        _type: "project",
-                        id: args.project_id,
-                    },
-                    description: testCase.description,
-                    steps: testCase.steps.map((step) => ({
-                        _type: "action-step",
-                        action: step.action,
-                        expected_result: step.expected_result,
-                    })),
-                };
-
-                return await makeSquashRequest<any>("test-cases", "POST", payload);
-            })
-        );
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify(createdTestCases, null, 2),
-                },
-            ],
-        };
-    }
-);
-
 async function getDetailedFolders(folders: SquashFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<SimplifiedFolder[]> {
     return Promise.all(folders.map(async folder => {
         const details = await makeSquashRequest<SquashFolderDetail>(`${type}/${folder.id}`, "GET");
@@ -347,6 +306,41 @@ server.registerTool(
                     text: JSON.stringify(simplifiedData, null, 2),
                 },
             ],
+        };
+    }
+);
+// Register create_test_cases tool
+server.registerTool(
+    "create_test_cases",
+    {
+        title: "Create Test Cases",
+        description: "Create test cases in a project in SquashTM",
+        inputSchema: CreateTestCasesSchema,
+    },
+    async (args) => {
+        const createdTestCases = await Promise.all(
+            args.test_cases.map(async (testCase) => {
+                const payload: any = {
+                    _type: "test-case",
+                    name: testCase.name,
+                    parent: {
+                        _type: "project",
+                        id: args.project_id,
+                    },
+                    description: testCase.description,
+                    steps: testCase.steps.map((step) => ({
+                        _type: "action-step",
+                        action: step.action,
+                        expected_result: step.expected_result,
+                    })),
+                };
+
+                return await makeSquashRequest<any>("test-cases", "POST", payload);
+            })
+        );
+
+        return {
+            content: [],
         };
     }
 );

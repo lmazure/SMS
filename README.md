@@ -47,21 +47,6 @@ Retrieves a list of all SquashTM projects you have access to.
 - `label` (string): The project label
 - `description` (string): The project description
 
-### `create_test_cases`
-
-Creates one or more test cases in a specified SquashTM project.
-
-**Input:**
-- `project_id` (number): The ID of the target project
-- `test_cases` (array): List of test cases to create, each containing:
-  - `name` (string): Test case name
-  - `description` (string): Test case description
-  - `steps` (array): One or more test steps, each with:
-    - `action` (string): What action to perform
-    - `expected_result` (string): Expected outcome
-
-**Output:** An array of test case objects created in SquashTM, each containing details like ID, name, etc.
-
 ### `get_requirement_folders_tree`
 
 Retrieves a detailed tree of requirement folders for specified projects.
@@ -95,6 +80,21 @@ Retrieves a detailed tree of test case folders for specified projects.
 - `modified_by` (string): Who last modified the folder
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
+
+### `create_test_cases`
+
+Creates one or more test cases in a specified SquashTM project.
+
+**Input:**
+- `project_id` (number): The ID of the target project
+- `test_cases` (array): List of test cases to create, each containing:
+  - `name` (string): Test case name
+  - `description` (string): Test case description
+  - `steps` (array): One or more test steps, each with:
+    - `action` (string): What action to perform
+    - `expected_result` (string): Expected outcome
+
+**Output:** None
 
 ### `get_campaign_folder_tree`
 
