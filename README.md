@@ -41,6 +41,12 @@ Retrieves a list of all SquashTM projects you have access to.
 
 **Input:** None
 
+**Output:** An array of objects, each containing:
+- `id` (number): The project ID
+- `name` (string): The project name
+- `label` (string): The project label
+- `description` (string): The project description
+
 ### `create_test_cases`
 
 Creates one or more test cases in a specified SquashTM project.
@@ -53,6 +59,8 @@ Creates one or more test cases in a specified SquashTM project.
   - `steps` (array): One or more test steps, each with:
     - `action` (string): What action to perform
     - `expected_result` (string): Expected outcome
+
+**Output:** An array of test case objects created in SquashTM, each containing details like ID, name, etc.
 
 ## Development
 
