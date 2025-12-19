@@ -81,6 +81,23 @@ Retrieves a detailed tree of test case folders for specified projects.
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
 
+### `get_test_case_folder_content`
+
+Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned.
+
+**Input:**
+- `folder_id` (number): The ID of the test case folder
+
+**Output:** An array of test case objects, each containing:
+- `id` (number): The test case ID
+- `name` (string): The test case name
+- `prerequisite` (string): The test case prerequisite
+- `description` (string): The test case description
+- `created_by` (string): Who created the test case
+- `created_on` (string): Creation timestamp
+- `last_modified_by` (string): Who last modified the test case
+- `last_modified_on` (string): Last modification timestamp
+
 ### `create_test_cases`
 
 Creates one or more test cases in a specified SquashTM project.

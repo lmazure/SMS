@@ -45,6 +45,18 @@ interface SquashProjectsResponse {
     };
 }
 
+interface SquashPaginatedResponse<T> {
+    _embedded?: {
+        [key: string]: T[];
+    };
+    page: {
+        size: number;
+        totalElements: number;
+        totalPages: number;
+        number: number;
+    };
+}
+
 // Zod schemas for validation
 const ListProjectsSchema = z.object({});
 
@@ -72,6 +84,10 @@ const GetCampaignFoldersTreeSchema = z.object({
     project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the campaign folders tree for"),
 });
 
+const GetTestCaseFolderContentSchema = z.object({
+    folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
+});
+
 interface SquashFolder {
     _type: string;
     id: number;
@@ -85,6 +101,17 @@ interface SquashFolderDetail {
     id: number;
     name: string;
     description: string;
+    created_by: string;
+    created_on: string;
+    last_modified_by: string;
+    last_modified_on: string;
+}
+
+interface SquashTestCaseDetail {
+    id: number;
+    name: string;
+    description: string;
+    prerequisite: string;
     created_by: string;
     created_on: string;
     last_modified_by: string;
@@ -341,6 +368,78 @@ server.registerTool(
 
         return {
             content: [],
+        };
+    }
+);
+
+// Register get_test_case_folder_content tool
+server.registerTool(
+    "get_test_case_folder_content",
+    {
+        title: "Get Test Case Folder Content",
+        description: "Get the test cases of a test-case-folder (only includes items of type 'test-case')",
+        inputSchema: GetTestCaseFolderContentSchema,
+    },
+    async (args) => {
+        let allTestCases: any[] = [];
+        let currentPage = 0;
+        let totalPages = 1;
+
+        while (currentPage < totalPages) {
+            const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+                `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
+                "GET"
+            );
+
+            if (!data || !data._embedded || !data._embedded.content) {
+                break;
+            }
+
+            const testCases = data._embedded.content.filter((item: any) => item._type === "test-case");
+            allTestCases.push(...testCases);
+
+            if (data.page) {
+                totalPages = data.page.totalPages;
+                currentPage++;
+            } else {
+                break;
+            }
+        }
+
+        if (allTestCases.length === 0) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "No test cases found in the specified folder.",
+                    },
+                ],
+            };
+        }
+
+        const detailedTestCases = await Promise.all(
+            allTestCases.map(async (tc) => {
+                const details = await makeSquashRequest<SquashTestCaseDetail>(`test-cases/${tc.id}`, "GET");
+                return {
+                    id: details.id,
+                    name: details.name,
+                    prerequisite: details.prerequisite,
+                    description: details.description,
+                    created_by: details.created_by,
+                    created_on: details.created_on,
+                    last_modified_by: details.last_modified_by,
+                    last_modified_on: details.last_modified_on,
+                };
+            })
+        );
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(detailedTestCases, null, 2),
+                },
+            ],
         };
     }
 );

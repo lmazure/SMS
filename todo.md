@@ -11,12 +11,14 @@
 - add tool get_project_requirements
 
 ------
+SquasTM bugs:
 
 get_requirement_folders_tree is buggy for a hierarchy a-b-c-d !!
 
-------
+REST API doc: "An test plan item represents a test case that has been planned"
 
-quick n' dirty notes:
+------
+test data:
 
 example of payload when creating test cases
 ```json
