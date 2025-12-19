@@ -62,6 +62,57 @@ Creates one or more test cases in a specified SquashTM project.
 
 **Output:** An array of test case objects created in SquashTM, each containing details like ID, name, etc.
 
+### `get_requirement_folders_tree`
+
+Retrieves a detailed tree of requirement folders for specified projects.
+
+**Input:**
+- `project_ids` (array of numbers): List of project IDs
+
+**Output:** A simplified tree structure for each project, where each folder includes:
+- `id` (number): The folder ID
+- `name` (string): The folder name
+- `description` (string): The folder description
+- `created_by` (string): Who created the folder
+- `created_on` (string): Creation timestamp
+- `modified_by` (string): Who last modified the folder
+- `modified_on` (string): Last modification timestamp
+- `children` (array): Nested child folders
+
+### `get_test_case_folder_tree`
+
+Retrieves a detailed tree of test case folders for specified projects.
+
+**Input:**
+- `project_ids` (array of numbers): List of project IDs
+
+**Output:** A simplified tree structure for each project, where each folder includes:
+- `id` (number): The folder ID
+- `name` (string): The folder name
+- `description` (string): The folder description
+- `created_by` (string): Who created the folder
+- `created_on` (string): Creation timestamp
+- `modified_by` (string): Who last modified the folder
+- `modified_on` (string): Last modification timestamp
+- `children` (array): Nested child folders
+
+### `get_campaign_folder_tree`
+
+Retrieves a detailed tree of campaign folders for specified projects.
+
+**Input:**
+- `project_ids` (array of numbers): List of project IDs
+
+**Output:** A simplified tree structure for each project, where each folder includes:
+- `id` (number): The folder ID
+- `name` (string): The folder name
+- `description` (string): The folder description
+- `created_by` (string): Who created the folder
+- `created_on` (string): Creation timestamp
+- `modified_by` (string): Who last modified the folder
+- `modified_on` (string): Last modification timestamp
+- `children` (array): Nested child folders
+
 ## Development
 
 ### Setup

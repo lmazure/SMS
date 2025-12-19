@@ -12,6 +12,10 @@
 
 ------
 
+get_requirement_folders_tree is buggy for a hierarchy a-b-c-d !!
+
+------
+
 quick n' dirty notes:
 
 example of payload when creating test cases

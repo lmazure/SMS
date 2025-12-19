@@ -60,6 +60,61 @@ const CreateTestCasesSchema = z.object({
     })).min(1).describe("List of test cases to create"),
 });
 
+const GetRequirementFoldersTreeSchema = z.object({
+    project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the requirement folders tree for"),
+});
+
+const GetTestCaseFoldersTreeSchema = z.object({
+    project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the test case folders tree for"),
+});
+
+const GetCampaignFoldersTreeSchema = z.object({
+    project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the campaign folders tree for"),
+});
+
+interface SquashFolder {
+    _type: string;
+    id: number;
+    name: string;
+    url: string;
+    children: SquashFolder[];
+}
+
+interface SquashFolderDetail {
+    _type: string;
+    id: number;
+    name: string;
+    description: string;
+    created_by: string;
+    created_on: string;
+    last_modified_by: string;
+    last_modified_on: string;
+}
+
+interface SquashProjectTree {
+    _type: string;
+    id: number;
+    name: string;
+    folders: SquashFolder[];
+}
+
+interface SimplifiedFolder {
+    id: number;
+    name: string;
+    description: string;
+    created_by: string;
+    created_on: string;
+    modified_by: string;
+    modified_on: string;
+    children: SimplifiedFolder[];
+}
+
+interface SimplifiedProjectTree {
+    id: number;
+    name: string;
+    folders: SimplifiedFolder[];
+}
+
 async function makeSquashRequest<T>(endpoint: string, method: string, body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
@@ -194,6 +249,142 @@ server.registerTool(
                 {
                     type: "text",
                     text: JSON.stringify(createdTestCases, null, 2),
+                },
+            ],
+        };
+    }
+);
+
+async function getDetailedFolders(folders: SquashFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<SimplifiedFolder[]> {
+    return Promise.all(folders.map(async folder => {
+        const details = await makeSquashRequest<SquashFolderDetail>(`${type}/${folder.id}`, "GET");
+        return {
+            id: folder.id,
+            name: folder.name,
+            description: details.description,
+            created_by: details.created_by,
+            created_on: details.created_on,
+            modified_by: details.last_modified_by,
+            modified_on: details.last_modified_on,
+            children: await getDetailedFolders(folder.children || [], type)
+        };
+    }));
+}
+
+// Register get_requirement_folders_tree tool
+server.registerTool(
+    "get_requirement_folders_tree",
+    {
+        title: "Get Requirement Folders Tree",
+        description: "Get the requirement folders tree for specified projects with detailed folder info",
+        inputSchema: GetRequirementFoldersTreeSchema,
+    },
+    async (args) => {
+        const ids = args.project_ids.join(",");
+        const data = await makeSquashRequest<SquashProjectTree[]>(`requirement-folders/tree/${ids}`, "GET");
+
+        if (!data) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Failed to retrieve requirement folders tree.",
+                    },
+                ],
+            };
+        }
+
+        const simplifiedData: SimplifiedProjectTree[] = await Promise.all(data.map(async project => ({
+            id: project.id,
+            name: project.name,
+            folders: await getDetailedFolders(project.folders || [], "requirement-folders")
+        })));
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(simplifiedData, null, 2),
+                },
+            ],
+        };
+    }
+);
+
+// Register get_test_case_folder_tree tool
+server.registerTool(
+    "get_test_case_folder_tree",
+    {
+        title: "Get Test Case Folders Tree",
+        description: "Get the test case folders tree for specified projects with detailed folder info",
+        inputSchema: GetTestCaseFoldersTreeSchema,
+    },
+    async (args) => {
+        const ids = args.project_ids.join(",");
+        const data = await makeSquashRequest<SquashProjectTree[]>(`test-case-folders/tree/${ids}`, "GET");
+
+        if (!data) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Failed to retrieve test case folders tree.",
+                    },
+                ],
+            };
+        }
+
+        const simplifiedData: SimplifiedProjectTree[] = await Promise.all(data.map(async project => ({
+            id: project.id,
+            name: project.name,
+            folders: await getDetailedFolders(project.folders || [], "test-case-folders")
+        })));
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(simplifiedData, null, 2),
+                },
+            ],
+        };
+    }
+);
+
+// Register get_campaign_folder_tree tool
+server.registerTool(
+    "get_campaign_folder_tree",
+    {
+        title: "Get Campaign Folders Tree",
+        description: "Get the campaign folders tree for specified projects with detailed folder info",
+        inputSchema: GetCampaignFoldersTreeSchema,
+    },
+    async (args) => {
+        const ids = args.project_ids.join(",");
+        const data = await makeSquashRequest<SquashProjectTree[]>(`campaign-folders/tree/${ids}`, "GET");
+
+        if (!data) {
+            return {
+                content: [
+                    {
+                        type: "text",
+                        text: "Failed to retrieve campaign folders tree.",
+                    },
+                ],
+            };
+        }
+
+        const simplifiedData: SimplifiedProjectTree[] = await Promise.all(data.map(async project => ({
+            id: project.id,
+            name: project.name,
+            folders: await getDetailedFolders(project.folders || [], "campaign-folders")
+        })));
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: JSON.stringify(simplifiedData, null, 2),
                 },
             ],
         };
