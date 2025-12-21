@@ -150,17 +150,13 @@ Retrieves a detailed tree of campaign folders for specified projects.
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
 
-### Note : Rich text
+### Note: Rich text
 
 Rich text is a subset of HTML.
 
-Allowed elements are: `a`, `b`, `blockquote`, `br`, `caption`, `center`, `cite`, `code`, `col`, `colgroup`, `dd`,
-`del`, `div`, `dl`, `dt`, `em`, `figure`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `hr`, `i`, `img`, `ins`, `li`, `ol`, `p`,
-`pre`, `q`, `s`, `small`, `span`, `strike`, `strong`, `sub`, `sup`, `table`, `tbody`, `td`, `tfoot`, `th`, `thead`, `tr`,
-`u`, and `ul`.
+Allowed elements are: `a`, `b`, `blockquote`, `br`, `caption`, `center`, `cite`, `code`, `col`, `colgroup`, `dd`, `del`, `div`, `dl`, `dt`, `em`, `figure`, `h1`, `h2`, `h3`, `h4`, `h5`, `h6`, `hr`, `i`, `img`, `ins`, `li`, `ol`, `p`, `pre`, `q`, `s`, `small`, `span`, `strike`, `strong`, `sub`, `sup`, `table`, `tbody`, `td`, `tfoot`, `th`, `thead`, `tr`, `u`, and `ul`.
 
-Allowed attributes for all elements are: `align`, `aria-hidden`, `border`, `cellpadding`, `cellspacing`,
-`class`, `dir`, `height`, `id`, `lang`, `rel`, `role`, `style`, `tabindex`, `title`, and `width`.
+Allowed attributes for all elements are: `align`, `aria-hidden`, `border`, `cellpadding`, `cellspacing`, `class`, `dir`, `height`, `id`, `lang`, `rel`, `role`, `style`, `tabindex`, `title`, and `width`.
 
 Additionally, some elements support specific attributes. These are listed below:
 
