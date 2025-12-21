@@ -60,6 +60,12 @@ interface SquashPaginatedResponse<T> {
 // Zod schemas for validation
 const ListProjectsSchema = z.object({});
 
+const CreateProjectSchema = z.object({
+    name: z.string().describe("The name of the project"),
+    label: z.string().optional().describe("The label of the project"),
+    description: z.string().optional().describe("The description of the project (HTML allowed)"),
+});
+
 const CreateTestCasesSchema = z.object({
     project_id: z.number().describe("The ID of the project where the test cases will be created"),
     test_cases: z.array(z.object({
@@ -386,6 +392,35 @@ server.registerTool(
 
         return {
             content: [],
+        };
+    }
+);
+
+// Register create_project tool
+server.registerTool(
+    "create_project",
+    {
+        title: "Create Project",
+        description: "Create a new project in SquashTM",
+        inputSchema: CreateProjectSchema,
+    },
+    async (args) => {
+        const payload = {
+            _type: "project",
+            name: args.name,
+            label: args.label,
+            description: args.description,
+        };
+
+        const response = await makeSquashRequest<any>("projects", "POST", payload);
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Project created successfully with ID: ${response.id}`,
+                },
+            ],
         };
     }
 );
