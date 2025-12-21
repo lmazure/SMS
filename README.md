@@ -58,6 +58,15 @@ Creates a new project in SquashTM.
 
 **Output:** A success message containing the ID of the newly created project.
 
+### `delete_project`
+
+Deletes a project in SquashTM.
+
+**Input:**
+- `id` (number): The ID of the project to delete
+
+**Output:** A success message.
+
 ### `get_requirement_folders_tree`
 
 Retrieves a detailed tree of requirement folders for specified projects.

@@ -66,6 +66,10 @@ const CreateProjectSchema = z.object({
     description: z.string().optional().describe("The description of the project (HTML allowed)"),
 });
 
+const DeleteProjectSchema = z.object({
+    id: z.number().describe("The ID of the project to delete"),
+});
+
 const CreateTestCasesSchema = z.object({
     project_id: z.number().describe("The ID of the project where the test cases will be created"),
     test_cases: z.array(z.object({
@@ -183,11 +187,24 @@ async function makeSquashRequest<T>(endpoint: string, method: string, body?: any
             );
         }
 
+        if (response.status === 204) {
+            return {} as T;
+        }
+
+        const text = await response.text();
+        if (text.length === 0) {
+            return {} as T;
+        }
+
         const contentType = response.headers.get("content-type");
         if (contentType?.includes("application/json")) {
-            return (await response.json()) as T;
+            try {
+                return JSON.parse(text) as T;
+            } catch (e) {
+                console.error(`Failed to parse JSON response: ${text}`);
+                throw new McpError(ErrorCode.InternalError, `Failed to parse JSON response: ${text}`);
+            }
         } else {
-            const text = await response.text();
             console.error(`Unexpected response format: ${text}`);
             throw new McpError(ErrorCode.InternalError, `Unexpected response format: ${text}`);
         }
@@ -259,6 +276,57 @@ server.registerTool(
                 {
                     type: "text",
                     text: JSON.stringify(detailedProjects, null, 2),
+                },
+            ],
+        };
+    }
+);
+
+// Register create_project tool
+server.registerTool(
+    "create_project",
+    {
+        title: "Create Project",
+        description: "Create a new project in SquashTM",
+        inputSchema: CreateProjectSchema,
+    },
+    async (args) => {
+        const payload = {
+            _type: "project",
+            name: args.name,
+            label: args.label,
+            description: args.description,
+        };
+
+        const response = await makeSquashRequest<any>("projects", "POST", payload);
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Project created successfully with ID: ${response.id}`,
+                },
+            ],
+        };
+    }
+);
+
+// Register delete_project tool
+server.registerTool(
+    "delete_project",
+    {
+        title: "Delete Project",
+        description: "Delete a project in SquashTM",
+        inputSchema: DeleteProjectSchema,
+    },
+    async (args) => {
+        await makeSquashRequest<any>(`projects/${args.id}`, "DELETE");
+
+        return {
+            content: [
+                {
+                    type: "text",
+                    text: `Project ${args.id} deleted successfully`,
                 },
             ],
         };
@@ -396,41 +464,12 @@ server.registerTool(
     }
 );
 
-// Register create_project tool
-server.registerTool(
-    "create_project",
-    {
-        title: "Create Project",
-        description: "Create a new project in SquashTM",
-        inputSchema: CreateProjectSchema,
-    },
-    async (args) => {
-        const payload = {
-            _type: "project",
-            name: args.name,
-            label: args.label,
-            description: args.description,
-        };
-
-        const response = await makeSquashRequest<any>("projects", "POST", payload);
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `Project created successfully with ID: ${response.id}`,
-                },
-            ],
-        };
-    }
-);
-
 // Register get_test_case_folder_content tool
 server.registerTool(
     "get_test_case_folder_content",
     {
         title: "Get Test Case Folder Content",
-        description: "Get the test cases of a test-case-folder (only includes items of type 'test-case')",
+        description: "Get the test cases of a test case folder (only includes items of type 'test-case')",
         inputSchema: GetTestCaseFolderContentSchema,
     },
     async (args) => {
