@@ -8,6 +8,7 @@ import {
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import "dotenv/config";
+import { fileURLToPath } from 'url';
 
 // Validate required environment variables
 if (!process.env.SQUASHTM_API_KEY) {
@@ -152,7 +153,7 @@ interface SimplifiedProjectTree {
     folders: SimplifiedFolder[];
 }
 
-async function makeSquashRequest<T>(endpoint: string, method: string, body?: any): Promise<T> {
+export async function makeSquashRequest<T>(endpoint: string, method: string, body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
         Accept: "application/json",
@@ -217,6 +218,62 @@ async function makeSquashRequest<T>(endpoint: string, method: string, body?: any
     }
 }
 
+export const listProjectsHandler = async () => {
+    let allProjects: SquashProject[] = [];
+    let currentPage = 0;
+    let totalPages = 1;
+
+    while (currentPage < totalPages) {
+        const data = await makeSquashRequest<SquashPaginatedResponse<SquashProject>>(
+            `projects?type=STANDARD&page=${currentPage}&size=50`,
+            "GET"
+        );
+
+        if (data?._embedded?.projects) {
+            allProjects.push(...data._embedded.projects);
+        }
+
+        if (data?.page) {
+            totalPages = data.page.totalPages;
+            currentPage++;
+        } else {
+            break;
+        }
+    }
+
+    if (allProjects.length === 0) {
+        return {
+            content: [
+                {
+                    type: "text" as const,
+                    text: "No projects found.",
+                },
+            ],
+        };
+    }
+
+    const detailedProjects = await Promise.all(
+        allProjects.map(async (p) => {
+            const details = await makeSquashRequest<SquashProject>(`projects/${p.id}`, "GET");
+            return {
+                id: p.id,
+                name: p.name,
+                label: details.label,
+                description: details.description,
+            };
+        })
+    );
+
+    return {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(detailedProjects, null, 2),
+            },
+        ],
+    };
+};
+
 // Register list_projects tool
 server.registerTool(
     "list_projects",
@@ -225,62 +282,28 @@ server.registerTool(
         description: "Get list of SquashTM projects",
         inputSchema: ListProjectsSchema,
     },
-    async () => {
-        let allProjects: SquashProject[] = [];
-        let currentPage = 0;
-        let totalPages = 1;
-
-        while (currentPage < totalPages) {
-            const data = await makeSquashRequest<SquashPaginatedResponse<SquashProject>>(
-                `projects?type=STANDARD&page=${currentPage}&size=50`,
-                "GET"
-            );
-
-            if (data?._embedded?.projects) {
-                allProjects.push(...data._embedded.projects);
-            }
-
-            if (data?.page) {
-                totalPages = data.page.totalPages;
-                currentPage++;
-            } else {
-                break;
-            }
-        }
-
-        if (allProjects.length === 0) {
-            return {
-                content: [
-                    {
-                        type: "text",
-                        text: "No projects found.",
-                    },
-                ],
-            };
-        }
-
-        const detailedProjects = await Promise.all(
-            allProjects.map(async (p) => {
-                const details = await makeSquashRequest<SquashProject>(`projects/${p.id}`, "GET");
-                return {
-                    id: p.id,
-                    name: p.name,
-                    label: details.label,
-                    description: details.description,
-                };
-            })
-        );
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: JSON.stringify(detailedProjects, null, 2),
-                },
-            ],
-        };
-    }
+    listProjectsHandler
 );
+
+export const createProjectHandler = async (args: z.infer<typeof CreateProjectSchema>) => {
+    const payload = {
+        _type: "project",
+        name: args.name,
+        label: args.label,
+        description: args.description,
+    };
+
+    const response = await makeSquashRequest<any>("projects", "POST", payload);
+
+    return {
+        content: [
+            {
+                type: "text" as const,
+                text: `Project created successfully with ID: ${response.id}`,
+            },
+        ],
+    };
+};
 
 // Register create_project tool
 server.registerTool(
@@ -290,26 +313,21 @@ server.registerTool(
         description: "Create a new project in SquashTM",
         inputSchema: CreateProjectSchema,
     },
-    async (args) => {
-        const payload = {
-            _type: "project",
-            name: args.name,
-            label: args.label,
-            description: args.description,
-        };
-
-        const response = await makeSquashRequest<any>("projects", "POST", payload);
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `Project created successfully with ID: ${response.id}`,
-                },
-            ],
-        };
-    }
+    createProjectHandler
 );
+
+export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectSchema>) => {
+    await makeSquashRequest<any>(`projects/${args.id}`, "DELETE");
+
+    return {
+        content: [
+            {
+                type: "text" as const,
+                text: `Project ${args.id} deleted successfully`,
+            },
+        ],
+    };
+};
 
 // Register delete_project tool
 server.registerTool(
@@ -319,18 +337,7 @@ server.registerTool(
         description: "Delete a project in SquashTM",
         inputSchema: DeleteProjectSchema,
     },
-    async (args) => {
-        await makeSquashRequest<any>(`projects/${args.id}`, "DELETE");
-
-        return {
-            content: [
-                {
-                    type: "text",
-                    text: `Project ${args.id} deleted successfully`,
-                },
-            ],
-        };
-    }
+    deleteProjectHandler
 );
 
 async function getDetailedFolders(folders: SquashFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<SimplifiedFolder[]> {
@@ -582,7 +589,9 @@ async function main() {
     console.error("SquashTM MCP Server running on stdio");
 }
 
-main().catch((error) => {
-    console.error("Fatal error in main():", error);
-    process.exit(1);
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    main().catch((error) => {
+        console.error("Fatal error in main():", error);
+        process.exit(1);
+    });
+}
