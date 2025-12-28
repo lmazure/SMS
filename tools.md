@@ -55,7 +55,7 @@ Retrieves a detailed tree of requirement folders for specified projects.
 
 ### `get_requirement_folder_content`
 
-Retrieves the list of requirements within a specific requirement folder. Only items of type `requirement` are returned.
+Retrieves the list of requirements within a specific requirement folder.
 
 **Input:**
 - `folder_id` (number): The ID of the requirement folder
@@ -90,7 +90,7 @@ Retrieves a detailed tree of test case folders for specified projects.
 
 ### `get_test_case_folder_content`
 
-Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned.
+Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned. The other types of test cases are not returned.
 
 **Input:**
 - `folder_id` (number): The ID of the test case folder

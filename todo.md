@@ -1,4 +1,10 @@
+- add a tool to delete test cases
+- add a tool to create a test case folder
+- add a tool to delete a test case folder
 - integration tests are failing
+- create integration tests for create_test_case_folder, list_test_case_folders, and delete_test_case_folder
+- create integration tests for create_test_case, list_test_cases, and delete_test_case
+
 - is it possible to properly sort the tool list (in MCP Inspector)
 
 - we are mixing `id` and `project_id`
