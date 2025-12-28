@@ -1,6 +1,8 @@
 # Available Tools
 
-## `list_projects`
+## Projects
+
+### `list_projects`
 
 Retrieves a list of all SquashTM projects you have access to.
 
@@ -12,7 +14,7 @@ Retrieves a list of all SquashTM projects you have access to.
 - `label` (string): The project label
 - `description` (string): The project description (rich text)
 
-## `create_project`
+### `create_project`
 
 Creates a new project in SquashTM.
 
@@ -23,7 +25,7 @@ Creates a new project in SquashTM.
 
 **Output:** A success message containing the ID of the newly created project.
 
-## `delete_project`
+### `delete_project`
 
 Deletes a project in SquashTM.
 
@@ -32,7 +34,9 @@ Deletes a project in SquashTM.
 
 **Output:** A success message.
 
-## `get_requirement_folders_tree`
+## Requirements
+
+### `get_requirement_folders_tree`
 
 Retrieves a detailed tree of requirement folders for specified projects.
 
@@ -49,7 +53,9 @@ Retrieves a detailed tree of requirement folders for specified projects.
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
 
-## `get_test_case_folder_tree`
+## Test Cases
+
+### `get_test_case_folder_tree`
 
 Retrieves a detailed tree of test case folders for specified projects.
 
@@ -66,7 +72,7 @@ Retrieves a detailed tree of test case folders for specified projects.
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
 
-## `get_test_case_folder_content`
+### `get_test_case_folder_content`
 
 Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned.
 
@@ -83,7 +89,7 @@ Retrieves the list of test cases within a specific test case folder. Only items 
 - `last_modified_by` (string): Who last modified the test case
 - `last_modified_on` (string): Last modification timestamp
 
-## `create_test_cases`
+### `create_test_cases`
 
 Creates one or more test cases in a specified SquashTM project.
 
@@ -98,7 +104,9 @@ Creates one or more test cases in a specified SquashTM project.
 
 **Output:** None
 
-## `get_campaign_folder_tree`
+## Campaigns
+
+### `get_campaign_folder_tree`
 
 Retrieves a detailed tree of campaign folders for specified projects.
 
