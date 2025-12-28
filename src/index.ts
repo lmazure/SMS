@@ -99,6 +99,10 @@ const GetTestCaseFolderContentSchema = z.object({
     folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
 });
 
+const GetRequirementFolderContentSchema = z.object({
+    folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
+});
+
 interface SquashFolder {
     _type: string;
     id: number;
@@ -127,6 +131,25 @@ interface SquashTestCaseDetail {
     created_on: string;
     last_modified_by: string;
     last_modified_on: string;
+}
+
+interface SquashRequirementDetail {
+    id: number;
+    name: string;
+    current_version: {
+        created_by: string;
+        created_on: string;
+        last_modified_by: string;
+        last_modified_on: string;
+        description: string;
+        reference: string;
+        version_number: number;
+        criticality: string;
+        category: {
+            code: string;
+        };
+        status: string;
+    };
 }
 
 interface SquashProjectTree {
@@ -355,6 +378,82 @@ async function getDetailedFolders(folders: SquashFolder[], type: "requirement-fo
         };
     }));
 }
+
+// Register get_requirement_folder_content tool
+server.registerTool(
+    "get_requirement_folder_content",
+    {
+        title: "Get Requirement Folder Content",
+        description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
+        inputSchema: GetRequirementFolderContentSchema,
+    },
+    async (args) => {
+        let allRequirements: any[] = [];
+        let currentPage = 0;
+        let totalPages = 1;
+
+        while (currentPage < totalPages) {
+            const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+                `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
+                "GET"
+            );
+
+            if (!data || !data._embedded || !data._embedded.content) {
+                break;
+            }
+
+            const requirements = data._embedded.content.filter((item: any) => item._type === "requirement");
+            allRequirements.push(...requirements);
+
+            if (data.page) {
+                totalPages = data.page.totalPages;
+                currentPage++;
+            } else {
+                break;
+            }
+        }
+
+        if (allRequirements.length === 0) {
+            return {
+                content: [
+                    {
+                        type: "text" as const,
+                        text: "No requirements found in the specified folder.",
+                    },
+                ],
+            };
+        }
+
+        const detailedRequirements = await Promise.all(
+            allRequirements.map(async (req) => {
+                const details = await makeSquashRequest<SquashRequirementDetail>(`requirements/${req.id}`, "GET");
+                return {
+                    id: details.id,
+                    name: details.name,
+                    reference: details.current_version.reference,
+                    version: details.current_version.version_number,
+                    description: details.current_version.description,
+                    created_by: details.current_version.created_by,
+                    created_on: details.current_version.created_on,
+                    last_modified_by: details.current_version.last_modified_by,
+                    last_modified_on: details.current_version.last_modified_on,
+                    criticality: details.current_version.criticality,
+                    category: details.current_version.category?.code,
+                    status: details.current_version.status,
+                };
+            })
+        );
+
+        return {
+            content: [
+                {
+                    type: "text" as const,
+                    text: JSON.stringify(detailedRequirements, null, 2),
+                },
+            ],
+        };
+    }
+);
 
 // Register get_requirement_folders_tree tool
 server.registerTool(

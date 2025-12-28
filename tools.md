@@ -53,6 +53,22 @@ Retrieves a detailed tree of requirement folders for specified projects.
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
 
+### `get_requirement_folder_content`
+
+Retrieves the list of requirements within a specific requirement folder. Only items of type `requirement` are returned.
+
+**Input:**
+- `folder_id` (number): The ID of the requirement folder
+
+**Output:** An array of requirement objects, each containing:
+- `id` (number): The requirement ID
+- `name` (string): The requirement name
+- `description` (string): The requirement description (rich text)
+- `created_by` (string): Who created the requirement
+- `created_on` (string): Creation timestamp
+- `last_modified_by` (string): Who last modified the requirement
+- `last_modified_on` (string): Last modification timestamp
+
 ## Test Cases
 
 ### `get_test_case_folder_tree`
@@ -160,4 +176,3 @@ Allowed protocols for URI attributes are:
 | `img`        | `src`     | `cid`, `data`, `http`, `https`   |
 | `ins`        | `cite`    | `http`, `https`                  |
 | `q`          | `cite`    | `http`, `https`                  |
-

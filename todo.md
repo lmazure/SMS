@@ -1,3 +1,6 @@
+- integration tests are failing
+- is it possible to properly sort the tool list (in MCP Inspector)
+
 - we are mixing `id` and `project_id`
 - create a rules.md (?)
     - complete/update README.md in case a tool is modified
