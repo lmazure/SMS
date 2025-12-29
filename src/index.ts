@@ -9,6 +9,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import "dotenv/config";
 import { fileURLToPath } from 'url';
+import { appendFileSync } from 'fs';
+import { EOL } from 'os';
 
 // Validate required environment variables
 if (!process.env.SQUASHTM_API_KEY) {
@@ -20,6 +22,18 @@ if (!process.env.SQUASHTM_URL) {
 const SQUASHTM_API_KEY = process.env.SQUASHTM_API_KEY;
 const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
 const SQUASHTM_API_URL = `${SQUASHTM_URL}/api/rest/latest`;
+const LOG_FILE = 'sms.log';
+
+function logToFile(message: string) {
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${message}${EOL}`;
+    try {
+        appendFileSync(LOG_FILE, logMessage);
+    } catch (error) {
+        // Fallback to console if writing to file fails
+        console.error(`Failed to write to log file: ${error}`);
+    }
+}
 
 // Create server instance
 const server = new McpServer({
@@ -186,6 +200,11 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
         headers["Content-Type"] = "application/json";
     }
 
+    logToFile(`Request: ${method} ${endpoint}`);
+    if (body) {
+        logToFile(`Request Payload: ${JSON.stringify(body)}`);
+    }
+
     try {
         const response = await fetch(SQUASHTM_API_URL + "/" + endpoint, {
             method,
@@ -193,8 +212,11 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
             body: body ? JSON.stringify(body) : undefined,
         });
 
+        logToFile(`Response Status: ${response.status}`);
+
         if (!response.ok) {
             const text = await response.text();
+            logToFile(`Response Payload: ${text}`);
             console.error(`SquashTM Request failed: ${response.status} - ${text}`);
             // if the response is JSON, extract the message from the "message" field
             // otherwise, use the text
@@ -216,6 +238,8 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
         }
 
         const text = await response.text();
+        logToFile(`Response Payload: ${text}`);
+
         if (text.length === 0) {
             return {} as T;
         }
