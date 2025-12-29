@@ -103,15 +103,15 @@ const GetRequirementFolderContentSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
 });
 
-interface SquashFolder {
+interface SquashTMFolder {
     _type: string;
     id: number;
     name: string;
     url: string;
-    children: SquashFolder[];
+    children: SquashTMFolder[];
 }
 
-interface SquashFolderDetail {
+interface SquashTMFolderDetail {
     _type: string;
     id: number;
     name: string;
@@ -122,7 +122,7 @@ interface SquashFolderDetail {
     last_modified_on: string;
 }
 
-interface SquashTestCaseDetail {
+interface SquashTMTestCaseDetail {
     id: number;
     name: string;
     description: string;
@@ -133,7 +133,7 @@ interface SquashTestCaseDetail {
     last_modified_on: string;
 }
 
-interface SquashRequirementDetail {
+interface SquashTMRequirementDetail {
     id: number;
     name: string;
     current_version: {
@@ -152,14 +152,14 @@ interface SquashRequirementDetail {
     };
 }
 
-interface SquashProjectTree {
+interface SquashTMProjectTree {
     _type: string;
     id: number;
     name: string;
-    folders: SquashFolder[];
+    folders: SquashTMFolder[];
 }
 
-interface SimplifiedFolder {
+interface ReturnedFolder {
     id: number;
     name: string;
     description: string;
@@ -167,13 +167,13 @@ interface SimplifiedFolder {
     created_on: string;
     modified_by: string;
     modified_on: string;
-    children: SimplifiedFolder[];
+    children: ReturnedFolder[];
 }
 
-interface SimplifiedProjectTree {
+interface ReturnedProjectTree {
     id: number;
     name: string;
-    folders: SimplifiedFolder[];
+    folders: ReturnedFolder[];
 }
 
 export async function makeSquashRequest<T>(endpoint: string, method: string, body?: any): Promise<T> {
@@ -363,9 +363,9 @@ server.registerTool(
     deleteProjectHandler
 );
 
-async function getDetailedFolders(folders: SquashFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<SimplifiedFolder[]> {
+async function getDetailedFolders(folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
     return Promise.all(folders.map(async folder => {
-        const details = await makeSquashRequest<SquashFolderDetail>(`${type}/${folder.id}`, "GET");
+        const details = await makeSquashRequest<SquashTMFolderDetail>(`${type}/${folder.id}`, "GET");
         return {
             id: folder.id,
             name: folder.name,
@@ -426,7 +426,7 @@ server.registerTool(
 
         const detailedRequirements = await Promise.all(
             allRequirements.map(async (req) => {
-                const details = await makeSquashRequest<SquashRequirementDetail>(`requirements/${req.id}`, "GET");
+                const details = await makeSquashRequest<SquashTMRequirementDetail>(`requirements/${req.id}`, "GET");
                 return {
                     id: details.id,
                     name: details.name,
@@ -464,7 +464,7 @@ server.registerTool(
         inputSchema: GetRequirementFoldersTreeSchema,
     },
     async (args) => {
-        const data = await makeSquashRequest<SquashProjectTree[]>(`requirement-folders/tree/${args.project_id}`, "GET");
+        const data = await makeSquashRequest<SquashTMProjectTree[]>(`requirement-folders/tree/${args.project_id}`, "GET");
 
         if (!data) {
             return {
@@ -477,7 +477,7 @@ server.registerTool(
             };
         }
 
-        const simplifiedData: SimplifiedProjectTree[] = await Promise.all(data.map(async project => ({
+        const returnedData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
             id: project.id,
             name: project.name,
             folders: await getDetailedFolders(project.folders || [], "requirement-folders")
@@ -487,7 +487,7 @@ server.registerTool(
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplifiedData, null, 2),
+                    text: JSON.stringify(returnedData, null, 2),
                 },
             ],
         };
@@ -503,7 +503,7 @@ server.registerTool(
         inputSchema: GetTestCaseFoldersTreeSchema,
     },
     async (args) => {
-        const data = await makeSquashRequest<SquashProjectTree[]>(`test-case-folders/tree/${args.project_id}`, "GET");
+        const data = await makeSquashRequest<SquashTMProjectTree[]>(`test-case-folders/tree/${args.project_id}`, "GET");
 
         if (!data) {
             return {
@@ -516,7 +516,7 @@ server.registerTool(
             };
         }
 
-        const simplifiedData: SimplifiedProjectTree[] = await Promise.all(data.map(async project => ({
+        const returnedData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
             id: project.id,
             name: project.name,
             folders: await getDetailedFolders(project.folders || [], "test-case-folders")
@@ -526,7 +526,7 @@ server.registerTool(
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplifiedData, null, 2),
+                    text: JSON.stringify(returnedData, null, 2),
                 },
             ],
         };
@@ -541,7 +541,7 @@ server.registerTool(
         inputSchema: CreateTestCasesSchema,
     },
     async (args) => {
-        const createdTestCases = await Promise.all(
+        await Promise.all(
             args.test_cases.map(async (testCase) => {
                 const payload: any = {
                     _type: "test-case",
@@ -615,7 +615,7 @@ server.registerTool(
 
         const detailedTestCases = await Promise.all(
             allTestCases.map(async (tc) => {
-                const details = await makeSquashRequest<SquashTestCaseDetail>(`test-cases/${tc.id}`, "GET");
+                const details = await makeSquashRequest<SquashTMTestCaseDetail>(`test-cases/${tc.id}`, "GET");
                 return {
                     id: details.id,
                     name: details.name,
@@ -649,7 +649,7 @@ server.registerTool(
         inputSchema: GetCampaignFoldersTreeSchema,
     },
     async (args) => {
-        const data = await makeSquashRequest<SquashProjectTree[]>(`campaign-folders/tree/${args.project_id}`, "GET");
+        const data = await makeSquashRequest<SquashTMProjectTree[]>(`campaign-folders/tree/${args.project_id}`, "GET");
 
         if (!data) {
             return {
@@ -662,7 +662,7 @@ server.registerTool(
             };
         }
 
-        const simplifiedData: SimplifiedProjectTree[] = await Promise.all(data.map(async project => ({
+        const returnedData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
             id: project.id,
             name: project.name,
             folders: await getDetailedFolders(project.folders || [], "campaign-folders")
@@ -672,7 +672,7 @@ server.registerTool(
             content: [
                 {
                     type: "text",
-                    text: JSON.stringify(simplifiedData, null, 2),
+                    text: JSON.stringify(returnedData, null, 2),
                 },
             ],
         };
