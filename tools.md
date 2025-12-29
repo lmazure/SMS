@@ -38,10 +38,10 @@ Deletes a project in SquashTM.
 
 ### `get_requirement_folders_tree`
 
-Retrieves a detailed tree of requirement folders for specified projects.
+Retrieves a detailed tree of requirement folders for a specified project.
 
 **Input:**
-- `project_ids` (array of numbers): List of project IDs
+- `project_id` (number): The project ID
 
 **Output:** A simplified tree structure for each project, where each folder includes:
 - `id` (number): The folder ID
@@ -73,10 +73,10 @@ Retrieves the list of requirements within a specific requirement folder.
 
 ### `get_test_case_folder_tree`
 
-Retrieves a detailed tree of test case folders for specified projects.
+Retrieves a detailed tree of test case folders for a specified project.
 
 **Input:**
-- `project_ids` (array of numbers): List of project IDs
+- `project_id` (number): The project ID
 
 **Output:** A simplified tree structure for each project, where each folder includes:
 - `id` (number): The folder ID
@@ -124,10 +124,10 @@ Creates one or more test cases in a specified SquashTM project.
 
 ### `get_campaign_folder_tree`
 
-Retrieves a detailed tree of campaign folders for specified projects.
+Retrieves a detailed tree of campaign folders for a specified project.
 
 **Input:**
-- `project_ids` (array of numbers): List of project IDs
+- `project_id` (number): The project ID
 
 **Output:** A simplified tree structure for each project, where each folder includes:
 - `id` (number): The folder ID

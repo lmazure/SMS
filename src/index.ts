@@ -84,15 +84,15 @@ const CreateTestCasesSchema = z.object({
 });
 
 const GetRequirementFoldersTreeSchema = z.object({
-    project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the requirement folders tree for"),
+    project_id: z.number().describe("Project ID to retrieve the requirement folders tree for"),
 });
 
 const GetTestCaseFoldersTreeSchema = z.object({
-    project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the test case folders tree for"),
+    project_id: z.number().describe("Project ID to retrieve the test case folders tree for"),
 });
 
 const GetCampaignFoldersTreeSchema = z.object({
-    project_ids: z.array(z.number()).min(1).describe("List of project IDs to retrieve the campaign folders tree for"),
+    project_id: z.number().describe("Project ID to retrieve the campaign folders tree for"),
 });
 
 const GetTestCaseFolderContentSchema = z.object({
@@ -464,8 +464,7 @@ server.registerTool(
         inputSchema: GetRequirementFoldersTreeSchema,
     },
     async (args) => {
-        const ids = args.project_ids.join(",");
-        const data = await makeSquashRequest<SquashProjectTree[]>(`requirement-folders/tree/${ids}`, "GET");
+        const data = await makeSquashRequest<SquashProjectTree[]>(`requirement-folders/tree/${args.project_id}`, "GET");
 
         if (!data) {
             return {
@@ -504,8 +503,7 @@ server.registerTool(
         inputSchema: GetTestCaseFoldersTreeSchema,
     },
     async (args) => {
-        const ids = args.project_ids.join(",");
-        const data = await makeSquashRequest<SquashProjectTree[]>(`test-case-folders/tree/${ids}`, "GET");
+        const data = await makeSquashRequest<SquashProjectTree[]>(`test-case-folders/tree/${args.project_id}`, "GET");
 
         if (!data) {
             return {
@@ -651,8 +649,7 @@ server.registerTool(
         inputSchema: GetCampaignFoldersTreeSchema,
     },
     async (args) => {
-        const ids = args.project_ids.join(",");
-        const data = await makeSquashRequest<SquashProjectTree[]>(`campaign-folders/tree/${ids}`, "GET");
+        const data = await makeSquashRequest<SquashProjectTree[]>(`campaign-folders/tree/${args.project_id}`, "GET");
 
         if (!data) {
             return {
