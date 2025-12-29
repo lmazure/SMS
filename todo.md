@@ -21,6 +21,23 @@
 - add tool get_project_requirements
 
 ------
+
+BUG
+when running the tests while there is no project
+```
+ FAIL  src/integration.test.ts > SquashTM Integration Tests > should verify the project is deleted
+SyntaxError: Unexpected token 'N', "No projects found." is not valid JSON
+ ❯ src/integration.test.ts:62:33
+     60|
+     61|         const result = await listProjectsHandler();
+     62|         const outputJson = JSON.parse(result.content[0].text);
+       |                                 ^
+     63|
+     64|         if (Array.isArray(outputJson)) {
+```
+This is related to the question of the format of error case and corner cases.
+
+------
 SquasTM bugs:
 
 get_requirement_folders_tree is buggy for a hierarchy a-b-c-d !!
