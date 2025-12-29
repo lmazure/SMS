@@ -24,15 +24,24 @@ const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
 const SQUASHTM_API_URL = `${SQUASHTM_URL}/api/rest/latest`;
 const LOG_FILE = 'sms.log';
 
-function logToFile(message: string) {
+function generateCorrelationId() {
+    return Math.random().toString(36).substring(2, 9);
+}
+
+function logToFile(correlationId: string, message: string) {
     const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${message}${EOL}`;
+    const logMessage = `[${timestamp}] ${correlationId}: ${message}${EOL}`;
     try {
         appendFileSync(LOG_FILE, logMessage);
     } catch (error) {
         // Fallback to console if writing to file fails
         console.error(`Failed to write to log file: ${error}`);
     }
+}
+
+function logErrorToConsole(correlationId: string, message: string) {
+    console.error(message);
+    logToFile(correlationId, message);
 }
 
 // Create server instance
@@ -190,7 +199,7 @@ interface ReturnedProjectTree {
     folders: ReturnedFolder[];
 }
 
-export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
+export async function makeSquashRequest<T>(correlationId: string, endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
         Accept: "application/json",
@@ -200,10 +209,7 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
         headers["Content-Type"] = "application/json";
     }
 
-    logToFile(`Request: ${method} ${endpoint}`);
-    if (body) {
-        logToFile(`Request Payload: ${JSON.stringify(body)}`);
-    }
+    logToFile(correlationId, `SquashTM REST API Request: method=${method} endpoint=${endpoint} body=${body ? JSON.stringify(body) : "<empty>"}`);
 
     try {
         const response = await fetch(SQUASHTM_API_URL + "/" + endpoint, {
@@ -212,12 +218,9 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
             body: body ? JSON.stringify(body) : undefined,
         });
 
-        logToFile(`Response Status: ${response.status}`);
-
         if (!response.ok) {
             const text = await response.text();
-            logToFile(`Response Payload: ${text}`);
-            console.error(`SquashTM Request failed: ${response.status} - ${text}`);
+            logErrorToConsole(correlationId, `SquashTM REST API Response Status: ${response.status} Payload: ${text}`);
             // if the response is JSON, extract the message from the "message" field
             // otherwise, use the text
             let message = text;
@@ -229,7 +232,7 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
             }
             throw new McpError(
                 ErrorCode.InternalError,
-                `SquashTM Request failed:\nstatus=${response.status}\nerror=${message}`
+                `Request failed:\nstatus=${response.status}\nerror=${message}`
             );
         }
 
@@ -238,7 +241,7 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
         }
 
         const text = await response.text();
-        logToFile(`Response Payload: ${text}`);
+        logToFile(correlationId, `REST API Response Status: ${response.status} Payload: ${text}`);
 
         if (text.length === 0) {
             return {} as T;
@@ -249,29 +252,35 @@ export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "PO
             try {
                 return JSON.parse(text) as T;
             } catch (e) {
-                console.error(`Failed to parse JSON response: ${text}`);
-                throw new McpError(ErrorCode.InternalError, `Failed to parse JSON response: ${text}`);
+                const m = `Failed to parse SquashTM REST API JSON response: ${text}`;
+                logErrorToConsole(correlationId, m);
+                throw new McpError(ErrorCode.InternalError, m);
             }
         } else {
-            console.error(`Unexpected response format: ${text}`);
-            throw new McpError(ErrorCode.InternalError, `Unexpected response format: ${text}`);
+            const m = `Unexpected SquashTM REST API response format: ${text}`;
+            logErrorToConsole(correlationId, m);
+            throw new McpError(ErrorCode.InternalError, m);
         }
     } catch (error) {
         if (error instanceof McpError) {
             throw error;
         }
-        console.error("Error making SquashTM request:", error);
-        throw new McpError(ErrorCode.InternalError, `Error making SquashTM request: ${error}`);
+        const m = `Error making SquashTM REST API request: ${error}`;
+        logErrorToConsole(correlationId, m);
+        throw new McpError(ErrorCode.InternalError, m);
     }
 }
 
 export const listProjectsHandler = async () => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "list_projects");
     let allProjects: SquashProject[] = [];
     let currentPage = 0;
     let totalPages = 1;
 
     while (currentPage < totalPages) {
         const data = await makeSquashRequest<SquashPaginatedResponse<SquashProject>>(
+            correlationId,
             `projects?type=STANDARD&page=${currentPage}&size=50`,
             "GET"
         );
@@ -289,7 +298,7 @@ export const listProjectsHandler = async () => {
     }
 
     if (allProjects.length === 0) {
-        return {
+        const returnedData = {
             content: [
                 {
                     type: "text" as const,
@@ -297,11 +306,17 @@ export const listProjectsHandler = async () => {
                 },
             ],
         };
+        logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 
     const detailedProjects = await Promise.all(
         allProjects.map(async (p) => {
-            const details = await makeSquashRequest<SquashProject>(`projects/${p.id}`, "GET");
+            const details = await makeSquashRequest<SquashProject>(
+                correlationId,
+                `projects/${p.id}`,
+                "GET"
+            );
             return {
                 id: p.id,
                 name: p.name,
@@ -311,7 +326,7 @@ export const listProjectsHandler = async () => {
         })
     );
 
-    return {
+    const returnedData = {
         content: [
             {
                 type: "text" as const,
@@ -319,6 +334,9 @@ export const listProjectsHandler = async () => {
             },
         ],
     };
+
+    logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
 };
 
 // Register list_projects tool
@@ -333,6 +351,8 @@ server.registerTool(
 );
 
 export const createProjectHandler = async (args: z.infer<typeof CreateProjectSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "create_project " + JSON.stringify(args));
     const payload = {
         _type: "project",
         name: args.name,
@@ -340,9 +360,14 @@ export const createProjectHandler = async (args: z.infer<typeof CreateProjectSch
         description: args.description,
     };
 
-    const response = await makeSquashRequest<any>("projects", "POST", payload);
+    const response = await makeSquashRequest<any>(
+        correlationId,
+        "projects",
+        "POST",
+        payload
+    );
 
-    return {
+    const returnedData = {
         content: [
             {
                 type: "text" as const,
@@ -350,6 +375,9 @@ export const createProjectHandler = async (args: z.infer<typeof CreateProjectSch
             },
         ],
     };
+
+    logToFile(correlationId, "create_project returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
 };
 
 // Register create_project tool
@@ -364,9 +392,15 @@ server.registerTool(
 );
 
 export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectSchema>) => {
-    await makeSquashRequest<any>(`projects/${args.id}`, "DELETE");
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "delete_project " + JSON.stringify(args));
+    await makeSquashRequest<any>(
+        correlationId,
+        `projects/${args.id}`,
+        "DELETE"
+    );
 
-    return {
+    const returnedData = {
         content: [
             {
                 type: "text" as const,
@@ -374,6 +408,9 @@ export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectSch
             },
         ],
     };
+
+    logToFile(correlationId, "delete_project returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
 };
 
 // Register delete_project tool
@@ -387,9 +424,13 @@ server.registerTool(
     deleteProjectHandler
 );
 
-async function getDetailedFolders(folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
+async function getDetailedFolders(correlationId: string, folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
     return Promise.all(folders.map(async folder => {
-        const details = await makeSquashRequest<SquashTMFolderDetail>(`${type}/${folder.id}`, "GET");
+        const details = await makeSquashRequest<SquashTMFolderDetail>(
+            correlationId,
+            `${type}/${folder.id}`,
+            "GET"
+        );
         return {
             id: folder.id,
             name: folder.name,
@@ -398,7 +439,7 @@ async function getDetailedFolders(folders: SquashTMFolder[], type: "requirement-
             created_on: details.created_on,
             modified_by: details.last_modified_by,
             modified_on: details.last_modified_on,
-            children: await getDetailedFolders(folder.children || [], type)
+            children: await getDetailedFolders(correlationId, folder.children || [], type)
         };
     }));
 }
@@ -412,12 +453,15 @@ server.registerTool(
         inputSchema: GetRequirementFolderContentSchema,
     },
     async (args) => {
+        const correlationId = generateCorrelationId();
+        logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
         let allRequirements: any[] = [];
         let currentPage = 0;
         let totalPages = 1;
 
         while (currentPage < totalPages) {
             const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+                correlationId,
                 `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
                 "GET"
             );
@@ -438,7 +482,7 @@ server.registerTool(
         }
 
         if (allRequirements.length === 0) {
-            return {
+            const returnedData = {
                 content: [
                     {
                         type: "text" as const,
@@ -446,11 +490,17 @@ server.registerTool(
                     },
                 ],
             };
+            logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+            return returnedData;
         }
 
         const detailedRequirements = await Promise.all(
             allRequirements.map(async (req) => {
-                const details = await makeSquashRequest<SquashTMRequirementDetail>(`requirements/${req.id}`, "GET");
+                const details = await makeSquashRequest<SquashTMRequirementDetail>(
+                    correlationId,
+                    `requirements/${req.id}`,
+                    "GET"
+                );
                 return {
                     id: details.id,
                     name: details.name,
@@ -468,7 +518,7 @@ server.registerTool(
             })
         );
 
-        return {
+        const returnedData = {
             content: [
                 {
                     type: "text" as const,
@@ -476,6 +526,9 @@ server.registerTool(
                 },
             ],
         };
+
+        logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 );
 
@@ -488,33 +541,45 @@ server.registerTool(
         inputSchema: GetRequirementFoldersTreeSchema,
     },
     async (args) => {
-        const data = await makeSquashRequest<SquashTMProjectTree[]>(`requirement-folders/tree/${args.project_id}`, "GET");
+        const correlationId = generateCorrelationId();
+        logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
+        const data = await makeSquashRequest<SquashTMProjectTree[]>(
+            correlationId,
+            `requirement-folders/tree/${args.project_id}`,
+            "GET"
+        );
 
         if (!data) {
-            return {
+            const returnedData = {
                 content: [
                     {
-                        type: "text",
+                        type: "text" as const,
                         text: "Failed to retrieve requirement folders tree.",
                     },
                 ],
             };
+
+            logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+            return returnedData;
         }
 
-        const returnedData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
+        const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
             id: project.id,
             name: project.name,
-            folders: await getDetailedFolders(project.folders || [], "requirement-folders")
+            folders: await getDetailedFolders(correlationId, project.folders || [], "requirement-folders")
         })));
 
-        return {
+        const returnedData = {
             content: [
                 {
-                    type: "text",
-                    text: JSON.stringify(returnedData, null, 2),
+                    type: "text" as const,
+                    text: JSON.stringify(resultData, null, 2),
                 },
             ],
         };
+
+        logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 );
 
@@ -527,33 +592,45 @@ server.registerTool(
         inputSchema: GetTestCaseFoldersTreeSchema,
     },
     async (args) => {
-        const data = await makeSquashRequest<SquashTMProjectTree[]>(`test-case-folders/tree/${args.project_id}`, "GET");
+        const correlationId = generateCorrelationId();
+        logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
+        const data = await makeSquashRequest<SquashTMProjectTree[]>(
+            correlationId,
+            `test-case-folders/tree/${args.project_id}`,
+            "GET"
+        );
 
         if (!data) {
-            return {
+            const returnedData = {
                 content: [
                     {
-                        type: "text",
+                        type: "text" as const,
                         text: "Failed to retrieve test case folders tree.",
                     },
                 ],
             };
+
+            logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+            return returnedData;
         }
 
-        const returnedData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
+        const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
             id: project.id,
             name: project.name,
-            folders: await getDetailedFolders(project.folders || [], "test-case-folders")
+            folders: await getDetailedFolders(correlationId, project.folders || [], "test-case-folders")
         })));
 
-        return {
+        const returnedData = {
             content: [
                 {
-                    type: "text",
-                    text: JSON.stringify(returnedData, null, 2),
+                    type: "text" as const,
+                    text: JSON.stringify(resultData, null, 2),
                 },
             ],
         };
+
+        logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 );
 // Register create_test_cases tool
@@ -565,6 +642,8 @@ server.registerTool(
         inputSchema: CreateTestCasesSchema,
     },
     async (args) => {
+        const correlationId = generateCorrelationId();
+        logToFile(correlationId, "create_test_cases " + JSON.stringify(args));
         await Promise.all(
             args.test_cases.map(async (testCase) => {
                 const payload: any = {
@@ -582,13 +661,24 @@ server.registerTool(
                     })),
                 };
 
-                return await makeSquashRequest<any>("test-cases", "POST", payload);
+                const returnedData = await makeSquashRequest<any>(
+                    correlationId,
+                    "test-cases",
+                    "POST",
+                    payload
+                );
+
+                logToFile(correlationId, "create_test_cases returned: " + JSON.stringify(returnedData, null, 2));
+                return returnedData;
             })
         );
 
-        return {
+        const returnedData = {
             content: [],
         };
+
+        logToFile(correlationId, "create_test_cases returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 );
 
@@ -601,12 +691,15 @@ server.registerTool(
         inputSchema: GetTestCaseFolderContentSchema,
     },
     async (args) => {
+        const correlationId = generateCorrelationId();
+        logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
         let allTestCases: any[] = [];
         let currentPage = 0;
         let totalPages = 1;
 
         while (currentPage < totalPages) {
             const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+                correlationId,
                 `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
                 "GET"
             );
@@ -627,19 +720,26 @@ server.registerTool(
         }
 
         if (allTestCases.length === 0) {
-            return {
+            const returnedData = {
                 content: [
                     {
-                        type: "text",
+                        type: "text" as const,
                         text: "No test cases found in the specified folder.",
                     },
                 ],
             };
+
+            logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+            return returnedData;
         }
 
         const detailedTestCases = await Promise.all(
             allTestCases.map(async (tc) => {
-                const details = await makeSquashRequest<SquashTMTestCaseDetail>(`test-cases/${tc.id}`, "GET");
+                const details = await makeSquashRequest<SquashTMTestCaseDetail>(
+                    correlationId,
+                    `test-cases/${tc.id}`,
+                    "GET"
+                );
                 return {
                     id: details.id,
                     name: details.name,
@@ -653,14 +753,17 @@ server.registerTool(
             })
         );
 
-        return {
+        const returnedData = {
             content: [
                 {
-                    type: "text",
+                    type: "text" as const,
                     text: JSON.stringify(detailedTestCases, null, 2),
                 },
             ],
         };
+
+        logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 );
 
@@ -673,45 +776,54 @@ server.registerTool(
         inputSchema: GetCampaignFoldersTreeSchema,
     },
     async (args) => {
-        const data = await makeSquashRequest<SquashTMProjectTree[]>(`campaign-folders/tree/${args.project_id}`, "GET");
+        const correlationId = generateCorrelationId();
+        logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
+        const data = await makeSquashRequest<SquashTMProjectTree[]>(
+            correlationId,
+            `campaign-folders/tree/${args.project_id}`,
+            "GET"
+        );
 
         if (!data) {
             return {
                 content: [
                     {
-                        type: "text",
+                        type: "text" as const,
                         text: "Failed to retrieve campaign folders tree.",
                     },
                 ],
             };
         }
 
-        const returnedData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
+        const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
             id: project.id,
             name: project.name,
-            folders: await getDetailedFolders(project.folders || [], "campaign-folders")
+            folders: await getDetailedFolders(correlationId, project.folders || [], "campaign-folders")
         })));
 
-        return {
+        const returnedData = {
             content: [
                 {
-                    type: "text",
-                    text: JSON.stringify(returnedData, null, 2),
+                    type: "text" as const,
+                    text: JSON.stringify(resultData, null, 2),
                 },
             ],
         };
+
+        logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
     }
 );
 
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("SquashTM MCP Server running on stdio");
+    logErrorToConsole("", "SquashTM MCP Server running on stdio");
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
     main().catch((error) => {
-        console.error("Fatal error in main():", error);
+        logErrorToConsole("", `Fatal error in main(): ${error}`);
         process.exit(1);
     });
 }
