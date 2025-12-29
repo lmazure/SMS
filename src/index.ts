@@ -176,7 +176,7 @@ interface ReturnedProjectTree {
     folders: ReturnedFolder[];
 }
 
-export async function makeSquashRequest<T>(endpoint: string, method: string, body?: any): Promise<T> {
+export async function makeSquashRequest<T>(endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
         Accept: "application/json",
