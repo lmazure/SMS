@@ -69,6 +69,28 @@ Retrieves the list of requirements within a specific requirement folder.
 - `last_modified_by` (string): Who last modified the requirement
 - `last_modified_on` (string): Last modification timestamp
 
+### `create_requirement_folders`
+
+Creates requirement folders recursively.
+
+**Input:**
+- `project_id` (number): The ID of the project in which to create the folder
+- `name` (string): Name of the folder
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
+- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+
+**Output:** A success message.
+
+### `delete_requirement_folder`
+
+Deletes a requirement folder and its content.
+
+**Input:**
+- `folder_id` (number): The ID of the folder to delete
+
+**Output:** A success message.
+
+
 ## Test Cases
 
 ### `get_test_case_folder_tree`
@@ -120,6 +142,27 @@ Creates one or more test cases in a specified SquashTM project.
 
 **Output:** None
 
+### `create_test_case_folders`
+
+Creates test case folders recursively.
+
+**Input:**
+- `project_id` (number): The ID of the project in which to create the folder
+- `name` (string): Name of the folder
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
+- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+
+**Output:** A success message.
+
+### `delete_test_case_folder`
+
+Deletes a test case folder and its content.
+
+**Input:**
+- `folder_id` (number): The ID of the folder to delete
+
+**Output:** A success message.
+
 ## Campaigns
 
 ### `get_campaign_folder_tree`
@@ -138,6 +181,28 @@ Retrieves a detailed tree of campaign folders for a specified project.
 - `modified_by` (string): Who last modified the folder
 - `modified_on` (string): Last modification timestamp
 - `children` (array): Nested child folders
+
+### `create_campaign_folders`
+
+Creates campaign folders recursively.
+
+**Input:**
+- `project_id` (number): The ID of the project in which to create the folder
+- `name` (string): Name of the folder
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
+- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+
+**Output:** A success message.
+
+### `delete_campaign_folder`
+
+Deletes a campaign folder and its content.
+
+**Input:**
+- `folder_id` (number): The ID of the folder to delete
+
+**Output:** A success message.
+
 
 ## Note: Rich text
 

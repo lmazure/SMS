@@ -126,6 +126,50 @@ const GetRequirementFolderContentSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
 });
 
+// Recursive schema for folder structure
+const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
+    name: z.string().describe("Name of the folder"),
+    children: z.array(FolderStructureSchema).optional().describe("Subfolders"),
+}).describe("Folder structure"));
+
+const CreateRequirementFoldersSchema = z.object({
+    project_id: z.number().describe("The ID of the project in which to create the folder"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
+    name: z.string().describe("Name of the folder"),
+    children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
+});
+
+const DeleteRequirementFolderSchema = z.object({
+    folder_id: z.number().describe("The ID of the folder to delete")
+});
+
+const CreateTestCaseFoldersSchema = z.object({
+    project_id: z.number().describe("The ID of the project in which to create the folder"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
+    name: z.string().describe("Name of the folder"),
+    children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
+});
+
+const DeleteTestCaseFolderSchema = z.object({
+    folder_id: z.number().describe("The ID of the folder to delete")
+});
+
+const CreateCampaignFoldersSchema = z.object({
+    project_id: z.number().describe("The ID of the project in which to create the folder"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
+    name: z.string().describe("Name of the folder"),
+    children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
+});
+
+const DeleteCampaignFolderSchema = z.object({
+    folder_id: z.number().describe("The ID of the folder to delete")
+});
+
+interface FolderStructure {
+    name: string;
+    children?: FolderStructure[];
+}
+
 interface SquashTMFolder {
     _type: string;
     id: number;
@@ -444,6 +488,85 @@ async function getDetailedFolders(correlationId: string, folders: SquashTMFolder
     }));
 }
 
+export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
+    let allRequirements: any[] = [];
+    let currentPage = 0;
+    let totalPages = 1;
+
+    while (currentPage < totalPages) {
+        const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+            correlationId,
+            `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
+            "GET"
+        );
+
+        if (!data || !data._embedded || !data._embedded.content) {
+            break;
+        }
+
+        const requirements = data._embedded.content.filter((item: any) => item._type === "requirement");
+        allRequirements.push(...requirements);
+
+        if (data.page) {
+            totalPages = data.page.totalPages;
+            currentPage++;
+        } else {
+            break;
+        }
+    }
+
+    if (allRequirements.length === 0) {
+        const returnedData = {
+            content: [
+                {
+                    type: "text" as const,
+                    text: "No requirements found in the specified folder.",
+                },
+            ],
+        };
+        logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
+    }
+
+    const detailedRequirements = await Promise.all(
+        allRequirements.map(async (req) => {
+            const details = await makeSquashRequest<SquashTMRequirementDetail>(
+                correlationId,
+                `requirements/${req.id}`,
+                "GET"
+            );
+            return {
+                id: details.id,
+                name: details.name,
+                reference: details.current_version.reference,
+                version: details.current_version.version_number,
+                description: details.current_version.description,
+                created_by: details.current_version.created_by,
+                created_on: details.current_version.created_on,
+                last_modified_by: details.current_version.last_modified_by,
+                last_modified_on: details.current_version.last_modified_on,
+                criticality: details.current_version.criticality,
+                category: details.current_version.category?.code,
+                status: details.current_version.status,
+            };
+        })
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(detailedRequirements, null, 2),
+            },
+        ],
+    };
+
+    logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
 // Register get_requirement_folder_content tool
 server.registerTool(
     "get_requirement_folder_content",
@@ -452,85 +575,50 @@ server.registerTool(
         description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
         inputSchema: GetRequirementFolderContentSchema,
     },
-    async (args) => {
-        const correlationId = generateCorrelationId();
-        logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
-        let allRequirements: any[] = [];
-        let currentPage = 0;
-        let totalPages = 1;
+    getRequirementFolderContentHandler
+);
 
-        while (currentPage < totalPages) {
-            const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
-                correlationId,
-                `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
-                "GET"
-            );
+export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
+    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+        correlationId,
+        `requirement-folders/tree/${args.project_id}`,
+        "GET"
+    );
 
-            if (!data || !data._embedded || !data._embedded.content) {
-                break;
-            }
-
-            const requirements = data._embedded.content.filter((item: any) => item._type === "requirement");
-            allRequirements.push(...requirements);
-
-            if (data.page) {
-                totalPages = data.page.totalPages;
-                currentPage++;
-            } else {
-                break;
-            }
-        }
-
-        if (allRequirements.length === 0) {
-            const returnedData = {
-                content: [
-                    {
-                        type: "text" as const,
-                        text: "No requirements found in the specified folder.",
-                    },
-                ],
-            };
-            logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-            return returnedData;
-        }
-
-        const detailedRequirements = await Promise.all(
-            allRequirements.map(async (req) => {
-                const details = await makeSquashRequest<SquashTMRequirementDetail>(
-                    correlationId,
-                    `requirements/${req.id}`,
-                    "GET"
-                );
-                return {
-                    id: details.id,
-                    name: details.name,
-                    reference: details.current_version.reference,
-                    version: details.current_version.version_number,
-                    description: details.current_version.description,
-                    created_by: details.current_version.created_by,
-                    created_on: details.current_version.created_on,
-                    last_modified_by: details.current_version.last_modified_by,
-                    last_modified_on: details.current_version.last_modified_on,
-                    criticality: details.current_version.criticality,
-                    category: details.current_version.category?.code,
-                    status: details.current_version.status,
-                };
-            })
-        );
-
+    if (!data) {
         const returnedData = {
             content: [
                 {
                     type: "text" as const,
-                    text: JSON.stringify(detailedRequirements, null, 2),
+                    text: "Failed to retrieve requirement folders tree.",
                 },
             ],
         };
 
-        logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+        logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
         return returnedData;
     }
-);
+
+    const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
+        id: project.id,
+        name: project.name,
+        folders: await getDetailedFolders(correlationId, project.folders || [], "requirement-folders")
+    })));
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(resultData, null, 2),
+            },
+        ],
+    };
+
+    logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
 
 // Register get_requirement_folders_tree tool
 server.registerTool(
@@ -540,48 +628,51 @@ server.registerTool(
         description: "Get the requirement folders tree for specified projects with detailed folder info",
         inputSchema: GetRequirementFoldersTreeSchema,
     },
-    async (args) => {
-        const correlationId = generateCorrelationId();
-        logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
-        const data = await makeSquashRequest<SquashTMProjectTree[]>(
-            correlationId,
-            `requirement-folders/tree/${args.project_id}`,
-            "GET"
-        );
+    getRequirementFoldersTreeHandler
+);
 
-        if (!data) {
-            const returnedData = {
-                content: [
-                    {
-                        type: "text" as const,
-                        text: "Failed to retrieve requirement folders tree.",
-                    },
-                ],
-            };
+// Register get_test_case_folder_tree tool
+export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTestCaseFoldersTreeSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
+    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+        correlationId,
+        `test-case-folders/tree/${args.project_id}`,
+        "GET"
+    );
 
-            logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
-            return returnedData;
-        }
-
-        const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
-            id: project.id,
-            name: project.name,
-            folders: await getDetailedFolders(correlationId, project.folders || [], "requirement-folders")
-        })));
-
+    if (!data) {
         const returnedData = {
             content: [
                 {
                     type: "text" as const,
-                    text: JSON.stringify(resultData, null, 2),
+                    text: "Failed to retrieve test case folders tree.",
                 },
             ],
         };
 
-        logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+        logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
         return returnedData;
     }
-);
+
+    const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
+        id: project.id,
+        name: project.name,
+        folders: await getDetailedFolders(correlationId, project.folders || [], "test-case-folders")
+    })));
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(resultData, null, 2),
+            },
+        ],
+    };
+
+    logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
 
 // Register get_test_case_folder_tree tool
 server.registerTool(
@@ -591,47 +682,7 @@ server.registerTool(
         description: "Get the test case folders tree for specified projects with detailed folder info",
         inputSchema: GetTestCaseFoldersTreeSchema,
     },
-    async (args) => {
-        const correlationId = generateCorrelationId();
-        logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
-        const data = await makeSquashRequest<SquashTMProjectTree[]>(
-            correlationId,
-            `test-case-folders/tree/${args.project_id}`,
-            "GET"
-        );
-
-        if (!data) {
-            const returnedData = {
-                content: [
-                    {
-                        type: "text" as const,
-                        text: "Failed to retrieve test case folders tree.",
-                    },
-                ],
-            };
-
-            logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
-            return returnedData;
-        }
-
-        const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
-            id: project.id,
-            name: project.name,
-            folders: await getDetailedFolders(correlationId, project.folders || [], "test-case-folders")
-        })));
-
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: JSON.stringify(resultData, null, 2),
-                },
-            ],
-        };
-
-        logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
-    }
+    getTestCaseFoldersTreeHandler
 );
 // Register create_test_cases tool
 server.registerTool(
@@ -682,6 +733,82 @@ server.registerTool(
     }
 );
 
+export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
+    let allTestCases: any[] = [];
+    let currentPage = 0;
+    let totalPages = 1;
+
+    while (currentPage < totalPages) {
+        const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+            correlationId,
+            `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
+            "GET"
+        );
+
+        if (!data || !data._embedded || !data._embedded.content) {
+            break;
+        }
+
+        const testCases = data._embedded.content.filter((item: any) => item._type === "test-case");
+        allTestCases.push(...testCases);
+
+        if (data.page) {
+            totalPages = data.page.totalPages;
+            currentPage++;
+        } else {
+            break;
+        }
+    }
+
+    if (allTestCases.length === 0) {
+        const returnedData = {
+            content: [
+                {
+                    type: "text" as const,
+                    text: "No test cases found in the specified folder.",
+                },
+            ],
+        };
+
+        logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+        return returnedData;
+    }
+
+    const detailedTestCases = await Promise.all(
+        allTestCases.map(async (tc) => {
+            const details = await makeSquashRequest<SquashTMTestCaseDetail>(
+                correlationId,
+                `test-cases/${tc.id}`,
+                "GET"
+            );
+            return {
+                id: details.id,
+                name: details.name,
+                prerequisite: details.prerequisite,
+                description: details.description,
+                created_by: details.created_by,
+                created_on: details.created_on,
+                last_modified_by: details.last_modified_by,
+                last_modified_on: details.last_modified_on,
+            };
+        })
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(detailedTestCases, null, 2),
+            },
+        ],
+    };
+
+    logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
 // Register get_test_case_folder_content tool
 server.registerTool(
     "get_test_case_folder_content",
@@ -690,82 +817,47 @@ server.registerTool(
         description: "Get the test cases of a test case folder (only includes items of type 'test-case')",
         inputSchema: GetTestCaseFolderContentSchema,
     },
-    async (args) => {
-        const correlationId = generateCorrelationId();
-        logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
-        let allTestCases: any[] = [];
-        let currentPage = 0;
-        let totalPages = 1;
+    getTestCaseFolderContentHandler
+);
 
-        while (currentPage < totalPages) {
-            const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
-                correlationId,
-                `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
-                "GET"
-            );
+export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
+    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+        correlationId,
+        `campaign-folders/tree/${args.project_id}`,
+        "GET"
+    );
 
-            if (!data || !data._embedded || !data._embedded.content) {
-                break;
-            }
-
-            const testCases = data._embedded.content.filter((item: any) => item._type === "test-case");
-            allTestCases.push(...testCases);
-
-            if (data.page) {
-                totalPages = data.page.totalPages;
-                currentPage++;
-            } else {
-                break;
-            }
-        }
-
-        if (allTestCases.length === 0) {
-            const returnedData = {
-                content: [
-                    {
-                        type: "text" as const,
-                        text: "No test cases found in the specified folder.",
-                    },
-                ],
-            };
-
-            logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-            return returnedData;
-        }
-
-        const detailedTestCases = await Promise.all(
-            allTestCases.map(async (tc) => {
-                const details = await makeSquashRequest<SquashTMTestCaseDetail>(
-                    correlationId,
-                    `test-cases/${tc.id}`,
-                    "GET"
-                );
-                return {
-                    id: details.id,
-                    name: details.name,
-                    prerequisite: details.prerequisite,
-                    description: details.description,
-                    created_by: details.created_by,
-                    created_on: details.created_on,
-                    last_modified_by: details.last_modified_by,
-                    last_modified_on: details.last_modified_on,
-                };
-            })
-        );
-
-        const returnedData = {
+    if (!data) {
+        return {
             content: [
                 {
                     type: "text" as const,
-                    text: JSON.stringify(detailedTestCases, null, 2),
+                    text: "Failed to retrieve campaign folders tree.",
                 },
             ],
         };
-
-        logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
     }
-);
+
+    const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
+        id: project.id,
+        name: project.name,
+        folders: await getDetailedFolders(correlationId, project.folders || [], "campaign-folders")
+    })));
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(resultData, null, 2),
+            },
+        ],
+    };
+
+    logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
 
 // Register get_campaign_folder_tree tool
 server.registerTool(
@@ -775,44 +867,283 @@ server.registerTool(
         description: "Get the campaign folders tree for specified projects with detailed folder info",
         inputSchema: GetCampaignFoldersTreeSchema,
     },
-    async (args) => {
-        const correlationId = generateCorrelationId();
-        logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
-        const data = await makeSquashRequest<SquashTMProjectTree[]>(
-            correlationId,
-            `campaign-folders/tree/${args.project_id}`,
-            "GET"
-        );
+    getCampaignFoldersTreeHandler
+);
 
-        if (!data) {
-            return {
-                content: [
-                    {
-                        type: "text" as const,
-                        text: "Failed to retrieve campaign folders tree.",
-                    },
-                ],
-            };
+// Helper for recursive folder creation
+async function createFolderRecursive(
+    correlationId: string,
+    projectId: number,
+    name: string,
+    parentId: number,
+    parentType: "project" | "requirement-folder" | "test-case-folder" | "campaign-folder",
+    folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
+    endpoint: string,
+    children?: FolderStructure[]
+): Promise<void> {
+    const payload = {
+        _type: folderType,
+        name: name,
+        parent: {
+            _type: parentType,
+            id: parentId
         }
+    };
 
-        const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
-            id: project.id,
-            name: project.name,
-            folders: await getDetailedFolders(correlationId, project.folders || [], "campaign-folders")
-        })));
+    logToFile(correlationId, `Creating folder: ${name} under ${parentType} ${parentId}`);
 
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: JSON.stringify(resultData, null, 2),
-                },
-            ],
-        };
+    const response = await makeSquashRequest<any>(
+        correlationId,
+        endpoint,
+        "POST",
+        payload
+    );
+    const newId = response.id;
 
-        logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
+    if (children && children.length > 0) {
+        // Recursively create children
+        // Parent is now the folder we just created
+        for (const child of children) {
+            await createFolderRecursive(
+                correlationId,
+                projectId,
+                child.name,
+                newId,
+                folderType, // Parent is now this folder type
+                folderType,
+                endpoint,
+                child.children
+            );;
+        }
     }
+}
+
+// Handler for creating requirement folders
+export const createRequirementFoldersHandler = async (args: z.infer<typeof CreateRequirementFoldersSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "create_requirement_folders " + JSON.stringify(args));
+
+    const parentId = args.parent_folder_id || args.project_id;
+    const parentType = args.parent_folder_id ? "requirement-folder" : "project";
+
+    await createFolderRecursive(
+        correlationId,
+        args.project_id,
+        args.name,
+        parentId,
+        parentType,
+        "requirement-folder",
+        "requirement-folders",
+        args.children
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: "Requirement folders created successfully",
+            },
+        ],
+    };
+    logToFile(correlationId, "create_requirement_folders returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
+// Register create_requirement_folders
+server.registerTool(
+    "create_requirement_folders",
+    {
+        title: "Create Requirement Folders",
+        description: "Create requirement folders recursively",
+        inputSchema: CreateRequirementFoldersSchema,
+    },
+    createRequirementFoldersHandler
+);
+
+// Handler for deleting requirement folder
+export const deleteRequirementFolderHandler = async (args: z.infer<typeof DeleteRequirementFolderSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "delete_requirement_folder " + JSON.stringify(args));
+
+    await makeSquashRequest<any>(
+        correlationId,
+        `requirement-folders/${args.folder_id}`,
+        "DELETE"
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: `Requirement folder ${args.folder_id} deleted successfully`,
+            },
+        ],
+    };
+    logToFile(correlationId, "delete_requirement_folder returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
+// Register delete_requirement_folder
+server.registerTool(
+    "delete_requirement_folder",
+    {
+        title: "Delete Requirement Folder",
+        description: "Delete a requirement folder and its content",
+        inputSchema: DeleteRequirementFolderSchema,
+    },
+    deleteRequirementFolderHandler
+);
+
+// Handler for creating test case folders
+export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTestCaseFoldersSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "create_test_case_folders " + JSON.stringify(args));
+
+    const parentId = args.parent_folder_id || args.project_id;
+    const parentType = args.parent_folder_id ? "test-case-folder" : "project";
+
+    await createFolderRecursive(
+        correlationId,
+        args.project_id,
+        args.name,
+        parentId,
+        parentType,
+        "test-case-folder",
+        "test-case-folders",
+        args.children
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: "Test case folders created successfully",
+            },
+        ],
+    };
+    logToFile(correlationId, "create_test_case_folders returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
+// Register create_test_case_folders
+server.registerTool(
+    "create_test_case_folders",
+    {
+        title: "Create Test Case Folders",
+        description: "Create test case folders recursively",
+        inputSchema: CreateTestCaseFoldersSchema,
+    },
+    createTestCaseFoldersHandler
+);
+
+// Handler for deleting test case folder
+export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTestCaseFolderSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "delete_test_case_folder " + JSON.stringify(args));
+
+    await makeSquashRequest<any>(
+        correlationId,
+        `test-case-folders/${args.folder_id}`,
+        "DELETE"
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: `Test case folder ${args.folder_id} deleted successfully`,
+            },
+        ],
+    };
+    logToFile(correlationId, "delete_test_case_folder returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
+// Register delete_test_case_folder
+server.registerTool(
+    "delete_test_case_folder",
+    {
+        title: "Delete Test Case Folder",
+        description: "Delete a test case folder and its content",
+        inputSchema: DeleteTestCaseFolderSchema,
+    },
+    deleteTestCaseFolderHandler
+);
+
+// Handler for creating campaign folders
+export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCampaignFoldersSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "create_campaign_folders " + JSON.stringify(args));
+
+    const parentId = args.parent_folder_id || args.project_id;
+    const parentType = args.parent_folder_id ? "campaign-folder" : "project";
+
+    await createFolderRecursive(
+        correlationId,
+        args.project_id,
+        args.name,
+        parentId,
+        parentType,
+        "campaign-folder",
+        "campaign-folders",
+        args.children
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: "Campaign folders created successfully",
+            },
+        ],
+    };
+    logToFile(correlationId, "create_campaign_folders returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
+// Register create_campaign_folders
+server.registerTool(
+    "create_campaign_folders",
+    {
+        title: "Create Campaign Folders",
+        description: "Create campaign folders recursively",
+        inputSchema: CreateCampaignFoldersSchema,
+    },
+    createCampaignFoldersHandler
+);
+
+// Handler for deleting campaign folder
+export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCampaignFolderSchema>) => {
+    const correlationId = generateCorrelationId();
+    logToFile(correlationId, "delete_campaign_folder " + JSON.stringify(args));
+
+    await makeSquashRequest<any>(
+        correlationId,
+        `campaign-folders/${args.folder_id}`,
+        "DELETE"
+    );
+
+    const returnedData = {
+        content: [
+            {
+                type: "text" as const,
+                text: `Campaign folder ${args.folder_id} deleted successfully`,
+            },
+        ],
+    };
+    logToFile(correlationId, "delete_campaign_folder returned: " + JSON.stringify(returnedData, null, 2));
+    return returnedData;
+};
+
+// Register delete_campaign_folder
+server.registerTool(
+    "delete_campaign_folder",
+    {
+        title: "Delete Campaign Folder",
+        description: "Delete a campaign folder and its content",
+        inputSchema: DeleteCampaignFolderSchema,
+    },
+    deleteCampaignFolderHandler
 );
 
 async function main() {
