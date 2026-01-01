@@ -7,6 +7,8 @@
 
 # Later on
 
+- spin off dev.md from README.md
+    - describe in it how to run the dev version in Claude desktop
 -studies
     - format of touputs
         - what should be returned for creation?
