@@ -2,12 +2,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
     createProjectHandler,
     deleteProjectHandler,
-    // These will be imported once implemented
-    // @ts-ignore
     createRequirementFoldersHandler,
-    // @ts-ignore
     getRequirementFoldersTreeHandler,
-    // @ts-ignore
     deleteRequirementFolderHandler
 } from '../index.js';
 

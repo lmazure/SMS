@@ -3,11 +3,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
     createProjectHandler,
     deleteProjectHandler,
-    // @ts-ignore
     createCampaignFoldersHandler,
-    // @ts-ignore
     getCampaignFoldersTreeHandler,
-    // @ts-ignore
     deleteCampaignFolderHandler
 } from '../index.js';
 

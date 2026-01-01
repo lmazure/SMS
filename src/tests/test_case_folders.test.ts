@@ -3,11 +3,8 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
     createProjectHandler,
     deleteProjectHandler,
-    // @ts-ignore
     createTestCaseFoldersHandler,
-    // @ts-ignore
     getTestCaseFoldersTreeHandler,
-    // @ts-ignore
     deleteTestCaseFolderHandler
 } from '../index.js';
 
