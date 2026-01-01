@@ -20,7 +20,7 @@ Add this configuration to your Claude Desktop config file:
       "command": "npx",
       "args": [
         "-y",
-        "github:lmazure/SMS#v0.0.1"
+        "github:lmazure/SMS#v0.0.2"
       ],
       "env": {
         "SQUASHTM_URL": "https://your-squashtm-instance.com/squash",
@@ -35,32 +35,7 @@ Replace `your-squashtm-instance.com` and `your-api-key-here` with your actual Sq
 
 ## Available Tools
 
-### `list_projects`
-
-Retrieves a list of all SquashTM projects you have access to.
-
-**Input:** None
-
-**Output:** An array of objects, each containing:
-- `id` (number): The project ID
-- `name` (string): The project name
-- `label` (string): The project label
-- `description` (string): The project description
-
-### `create_test_cases`
-
-Creates one or more test cases in a specified SquashTM project.
-
-**Input:**
-- `project_id` (number): The ID of the target project
-- `test_cases` (array): List of test cases to create, each containing:
-  - `name` (string): Test case name
-  - `description` (string): Test case description
-  - `steps` (array): One or more test steps, each with:
-    - `action` (string): What action to perform
-    - `expected_result` (string): Expected outcome
-
-**Output:** An array of test case objects created in SquashTM, each containing details like ID, name, etc.
+See [tools.md](tools.md).
 
 ## Development
 
