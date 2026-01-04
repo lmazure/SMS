@@ -82,19 +82,19 @@ interface SquashPaginatedResponse<T> {
 }
 
 // Zod schemas for validation
-const ListProjectsSchema = z.object({});
+const ListProjectsInputSchema = z.object({});
 
-const CreateProjectSchema = z.object({
+const CreateProjectInputSchema = z.object({
     name: z.string().describe("The name of the project"),
     label: z.string().optional().describe("The label of the project"),
     description: z.string().optional().describe("The description of the project (HTML allowed)"),
 });
 
-const DeleteProjectSchema = z.object({
+const DeleteProjectInputSchema = z.object({
     id: z.number().describe("The ID of the project to delete"),
 });
 
-const CreateTestCasesSchema = z.object({
+const CreateTestCasesInputSchema = z.object({
     project_id: z.number().describe("The ID of the project where the test cases will be created"),
     test_cases: z.array(z.object({
         name: z.string().describe("The name of the test case"),
@@ -106,23 +106,23 @@ const CreateTestCasesSchema = z.object({
     })).min(1).describe("List of test cases to create"),
 });
 
-const GetRequirementFoldersTreeSchema = z.object({
+const GetRequirementFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the requirement folders tree for"),
 });
 
-const GetTestCaseFoldersTreeSchema = z.object({
+const GetTestCaseFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the test case folders tree for"),
 });
 
-const GetCampaignFoldersTreeSchema = z.object({
+const GetCampaignFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the campaign folders tree for"),
 });
 
-const GetTestCaseFolderContentSchema = z.object({
+const GetTestCaseFolderContentInputSchema = z.object({
     folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
 });
 
-const GetRequirementFolderContentSchema = z.object({
+const GetRequirementFolderContentInputSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
 });
 
@@ -132,36 +132,36 @@ const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
     children: z.array(FolderStructureSchema).optional().describe("Subfolders"),
 }).describe("Folder structure"));
 
-const CreateRequirementFoldersSchema = z.object({
+const CreateRequirementFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
 });
 
-const DeleteRequirementFolderSchema = z.object({
+const DeleteRequirementFolderInputSchema = z.object({
     folder_id: z.number().describe("The ID of the folder to delete")
 });
 
-const CreateTestCaseFoldersSchema = z.object({
+const CreateTestCaseFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
 });
 
-const DeleteTestCaseFolderSchema = z.object({
+const DeleteTestCaseFolderInputSchema = z.object({
     folder_id: z.number().describe("The ID of the folder to delete")
 });
 
-const CreateCampaignFoldersSchema = z.object({
+const CreateCampaignFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
 });
 
-const DeleteCampaignFolderSchema = z.object({
+const DeleteCampaignFolderInputSchema = z.object({
     folder_id: z.number().describe("The ID of the folder to delete")
 });
 
@@ -389,12 +389,12 @@ server.registerTool(
     {
         title: "List Projects",
         description: "Get list of SquashTM projects",
-        inputSchema: ListProjectsSchema,
+        inputSchema: ListProjectsInputSchema,
     },
     listProjectsHandler
 );
 
-export const createProjectHandler = async (args: z.infer<typeof CreateProjectSchema>) => {
+export const createProjectHandler = async (args: z.infer<typeof CreateProjectInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_project " + JSON.stringify(args));
     const payload = {
@@ -430,12 +430,12 @@ server.registerTool(
     {
         title: "Create Project",
         description: "Create a new project in SquashTM",
-        inputSchema: CreateProjectSchema,
+        inputSchema: CreateProjectInputSchema,
     },
     createProjectHandler
 );
 
-export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectSchema>) => {
+export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_project " + JSON.stringify(args));
     await makeSquashRequest<any>(
@@ -463,7 +463,7 @@ server.registerTool(
     {
         title: "Delete Project",
         description: "Delete a project in SquashTM",
-        inputSchema: DeleteProjectSchema,
+        inputSchema: DeleteProjectInputSchema,
     },
     deleteProjectHandler
 );
@@ -488,7 +488,7 @@ async function getDetailedFolders(correlationId: string, folders: SquashTMFolder
     }));
 }
 
-export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentSchema>) => {
+export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
     let allRequirements: any[] = [];
@@ -573,12 +573,12 @@ server.registerTool(
     {
         title: "Get Requirement Folder Content",
         description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
-        inputSchema: GetRequirementFolderContentSchema,
+        inputSchema: GetRequirementFolderContentInputSchema,
     },
     getRequirementFolderContentHandler
 );
 
-export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeSchema>) => {
+export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
     const data = await makeSquashRequest<SquashTMProjectTree[]>(
@@ -626,13 +626,13 @@ server.registerTool(
     {
         title: "Get Requirement Folders Tree",
         description: "Get the requirement folders tree for specified projects with detailed folder info",
-        inputSchema: GetRequirementFoldersTreeSchema,
+        inputSchema: GetRequirementFoldersTreeInputSchema,
     },
     getRequirementFoldersTreeHandler
 );
 
 // Register get_test_case_folder_tree tool
-export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTestCaseFoldersTreeSchema>) => {
+export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTestCaseFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
     const data = await makeSquashRequest<SquashTMProjectTree[]>(
@@ -680,7 +680,7 @@ server.registerTool(
     {
         title: "Get Test Case Folders Tree",
         description: "Get the test case folders tree for specified projects with detailed folder info",
-        inputSchema: GetTestCaseFoldersTreeSchema,
+        inputSchema: GetTestCaseFoldersTreeInputSchema,
     },
     getTestCaseFoldersTreeHandler
 );
@@ -690,7 +690,7 @@ server.registerTool(
     {
         title: "Create Test Cases",
         description: "Create test cases in a project in SquashTM",
-        inputSchema: CreateTestCasesSchema,
+        inputSchema: CreateTestCasesInputSchema,
     },
     async (args) => {
         const correlationId = generateCorrelationId();
@@ -733,7 +733,7 @@ server.registerTool(
     }
 );
 
-export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentSchema>) => {
+export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
     let allTestCases: any[] = [];
@@ -815,12 +815,12 @@ server.registerTool(
     {
         title: "Get Test Case Folder Content",
         description: "Get the test cases of a test case folder (only includes items of type 'test-case')",
-        inputSchema: GetTestCaseFolderContentSchema,
+        inputSchema: GetTestCaseFolderContentInputSchema,
     },
     getTestCaseFolderContentHandler
 );
 
-export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeSchema>) => {
+export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
     const data = await makeSquashRequest<SquashTMProjectTree[]>(
@@ -865,7 +865,7 @@ server.registerTool(
     {
         title: "Get Campaign Folders Tree",
         description: "Get the campaign folders tree for specified projects with detailed folder info",
-        inputSchema: GetCampaignFoldersTreeSchema,
+        inputSchema: GetCampaignFoldersTreeInputSchema,
     },
     getCampaignFoldersTreeHandler
 );
@@ -919,7 +919,7 @@ async function createFolderRecursive(
 }
 
 // Handler for creating requirement folders
-export const createRequirementFoldersHandler = async (args: z.infer<typeof CreateRequirementFoldersSchema>) => {
+export const createRequirementFoldersHandler = async (args: z.infer<typeof CreateRequirementFoldersInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_requirement_folders " + JSON.stringify(args));
 
@@ -955,13 +955,13 @@ server.registerTool(
     {
         title: "Create Requirement Folders",
         description: "Create requirement folders recursively",
-        inputSchema: CreateRequirementFoldersSchema,
+        inputSchema: CreateRequirementFoldersInputSchema,
     },
     createRequirementFoldersHandler
 );
 
 // Handler for deleting requirement folder
-export const deleteRequirementFolderHandler = async (args: z.infer<typeof DeleteRequirementFolderSchema>) => {
+export const deleteRequirementFolderHandler = async (args: z.infer<typeof DeleteRequirementFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_requirement_folder " + JSON.stringify(args));
 
@@ -989,13 +989,13 @@ server.registerTool(
     {
         title: "Delete Requirement Folder",
         description: "Delete a requirement folder and its content",
-        inputSchema: DeleteRequirementFolderSchema,
+        inputSchema: DeleteRequirementFolderInputSchema,
     },
     deleteRequirementFolderHandler
 );
 
 // Handler for creating test case folders
-export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTestCaseFoldersSchema>) => {
+export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTestCaseFoldersInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_test_case_folders " + JSON.stringify(args));
 
@@ -1031,13 +1031,13 @@ server.registerTool(
     {
         title: "Create Test Case Folders",
         description: "Create test case folders recursively",
-        inputSchema: CreateTestCaseFoldersSchema,
+        inputSchema: CreateTestCaseFoldersInputSchema,
     },
     createTestCaseFoldersHandler
 );
 
 // Handler for deleting test case folder
-export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTestCaseFolderSchema>) => {
+export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTestCaseFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_test_case_folder " + JSON.stringify(args));
 
@@ -1065,13 +1065,13 @@ server.registerTool(
     {
         title: "Delete Test Case Folder",
         description: "Delete a test case folder and its content",
-        inputSchema: DeleteTestCaseFolderSchema,
+        inputSchema: DeleteTestCaseFolderInputSchema,
     },
     deleteTestCaseFolderHandler
 );
 
 // Handler for creating campaign folders
-export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCampaignFoldersSchema>) => {
+export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCampaignFoldersInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_campaign_folders " + JSON.stringify(args));
 
@@ -1107,13 +1107,13 @@ server.registerTool(
     {
         title: "Create Campaign Folders",
         description: "Create campaign folders recursively",
-        inputSchema: CreateCampaignFoldersSchema,
+        inputSchema: CreateCampaignFoldersInputSchema,
     },
     createCampaignFoldersHandler
 );
 
 // Handler for deleting campaign folder
-export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCampaignFolderSchema>) => {
+export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCampaignFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_campaign_folder " + JSON.stringify(args));
 
@@ -1141,7 +1141,7 @@ server.registerTool(
     {
         title: "Delete Campaign Folder",
         description: "Delete a campaign folder and its content",
-        inputSchema: DeleteCampaignFolderSchema,
+        inputSchema: DeleteCampaignFolderInputSchema,
     },
     deleteCampaignFolderHandler
 );
