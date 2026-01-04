@@ -96,9 +96,13 @@ const ListProjectsOutputSchema = z.object({
 });
 
 const CreateProjectInputSchema = z.object({
-    name: z.string().describe("The name of the project"),
-    label: z.string().optional().describe("The label of the project"),
-    description: z.string().optional().describe("The description of the project (rich text)"),
+    name: z.string().describe("The name of the project to be created"),
+    label: z.string().optional().describe("The label of the project to be created"),
+    description: z.string().describe("The description of the project to be created (rich text)"),
+});
+
+const CreateProjectOutputSchema = z.object({
+    id: z.number().describe("The ID of the newly created project"),
 });
 
 const DeleteProjectInputSchema = z.object({
@@ -413,13 +417,18 @@ export const createProjectHandler = async (args: z.infer<typeof CreateProjectInp
         payload
     );
 
+    const projectData = {
+        id: response.id,
+    };
+
     const returnedData = {
         content: [
             {
                 type: "text" as const,
-                text: `Project created successfully with ID: ${response.id}`,
+                text: JSON.stringify(projectData, null, 2),
             },
         ],
+        structuredContent: projectData,
     };
 
     logToFile(correlationId, "create_project returned: " + JSON.stringify(returnedData, null, 2));
@@ -433,6 +442,7 @@ server.registerTool(
         title: "Create Project",
         description: "Create a new project in SquashTM",
         inputSchema: CreateProjectInputSchema,
+        outputSchema: CreateProjectOutputSchema,
     },
     createProjectHandler
 );

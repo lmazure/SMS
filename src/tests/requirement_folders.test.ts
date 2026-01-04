@@ -9,19 +9,22 @@ import {
 
 describe('Requirement Folders Integration Tests', () => {
     const timestamp = Date.now();
-    const projectName = `Req Folder Test Project ${timestamp}`;
+    const projectName = `Name of the Requirement Folder Test Project ${timestamp}`;
+    const projectLabel = `Label of the Requirement Folder Test Project ${timestamp}`;
+    const projectDescription = `Description of the Requirement Folder Test Project ${timestamp}`;
     let projectId: number | undefined;
 
     beforeAll(async () => {
         // Create a project for testing
         const result = await createProjectHandler({
             name: projectName,
-            description: "Project for requirement folder tests"
+            label: projectLabel,
+            description: projectDescription
         });
-        const match = result.content[0].text.match(/ID: (\d+)/);
-        if (match) {
-            projectId = parseInt(match[1], 10);
-        }
+        expect(result).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.id).toBeDefined();
+        projectId = result.structuredContent.id;
     });
 
     it('should create a requirement folder structure', async () => {

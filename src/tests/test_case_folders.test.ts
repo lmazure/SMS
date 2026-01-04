@@ -10,19 +10,22 @@ import {
 
 describe('Test Case Folders Integration Tests', () => {
     const timestamp = Date.now();
-    const projectName = `Test Case Folder Test Project ${timestamp}`;
+    const projectName = `Name of the Test Case Folder Test Project ${timestamp}`;
+    const projectLabel = `Label of the Test Case Folder Test Project ${timestamp}`;
+    const projectDescription = `Description of the Test Case Folder Test Project ${timestamp}`;
     let projectId: number | undefined;
 
     beforeAll(async () => {
         // Create a project for testing
         const result = await createProjectHandler({
             name: projectName,
-            description: "Project for test case folder tests"
+            label: projectLabel,
+            description: projectDescription
         });
-        const match = result.content[0].text.match(/ID: (\d+)/);
-        if (match) {
-            projectId = parseInt(match[1], 10);
-        }
+        expect(result).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.id).toBeDefined();
+        projectId = result.structuredContent.id;
     });
 
     it('should create a test case folder structure', async () => {
