@@ -1,19 +1,21 @@
 # Next step
 
-
+- add the verification for each test that the text and the structured content are the same  
+    - using `const outputJson = JSON.parse(result.content[0].text);`
+    - and `expect(outputJson).toEqual(output.content[0].structuredContent);`
+- the tests of get_folder should verify all the fields
+- test the creation of a project with no label
+    
 # Before merging the branch
 
-- the tests of get_folder should verify all the fields
 
 # Later on
 
 - spin off dev.md from README.md
     - describe in it how to run the dev version in Claude desktop
 -studies
-    - format of touputs
-        - what should be returned for creation?
+    - format of outputs
         - what should be returned for deletion? (see bug 1)
-        - what should be returned for read when there is no entity?
 - add more tests and get the tests more detailled
 - add a tool to delete test cases
 - create integration tests for create_test_case, list_test_cases, and delete_test_case
