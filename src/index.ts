@@ -341,19 +341,6 @@ export const listProjectsHandler = async () => {
         }
     }
 
-    if (allProjects.length === 0) {
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: "No projects found.",
-                },
-            ],
-        };
-        logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
-    }
-
     const detailedProjects = await Promise.all(
         allProjects.map(async (p) => {
             const details = await makeSquashRequest<SquashProject>(
@@ -515,19 +502,6 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
         } else {
             break;
         }
-    }
-
-    if (allRequirements.length === 0) {
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: "No requirements found in the specified folder.",
-                },
-            ],
-        };
-        logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
     }
 
     const detailedRequirements = await Promise.all(
@@ -760,20 +734,6 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
         } else {
             break;
         }
-    }
-
-    if (allTestCases.length === 0) {
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: "No test cases found in the specified folder.",
-                },
-            ],
-        };
-
-        logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
     }
 
     const detailedTestCases = await Promise.all(
