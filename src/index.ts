@@ -84,10 +84,21 @@ interface SquashPaginatedResponse<T> {
 // Zod schemas for validation
 const ListProjectsInputSchema = z.object({});
 
+const ListProjectsOutputSchema = z.object({
+    projects: z.array(
+        z.object({
+            id: z.number().describe("The ID of the project"),
+            name: z.string().describe("The name of the project"),
+            label: z.string().optional().describe("The label of the project"),
+            description: z.string().describe("The description of the project (rich text)"),
+        })
+    ),
+});
+
 const CreateProjectInputSchema = z.object({
     name: z.string().describe("The name of the project"),
     label: z.string().optional().describe("The label of the project"),
-    description: z.string().optional().describe("The description of the project (HTML allowed)"),
+    description: z.string().optional().describe("The description of the project (rich text)"),
 });
 
 const DeleteProjectInputSchema = z.object({
@@ -341,21 +352,23 @@ export const listProjectsHandler = async () => {
         }
     }
 
-    const detailedProjects = await Promise.all(
-        allProjects.map(async (p) => {
-            const details = await makeSquashRequest<SquashProject>(
-                correlationId,
-                `projects/${p.id}`,
-                "GET"
-            );
-            return {
-                id: p.id,
-                name: p.name,
-                label: details.label,
-                description: details.description,
-            };
-        })
-    );
+    const detailedProjects = {
+        projects: await Promise.all(
+            allProjects.map(async (p) => {
+                const details = await makeSquashRequest<SquashProject>(
+                    correlationId,
+                    `projects/${p.id}`,
+                    "GET"
+                );
+                return {
+                    id: p.id,
+                    name: p.name,
+                    ...(details.label && { label: details.label }),
+                    description: details.description,
+                };
+            })
+        )
+    };
 
     const returnedData = {
         content: [
@@ -364,6 +377,7 @@ export const listProjectsHandler = async () => {
                 text: JSON.stringify(detailedProjects, null, 2),
             },
         ],
+        structuredContent: detailedProjects,
     };
 
     logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
@@ -377,6 +391,7 @@ server.registerTool(
         title: "List Projects",
         description: "Get list of SquashTM projects",
         inputSchema: ListProjectsInputSchema,
+        outputSchema: ListProjectsOutputSchema,
     },
     listProjectsHandler
 );

@@ -36,10 +36,10 @@ describe('SquashTM Integration Tests', () => {
 
         // Parse the JSON output
         const outputJson = JSON.parse(result.content[0].text);
-        expect(Array.isArray(outputJson)).toBe(true);
+        expect(Object.keys(outputJson).includes('projects')).toBe(true);
 
         // Find our project
-        const project = outputJson.find((p: any) => p.name === projectName);
+        const project = outputJson.projects.find((p: any) => p.name === projectName);
         expect(project).toBeDefined();
         expect(project.id).toBe(projectId);
         expect(project.description).toBe(projectDescription);
