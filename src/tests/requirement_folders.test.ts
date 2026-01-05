@@ -34,15 +34,15 @@ describe('Requirement Folders Integration Tests', () => {
         // @ts-ignore
         const result = await createRequirementFoldersHandler({
             project_id: projectId,
-            name: "Root Folder",
+            name: "Root Requirement Folder",
             children: [
                 {
-                    name: "Child Folder 1"
+                    name: "Child Requirement Folder 1"
                 },
                 {
-                    name: "Child Folder 2",
+                    name: "Child Requirement Folder 2",
                     children: [
-                        { name: "Grandchild Folder" }
+                        { name: "Grandchild Requirement Folder" }
                     ]
                 }
             ]
@@ -63,19 +63,17 @@ describe('Requirement Folders Integration Tests', () => {
         });
 
         expect(result).toBeDefined();
-        const tree = JSON.parse(result.content[0].text);
-        const projectNode = tree.find((p: any) => p.id === projectId);
-        expect(projectNode).toBeDefined();
-        expect(projectNode.folders).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folders).toBeDefined();
 
-        const rootFolder = projectNode.folders.find((f: any) => f.name === "Root Folder");
+        const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Requirement Folder");
         expect(rootFolder).toBeDefined();
-        expect(rootFolder.children).toHaveLength(2);
+        expect(rootFolder?.children).toHaveLength(2);
 
-        const child2 = rootFolder.children.find((f: any) => f.name === "Child Folder 2");
+        const child2 = rootFolder?.children.find((f: any) => f.name === "Child Requirement Folder 2");
         expect(child2).toBeDefined();
-        expect(child2.children).toHaveLength(1);
-        expect(child2.children[0].name).toBe("Grandchild Folder");
+        expect(child2?.children).toHaveLength(1);
+        expect(child2?.children[0].name).toBe("Grandchild Requirement Folder");
     });
 
     it('should delete the requirement folder', async () => {
@@ -83,15 +81,13 @@ describe('Requirement Folders Integration Tests', () => {
         if (!projectId) return;
 
         // First get the ID of the root folder
-        // @ts-ignore
         const treeResult = await getRequirementFoldersTreeHandler({ project_id: projectId });
-        const tree = JSON.parse(treeResult.content[0].text);
-        const projectNode = tree.find((p: any) => p.id === projectId);
-        const rootFolder = projectNode.folders.find((f: any) => f.name === "Root Folder");
+        expect(treeResult).toBeDefined();
+        expect(treeResult.structuredContent).toBeDefined();
+        const rootFolder = treeResult.structuredContent.folders.find((f: any) => f.name === "Root Requirement Folder");
         expect(rootFolder).toBeDefined();
 
         // Delete it
-        // @ts-ignore
         const result = await deleteRequirementFolderHandler({
             folder_id: rootFolder.id
         });

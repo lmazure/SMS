@@ -50,7 +50,8 @@ const server = new McpServer({
     version: "0.0.1",
 });
 
-interface SquashProject {
+// structures of the SquashTM API responses
+interface SquashTMProject {
     _type: string;
     id: number;
     name: string;
@@ -63,13 +64,7 @@ interface SquashProject {
     };
 }
 
-interface SquashProjectsResponse {
-    _embedded?: {
-        projects?: SquashProject[];
-    };
-}
-
-interface SquashPaginatedResponse<T> {
+interface SquashTMPaginatedResponse<T> {
     _embedded?: {
         [key: string]: T[];
     };
@@ -79,6 +74,62 @@ interface SquashPaginatedResponse<T> {
         totalPages: number;
         number: number;
     };
+}
+
+interface SquashTMFolder {
+    _type: string;
+    id: number;
+    name: string;
+    url: string;
+    children: SquashTMFolder[];
+}
+
+interface SquashTMFolderDetail {
+    _type: string;
+    id: number;
+    name: string;
+    description: string;
+    created_by: string;
+    created_on: string;
+    last_modified_by: string;
+    last_modified_on: string;
+}
+
+interface SquashTMTestCaseDetail {
+    id: number;
+    name: string;
+    description: string;
+    prerequisite: string;
+    created_by: string;
+    created_on: string;
+    last_modified_by: string;
+    last_modified_on: string;
+}
+
+interface SquashTMRequirementDetail {
+    id: number;
+    name: string;
+    current_version: {
+        created_by: string;
+        created_on: string;
+        last_modified_by: string;
+        last_modified_on: string;
+        description: string;
+        reference: string;
+        version_number: number;
+        criticality: string;
+        category: {
+            code: string;
+        };
+        status: string;
+    };
+}
+
+interface SquashTMProjectTree {
+    _type: string;
+    id: number;
+    name: string;
+    folders: SquashTMFolder[];
 }
 
 // Zod schemas for validation
@@ -96,9 +147,9 @@ const ListProjectsOutputSchema = z.object({
 });
 
 const CreateProjectInputSchema = z.object({
-    name: z.string().describe("The name of the project to be created"),
-    label: z.string().optional().describe("The label of the project to be created"),
-    description: z.string().describe("The description of the project to be created (rich text)"),
+    name: z.string().describe("The name of the project to create"),
+    label: z.string().optional().describe("The label of the project to create"),
+    description: z.string().describe("The description of the project to create (rich text)"),
 });
 
 const CreateProjectOutputSchema = z.object({
@@ -119,6 +170,25 @@ const CreateTestCasesInputSchema = z.object({
             expected_result: z.string().describe("The expected result"),
         })).min(1).describe("List of test steps"),
     })).min(1).describe("List of test cases to create"),
+});
+
+const ReturnedFolderSchema: z.ZodType<any> = z.lazy(() =>
+    z.object({
+        id: z.number().describe("The ID of the folder"),
+        name: z.string().describe("The name of the folder"),
+        description: z.string().describe("The description of the folder"),
+        created_by: z.string().describe("The user who created the folder"),
+        created_on: z.string().describe("The date when the folder was created"),
+        modified_by: z.string().optional().describe("The user who last modified the folder"),
+        modified_on: z.string().optional().describe("The date when the folder was last modified"),
+        children: z.array(ReturnedFolderSchema).describe("Subfolders"),
+    })
+);
+
+type ReturnedFolder = z.infer<typeof ReturnedFolderSchema>;
+
+const GetFoldersTreeOutputSchema = z.object({
+    folders: z.array(ReturnedFolderSchema).describe("List of folders"),
 });
 
 const GetRequirementFoldersTreeInputSchema = z.object({
@@ -183,79 +253,6 @@ const DeleteCampaignFolderInputSchema = z.object({
 interface FolderStructure {
     name: string;
     children?: FolderStructure[];
-}
-
-interface SquashTMFolder {
-    _type: string;
-    id: number;
-    name: string;
-    url: string;
-    children: SquashTMFolder[];
-}
-
-interface SquashTMFolderDetail {
-    _type: string;
-    id: number;
-    name: string;
-    description: string;
-    created_by: string;
-    created_on: string;
-    last_modified_by: string;
-    last_modified_on: string;
-}
-
-interface SquashTMTestCaseDetail {
-    id: number;
-    name: string;
-    description: string;
-    prerequisite: string;
-    created_by: string;
-    created_on: string;
-    last_modified_by: string;
-    last_modified_on: string;
-}
-
-interface SquashTMRequirementDetail {
-    id: number;
-    name: string;
-    current_version: {
-        created_by: string;
-        created_on: string;
-        last_modified_by: string;
-        last_modified_on: string;
-        description: string;
-        reference: string;
-        version_number: number;
-        criticality: string;
-        category: {
-            code: string;
-        };
-        status: string;
-    };
-}
-
-interface SquashTMProjectTree {
-    _type: string;
-    id: number;
-    name: string;
-    folders: SquashTMFolder[];
-}
-
-interface ReturnedFolder {
-    id: number;
-    name: string;
-    description: string;
-    created_by: string;
-    created_on: string;
-    modified_by: string;
-    modified_on: string;
-    children: ReturnedFolder[];
-}
-
-interface ReturnedProjectTree {
-    id: number;
-    name: string;
-    folders: ReturnedFolder[];
 }
 
 export async function makeSquashRequest<T>(correlationId: string, endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
@@ -333,12 +330,12 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
 export const listProjectsHandler = async () => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "list_projects");
-    let allProjects: SquashProject[] = [];
+    let allProjects: SquashTMProject[] = [];
     let currentPage = 0;
     let totalPages = 1;
 
     while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashPaginatedResponse<SquashProject>>(
+        const data = await makeSquashRequest<SquashTMPaginatedResponse<SquashTMProject>>(
             correlationId,
             `projects?type=STANDARD&page=${currentPage}&size=50`,
             "GET"
@@ -359,7 +356,7 @@ export const listProjectsHandler = async () => {
     const detailedProjects = {
         projects: await Promise.all(
             allProjects.map(async (p) => {
-                const details = await makeSquashRequest<SquashProject>(
+                const details = await makeSquashRequest<SquashTMProject>(
                     correlationId,
                     `projects/${p.id}`,
                     "GET"
@@ -493,8 +490,8 @@ async function getDetailedFolders(correlationId: string, folders: SquashTMFolder
             description: details.description,
             created_by: details.created_by,
             created_on: details.created_on,
-            modified_by: details.last_modified_by,
-            modified_on: details.last_modified_on,
+            ...(details.last_modified_by && { modified_by: details.last_modified_by }),
+            ...(details.last_modified_on && { modified_on: details.last_modified_on }),
             children: await getDetailedFolders(correlationId, folder.children || [], type)
         };
     }));
@@ -508,7 +505,7 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
     let totalPages = 1;
 
     while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+        const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
             correlationId,
             `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
             "GET"
@@ -586,25 +583,9 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
         "GET"
     );
 
-    if (!data) {
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: "Failed to retrieve requirement folders tree.",
-                },
-            ],
-        };
-
-        logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
-    }
-
-    const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
-        id: project.id,
-        name: project.name,
-        folders: await getDetailedFolders(correlationId, project.folders || [], "requirement-folders")
-    })));
+    const resultData = {
+        folders: await getDetailedFolders(correlationId, data[0].folders, "requirement-folders")
+    };
 
     const returnedData = {
         content: [
@@ -613,6 +594,7 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
                 text: JSON.stringify(resultData, null, 2),
             },
         ],
+        structuredContent: resultData,
     };
 
     logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
@@ -624,8 +606,9 @@ server.registerTool(
     "get_requirement_folders_tree",
     {
         title: "Get Requirement Folders Tree",
-        description: "Get the requirement folders tree for specified projects with detailed folder info",
+        description: "Get the requirement folders tree for specified project with detailed folder info",
         inputSchema: GetRequirementFoldersTreeInputSchema,
+        outputSchema: GetFoldersTreeOutputSchema,
     },
     getRequirementFoldersTreeHandler
 );
@@ -640,25 +623,9 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
         "GET"
     );
 
-    if (!data) {
-        const returnedData = {
-            content: [
-                {
-                    type: "text" as const,
-                    text: "Failed to retrieve test case folders tree.",
-                },
-            ],
-        };
-
-        logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
-        return returnedData;
-    }
-
-    const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
-        id: project.id,
-        name: project.name,
-        folders: await getDetailedFolders(correlationId, project.folders || [], "test-case-folders")
-    })));
+    const resultData = {
+        folders: await getDetailedFolders(correlationId, data[0].folders, "test-case-folders")
+    };
 
     const returnedData = {
         content: [
@@ -667,6 +634,7 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
                 text: JSON.stringify(resultData, null, 2),
             },
         ],
+        structuredContent: resultData,
     };
 
     logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
@@ -678,11 +646,13 @@ server.registerTool(
     "get_test_case_folder_tree",
     {
         title: "Get Test Case Folders Tree",
-        description: "Get the test case folders tree for specified projects with detailed folder info",
+        description: "Get the test case folders tree for specified project with detailed folder info",
         inputSchema: GetTestCaseFoldersTreeInputSchema,
+        outputSchema: GetFoldersTreeOutputSchema,
     },
     getTestCaseFoldersTreeHandler
 );
+
 // Register create_test_cases tool
 server.registerTool(
     "create_test_cases",
@@ -740,7 +710,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
     let totalPages = 1;
 
     while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashPaginatedResponse<any>>(
+        const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
             correlationId,
             `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
             "GET"
@@ -814,22 +784,9 @@ export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCamp
         "GET"
     );
 
-    if (!data) {
-        return {
-            content: [
-                {
-                    type: "text" as const,
-                    text: "Failed to retrieve campaign folders tree.",
-                },
-            ],
-        };
-    }
-
-    const resultData: ReturnedProjectTree[] = await Promise.all(data.map(async project => ({
-        id: project.id,
-        name: project.name,
-        folders: await getDetailedFolders(correlationId, project.folders || [], "campaign-folders")
-    })));
+    const resultData = {
+        folders: await getDetailedFolders(correlationId, data[0].folders, "campaign-folders")
+    };
 
     const returnedData = {
         content: [
@@ -838,6 +795,7 @@ export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCamp
                 text: JSON.stringify(resultData, null, 2),
             },
         ],
+        structuredContent: resultData,
     };
 
     logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
@@ -849,8 +807,9 @@ server.registerTool(
     "get_campaign_folder_tree",
     {
         title: "Get Campaign Folders Tree",
-        description: "Get the campaign folders tree for specified projects with detailed folder info",
+        description: "Get the campaign folders tree for specified project with detailed folder info",
         inputSchema: GetCampaignFoldersTreeInputSchema,
+        outputSchema: GetFoldersTreeOutputSchema,
     },
     getCampaignFoldersTreeHandler
 );
