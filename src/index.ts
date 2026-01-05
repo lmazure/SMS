@@ -203,15 +203,14 @@ const GetCampaignFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the campaign folders tree for"),
 });
 
-const GetTestCaseFolderContentInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
-});
-
 const GetRequirementFolderContentInputSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
 });
 
-// Recursive schema for folder structure
+const GetTestCaseFolderContentInputSchema = z.object({
+    folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
+});
+
 const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders"),
@@ -219,9 +218,9 @@ const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
 
 const CreateRequirementFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the folder"),
-    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
-    children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
+    children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
 const DeleteRequirementFolderInputSchema = z.object({
@@ -230,9 +229,9 @@ const DeleteRequirementFolderInputSchema = z.object({
 
 const CreateTestCaseFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the folder"),
-    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
-    children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
+    children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
 const DeleteTestCaseFolderInputSchema = z.object({
@@ -241,9 +240,9 @@ const DeleteTestCaseFolderInputSchema = z.object({
 
 const CreateCampaignFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the folder"),
-    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional)"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
-    children: z.array(FolderStructureSchema).optional().describe("Array of subfolders")
+    children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
 const DeleteCampaignFolderInputSchema = z.object({
