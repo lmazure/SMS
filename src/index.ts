@@ -270,6 +270,7 @@ interface FolderStructure {
     children?: FolderStructure[];
 }
 
+// Format the response to be returned to the MCP client
 function formatResponse(data: any) {
     return {
         content: [
@@ -282,6 +283,7 @@ function formatResponse(data: any) {
     };
 }
 
+// Make a request to the SquashTM REST API
 export async function makeSquashRequest<T>(correlationId: string, endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
@@ -354,6 +356,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
     }
 }
 
+// 'list_projects' tool
 export const listProjectsHandler = async () => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "list_projects");
@@ -403,8 +406,6 @@ export const listProjectsHandler = async () => {
     logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register list_projects tool
 server.registerTool(
     "list_projects",
     {
@@ -416,6 +417,7 @@ server.registerTool(
     listProjectsHandler
 );
 
+// 'create_project' tool
 export const createProjectHandler = async (args: z.infer<typeof CreateProjectInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_project " + JSON.stringify(args));
@@ -442,8 +444,6 @@ export const createProjectHandler = async (args: z.infer<typeof CreateProjectInp
     logToFile(correlationId, "create_project returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register create_project tool
 server.registerTool(
     "create_project",
     {
@@ -455,6 +455,7 @@ server.registerTool(
     createProjectHandler
 );
 
+// 'delete_project' tool
 export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_project " + JSON.stringify(args));
@@ -473,8 +474,6 @@ export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInp
     logToFile(correlationId, "delete_project returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register delete_project tool
 server.registerTool(
     "delete_project",
     {
@@ -486,6 +485,7 @@ server.registerTool(
     deleteProjectHandler
 );
 
+// Get folder details
 async function getDetailedFolders(correlationId: string, folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
     return Promise.all(folders.map(async folder => {
         const details = await makeSquashRequest<SquashTMFolderDetail>(
@@ -506,6 +506,7 @@ async function getDetailedFolders(correlationId: string, folders: SquashTMFolder
     }));
 }
 
+// 'get_requirement_folder_content' tool
 export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
@@ -571,8 +572,6 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
     logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register get_requirement_folder_content tool
 server.registerTool(
     "get_requirement_folder_content",
     {
@@ -583,6 +582,7 @@ server.registerTool(
     getRequirementFolderContentHandler
 );
 
+// 'get_requirement_folders_tree' tool
 export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
@@ -601,8 +601,6 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
     logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register get_requirement_folders_tree tool
 server.registerTool(
     "get_requirement_folders_tree",
     {
@@ -614,7 +612,7 @@ server.registerTool(
     getRequirementFoldersTreeHandler
 );
 
-// Register get_test_case_folder_tree tool
+// 'get_test_case_folders_tree' tool
 export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTestCaseFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
@@ -633,8 +631,6 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
     logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register get_test_case_folder_tree tool
 server.registerTool(
     "get_test_case_folder_tree",
     {
@@ -646,7 +642,7 @@ server.registerTool(
     getTestCaseFoldersTreeHandler
 );
 
-// Register create_test_cases tool
+// 'create_test_cases' tool
 server.registerTool(
     "create_test_cases",
     {
@@ -695,6 +691,7 @@ server.registerTool(
     }
 );
 
+// 'get_test_case_folder_content' tool
 export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
@@ -756,8 +753,6 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
     logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register get_test_case_folder_content tool
 server.registerTool(
     "get_test_case_folder_content",
     {
@@ -768,6 +763,7 @@ server.registerTool(
     getTestCaseFolderContentHandler
 );
 
+// 'get_campaign_folders_tree' tool
 export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
@@ -786,8 +782,6 @@ export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCamp
     logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register get_campaign_folder_tree tool
 server.registerTool(
     "get_campaign_folder_tree",
     {
@@ -799,7 +793,7 @@ server.registerTool(
     getCampaignFoldersTreeHandler
 );
 
-// Helper for recursive folder creation
+// recursive folder creation helper
 async function createFolderRecursive(
     correlationId: string,
     projectId: number,
@@ -847,7 +841,7 @@ async function createFolderRecursive(
     }
 }
 
-// Handler for creating requirement folders
+// 'create_requirement_folders' tool
 export const createRequirementFoldersHandler = async (args: z.infer<typeof CreateRequirementFoldersInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_requirement_folders " + JSON.stringify(args));
@@ -877,8 +871,6 @@ export const createRequirementFoldersHandler = async (args: z.infer<typeof Creat
     logToFile(correlationId, "create_requirement_folders returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register create_requirement_folders
 server.registerTool(
     "create_requirement_folders",
     {
@@ -889,7 +881,7 @@ server.registerTool(
     createRequirementFoldersHandler
 );
 
-// Handler for deleting requirement folder
+// 'delete_requirement_folder' tool
 export const deleteRequirementFolderHandler = async (args: z.infer<typeof DeleteRequirementFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_requirement_folder " + JSON.stringify(args));
@@ -908,8 +900,6 @@ export const deleteRequirementFolderHandler = async (args: z.infer<typeof Delete
     logToFile(correlationId, "delete_requirement_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register delete_requirement_folder
 server.registerTool(
     "delete_requirement_folder",
     {
@@ -921,7 +911,7 @@ server.registerTool(
     deleteRequirementFolderHandler
 );
 
-// Handler for creating test case folders
+// 'create_test_case_folders' tool
 export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTestCaseFoldersInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_test_case_folders " + JSON.stringify(args));
@@ -951,8 +941,6 @@ export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTe
     logToFile(correlationId, "create_test_case_folders returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register create_test_case_folders
 server.registerTool(
     "create_test_case_folders",
     {
@@ -963,7 +951,7 @@ server.registerTool(
     createTestCaseFoldersHandler
 );
 
-// Handler for deleting test case folder
+// 'delete_test_case_folder' tool
 export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTestCaseFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_test_case_folder " + JSON.stringify(args));
@@ -982,8 +970,6 @@ export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTes
     logToFile(correlationId, "delete_test_case_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register delete_test_case_folder
 server.registerTool(
     "delete_test_case_folder",
     {
@@ -994,7 +980,7 @@ server.registerTool(
     deleteTestCaseFolderHandler
 );
 
-// Handler for creating campaign folders
+// 'create_campaign_folders' tool
 export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCampaignFoldersInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "create_campaign_folders " + JSON.stringify(args));
@@ -1024,8 +1010,6 @@ export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCa
     logToFile(correlationId, "create_campaign_folders returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register create_campaign_folders
 server.registerTool(
     "create_campaign_folders",
     {
@@ -1036,7 +1020,7 @@ server.registerTool(
     createCampaignFoldersHandler
 );
 
-// Handler for deleting campaign folder
+// 'delete_campaign_folder' tool
 export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCampaignFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "delete_campaign_folder " + JSON.stringify(args));
@@ -1055,8 +1039,6 @@ export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCam
     logToFile(correlationId, "delete_campaign_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
-
-// Register delete_campaign_folder
 server.registerTool(
     "delete_campaign_folder",
     {
