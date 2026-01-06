@@ -25,13 +25,16 @@ describe('Requirement Folders Integration Tests', () => {
         expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.id).toBeDefined();
         projectId = result.structuredContent.id;
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should create a requirement folder structure', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        // @ts-ignore
         const result = await createRequirementFoldersHandler({
             project_id: projectId,
             name: "Root Requirement Folder",
@@ -57,7 +60,6 @@ describe('Requirement Folders Integration Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        // @ts-ignore
         const result = await getRequirementFoldersTreeHandler({
             project_id: projectId
         });
@@ -74,6 +76,10 @@ describe('Requirement Folders Integration Tests', () => {
         expect(child2).toBeDefined();
         expect(child2?.children).toHaveLength(1);
         expect(child2?.children[0].name).toBe("Grandchild Requirement Folder");
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the requirement folder', async () => {
@@ -95,6 +101,10 @@ describe('Requirement Folders Integration Tests', () => {
         expect(result).toBeDefined();
         expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.message).toContain(`Requirement folder ${rootFolder.id} deleted successfully`);
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should cleanup the project', async () => {
