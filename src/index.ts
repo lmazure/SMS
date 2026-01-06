@@ -161,7 +161,7 @@ const DeleteProjectInputSchema = z.object({
 });
 
 const DeleteProjectOutputSchema = z.object({
-    message: z.string().describe("Message indicating success of the deletion"),
+    message: z.string().describe("Message indicating success of the deletion of the project"),
 });
 
 const CreateTestCasesInputSchema = z.object({
@@ -221,36 +221,48 @@ const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
 }).describe("Folder structure"));
 
 const CreateRequirementFoldersInputSchema = z.object({
-    project_id: z.number().describe("The ID of the project in which to create the folder"),
+    project_id: z.number().describe("The ID of the project in which to create the requirement folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
 const DeleteRequirementFolderInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the folder to delete")
+    folder_id: z.number().describe("The ID of the requirement folder to delete")
+});
+
+const DeleteRequirementFolderOutputSchema = z.object({
+    message: z.string().describe("Message indicating success of the deletion of the requirement folder"),
 });
 
 const CreateTestCaseFoldersInputSchema = z.object({
-    project_id: z.number().describe("The ID of the project in which to create the folder"),
+    project_id: z.number().describe("The ID of the project in which to create the test case folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
 const DeleteTestCaseFolderInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the folder to delete")
+    folder_id: z.number().describe("The ID of the test case folder to delete")
+});
+
+const DeleteTestCaseFolderOutputSchema = z.object({
+    message: z.string().describe("Message indicating success of the deletion of the test case folder"),
 });
 
 const CreateCampaignFoldersInputSchema = z.object({
-    project_id: z.number().describe("The ID of the project in which to create the folder"),
+    project_id: z.number().describe("The ID of the project in which to create the campaign folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
 const DeleteCampaignFolderInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the folder to delete")
+    folder_id: z.number().describe("The ID of the campaign folder to delete")
+});
+
+const DeleteCampaignFolderOutputSchema = z.object({
+    message: z.string().describe("Message indicating success of the deletion of the campaign folder"),
 });
 
 interface FolderStructure {
@@ -924,14 +936,19 @@ export const deleteRequirementFolderHandler = async (args: z.infer<typeof Delete
         "DELETE"
     );
 
+    const folderData = {
+        message: `Requirement folder ${args.folder_id} deleted successfully`,
+    };
     const returnedData = {
         content: [
             {
                 type: "text" as const,
-                text: `Requirement folder ${args.folder_id} deleted successfully`,
+                text: JSON.stringify(folderData, null, 2),
             },
         ],
+        structuredContent: folderData,
     };
+
     logToFile(correlationId, "delete_requirement_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
@@ -943,6 +960,7 @@ server.registerTool(
         title: "Delete Requirement Folder",
         description: "Delete a requirement folder and its content",
         inputSchema: DeleteRequirementFolderInputSchema,
+        outputSchema: DeleteRequirementFolderOutputSchema,
     },
     deleteRequirementFolderHandler
 );
@@ -1000,14 +1018,19 @@ export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTes
         "DELETE"
     );
 
+    const folderData = {
+        message: `Test case folder ${args.folder_id} deleted successfully`,
+    };
     const returnedData = {
         content: [
             {
                 type: "text" as const,
-                text: `Test case folder ${args.folder_id} deleted successfully`,
+                text: JSON.stringify(folderData, null, 2),
             },
         ],
+        structuredContent: folderData,
     };
+
     logToFile(correlationId, "delete_test_case_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
@@ -1076,14 +1099,19 @@ export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCam
         "DELETE"
     );
 
+    const folderData = {
+        message: `Campaign folder ${args.folder_id} deleted successfully`,
+    };
     const returnedData = {
         content: [
             {
                 type: "text" as const,
-                text: `Campaign folder ${args.folder_id} deleted successfully`,
+                text: JSON.stringify(folderData, null, 2),
             },
         ],
+        structuredContent: folderData,
     };
+
     logToFile(correlationId, "delete_campaign_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };

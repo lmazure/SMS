@@ -93,7 +93,8 @@ describe('Campaign Folders Integration Tests', () => {
         });
 
         expect(result).toBeDefined();
-        expect(result.content[0].text).toContain(`Campaign folder ${rootFolder.id} deleted successfully`);
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.message).toContain(`Campaign folder ${rootFolder.id} deleted successfully`);
     });
 
     it('should cleanup the project', async () => {
