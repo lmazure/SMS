@@ -270,6 +270,18 @@ interface FolderStructure {
     children?: FolderStructure[];
 }
 
+function formatResponse(data: any) {
+    return {
+        content: [
+            {
+                type: "text" as const,
+                text: JSON.stringify(data, null, 2),
+            },
+        ],
+        structuredContent: data,
+    };
+}
+
 export async function makeSquashRequest<T>(correlationId: string, endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
@@ -386,15 +398,7 @@ export const listProjectsHandler = async () => {
         )
     };
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(detailedProjects, null, 2),
-            },
-        ],
-        structuredContent: detailedProjects,
-    };
+    const returnedData = formatResponse(detailedProjects);
 
     logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -433,15 +437,7 @@ export const createProjectHandler = async (args: z.infer<typeof CreateProjectInp
         id: response.id,
     };
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(projectData, null, 2),
-            },
-        ],
-        structuredContent: projectData,
-    };
+    const returnedData = formatResponse(projectData);
 
     logToFile(correlationId, "create_project returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -472,15 +468,7 @@ export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInp
         message: `Project ${args.id} deleted successfully`,
     };
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(projectData, null, 2),
-            },
-        ],
-        structuredContent: projectData,
-    };
+    const returnedData = formatResponse(projectData);
 
     logToFile(correlationId, "delete_project returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -608,15 +596,7 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
         folders: await getDetailedFolders(correlationId, data[0].folders, "requirement-folders")
     };
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(resultData, null, 2),
-            },
-        ],
-        structuredContent: resultData,
-    };
+    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -648,15 +628,7 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
         folders: await getDetailedFolders(correlationId, data[0].folders, "test-case-folders")
     };
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(resultData, null, 2),
-            },
-        ],
-        structuredContent: resultData,
-    };
+    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -809,15 +781,7 @@ export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCamp
         folders: await getDetailedFolders(correlationId, data[0].folders, "campaign-folders")
     };
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(resultData, null, 2),
-            },
-        ],
-        structuredContent: resultData,
-    };
+    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -939,15 +903,7 @@ export const deleteRequirementFolderHandler = async (args: z.infer<typeof Delete
     const folderData = {
         message: `Requirement folder ${args.folder_id} deleted successfully`,
     };
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(folderData, null, 2),
-            },
-        ],
-        structuredContent: folderData,
-    };
+    const returnedData = formatResponse(folderData);
 
     logToFile(correlationId, "delete_requirement_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -1021,15 +977,7 @@ export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTes
     const folderData = {
         message: `Test case folder ${args.folder_id} deleted successfully`,
     };
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(folderData, null, 2),
-            },
-        ],
-        structuredContent: folderData,
-    };
+    const returnedData = formatResponse(folderData);
 
     logToFile(correlationId, "delete_test_case_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -1102,15 +1050,7 @@ export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCam
     const folderData = {
         message: `Campaign folder ${args.folder_id} deleted successfully`,
     };
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(folderData, null, 2),
-            },
-        ],
-        structuredContent: folderData,
-    };
+    const returnedData = formatResponse(folderData);
 
     logToFile(correlationId, "delete_campaign_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;

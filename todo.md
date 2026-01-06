@@ -1,11 +1,8 @@
 # Next step
 
-- add the verification for each test that the text and the structured content are the same  
-    - using `const outputJson = JSON.parse(result.content[0].text);`
-    - and `expect(outputJson).toEqual(output.content[0].structuredContent);`
 - the tests of get_folder should verify all the fields
 - test the creation of a project with no label
-    
+
 # Before merging the branch
 
 
