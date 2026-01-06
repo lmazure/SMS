@@ -51,8 +51,6 @@
 
 get_requirement_folders_tree is buggy for a hierarchy a-b-c-d !!
 
-REST API doc: "An test plan item represents a test case that has been planned"
-
 /api/rest/latest/requirement-folders does not accept a description
 
 # Test data

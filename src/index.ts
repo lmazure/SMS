@@ -160,6 +160,10 @@ const DeleteProjectInputSchema = z.object({
     id: z.number().describe("The ID of the project to delete"),
 });
 
+const DeleteProjectOutputSchema = z.object({
+    message: z.string().describe("Message indicating success of the deletion"),
+});
+
 const CreateTestCasesInputSchema = z.object({
     project_id: z.number().describe("The ID of the project where the test cases will be created"),
     test_cases: z.array(z.object({
@@ -452,13 +456,18 @@ export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInp
         "DELETE"
     );
 
+    const projectData = {
+        message: `Project ${args.id} deleted successfully`,
+    };
+
     const returnedData = {
         content: [
             {
                 type: "text" as const,
-                text: `Project ${args.id} deleted successfully`,
+                text: JSON.stringify(projectData, null, 2),
             },
         ],
+        structuredContent: projectData,
     };
 
     logToFile(correlationId, "delete_project returned: " + JSON.stringify(returnedData, null, 2));
@@ -472,6 +481,7 @@ server.registerTool(
         title: "Delete Project",
         description: "Delete a project in SquashTM",
         inputSchema: DeleteProjectInputSchema,
+        outputSchema: DeleteProjectOutputSchema,
     },
     deleteProjectHandler
 );

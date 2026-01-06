@@ -45,7 +45,8 @@ describe('SquashTM Integration Tests', () => {
 
         const result = await deleteProjectHandler({ id: projectId });
         expect(result).toBeDefined();
-        expect(result.content[0].text).toContain(`Project ${projectId} deleted successfully`);
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.message).toEqual(`Project ${projectId} deleted successfully`);
     });
 
     it('should verify the project is deleted', async () => {
@@ -53,15 +54,10 @@ describe('SquashTM Integration Tests', () => {
         if (!projectId) return;
 
         const result = await listProjectsHandler();
-        const outputJson = JSON.parse(result.content[0].text);
-
-        if (Array.isArray(outputJson)) {
-            const project = outputJson.find((p: any) => p.id === projectId);
-            expect(project).toBeUndefined();
-        } else {
-            // If no projects found, output might be text message "No projects found."
-            // Assuming listProjectsHandler returns either JSON array or "No projects found." text
-            // Logic in handler: if empty, returns "No projects found."
-        }
+        expect(result).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.projects).toBeDefined();
+        expect(result.structuredContent.projects.length).toBeGreaterThan(0);
+        expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeUndefined();
     });
 });
