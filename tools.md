@@ -21,9 +21,10 @@ Creates a new project in SquashTM.
 **Input:**
 - `name` (string): The name of the project
 - `label` (string, optional): The label of the project
-- `description` (string, optional): The description of the project (rich text)
+- `description` (string): The description of the project (rich text)
 
-**Output:** A success message containing the ID of the newly created project.
+**Output:** An object containing:
+- `id` (number): The ID of the newly created project
 
 ### `delete_project`
 
@@ -32,7 +33,8 @@ Deletes a project in SquashTM.
 **Input:**
 - `id` (number): The ID of the project to delete
 
-**Output:** A success message.
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the project
 
 ## Requirements
 
@@ -43,15 +45,16 @@ Retrieves a detailed tree of requirement folders for a specified project.
 **Input:**
 - `project_id` (number): The project ID
 
-**Output:** A simplified tree structure for each project, where each folder includes:
-- `id` (number): The folder ID
-- `name` (string): The folder name
-- `description` (string): The folder description (rich text)
-- `created_by` (string): Who created the folder
-- `created_on` (string): Creation timestamp
-- `modified_by` (string): Who last modified the folder
-- `modified_on` (string): Last modification timestamp
-- `children` (array): Nested child folders
+**Output:** An object containing:
+- `folders` (array): List of folders, where each folder includes:
+  - `id` (number): The folder ID
+  - `name` (string): The folder name
+  - `description` (string): The folder description (rich text)
+  - `created_by` (string): Who created the folder
+  - `created_on` (string): Creation timestamp
+  - `modified_by` (string, optional): Who last modified the folder
+  - `modified_on` (string, optional): Last modification timestamp
+  - `children` (array): Nested child folders
 
 ### `get_requirement_folder_content`
 
@@ -79,7 +82,11 @@ Creates requirement folders recursively.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
 - `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
 
-**Output:** A success message.
+**Output:** An object containing:
+- `folder` (object): The created folder structure with:
+  - `name` (string): Name of the folder
+  - `id` (number): ID of the folder
+  - `children` (array, optional): Subfolders
 
 ### `delete_requirement_folder`
 
@@ -88,7 +95,8 @@ Deletes a requirement folder and its content.
 **Input:**
 - `folder_id` (number): The ID of the folder to delete
 
-**Output:** A success message.
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the requirement folder
 
 
 ## Test Cases
@@ -100,15 +108,16 @@ Retrieves a detailed tree of test case folders for a specified project.
 **Input:**
 - `project_id` (number): The project ID
 
-**Output:** A simplified tree structure for each project, where each folder includes:
-- `id` (number): The folder ID
-- `name` (string): The folder name
-- `description` (string): The folder description (rich text)
-- `created_by` (string): Who created the folder
-- `created_on` (string): Creation timestamp
-- `modified_by` (string): Who last modified the folder
-- `modified_on` (string): Last modification timestamp
-- `children` (array): Nested child folders
+**Output:** An object containing:
+- `folders` (array): List of folders, where each folder includes:
+  - `id` (number): The folder ID
+  - `name` (string): The folder name
+  - `description` (string): The folder description (rich text)
+  - `created_by` (string): Who created the folder
+  - `created_on` (string): Creation timestamp
+  - `modified_by` (string, optional): Who last modified the folder
+  - `modified_on` (string, optional): Last modification timestamp
+  - `children` (array): Nested child folders
 
 ### `get_test_case_folder_content`
 
@@ -152,7 +161,11 @@ Creates test case folders recursively.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
 - `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
 
-**Output:** A success message.
+**Output:** An object containing:
+- `folder` (object): The created folder structure with:
+  - `name` (string): Name of the folder
+  - `id` (number): ID of the folder
+  - `children` (array, optional): Subfolders
 
 ### `delete_test_case_folder`
 
@@ -161,7 +174,8 @@ Deletes a test case folder and its content.
 **Input:**
 - `folder_id` (number): The ID of the folder to delete
 
-**Output:** A success message.
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the test case folder
 
 ## Campaigns
 
@@ -172,15 +186,16 @@ Retrieves a detailed tree of campaign folders for a specified project.
 **Input:**
 - `project_id` (number): The project ID
 
-**Output:** A simplified tree structure for each project, where each folder includes:
-- `id` (number): The folder ID
-- `name` (string): The folder name
-- `description` (string): The folder description (rich text)
-- `created_by` (string): Who created the folder
-- `created_on` (string): Creation timestamp
-- `modified_by` (string): Who last modified the folder
-- `modified_on` (string): Last modification timestamp
-- `children` (array): Nested child folders
+**Output:** An object containing:
+- `folders` (array): List of folders, where each folder includes:
+  - `id` (number): The folder ID
+  - `name` (string): The folder name
+  - `description` (string): The folder description (rich text)
+  - `created_by` (string): Who created the folder
+  - `created_on` (string): Creation timestamp
+  - `modified_by` (string, optional): Who last modified the folder
+  - `modified_on` (string, optional): Last modification timestamp
+  - `children` (array): Nested child folders
 
 ### `create_campaign_folders`
 
@@ -192,7 +207,11 @@ Creates campaign folders recursively.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
 - `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
 
-**Output:** A success message.
+**Output:** An object containing:
+- `folder` (object): The created folder structure with:
+  - `name` (string): Name of the folder
+  - `id` (number): ID of the folder
+  - `children` (array, optional): Subfolders
 
 ### `delete_campaign_folder`
 
@@ -201,7 +220,8 @@ Deletes a campaign folder and its content.
 **Input:**
 - `folder_id` (number): The ID of the folder to delete
 
-**Output:** A success message.
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the campaign folder
 
 
 ## Note: Rich text
