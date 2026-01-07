@@ -224,7 +224,7 @@ Deletes a campaign folder and its content.
 - `message` (string): Message indicating success of the deletion of the campaign folder
 
 
-## Note: Rich text
+## Note 1: Rich text
 
 Rich text is a subset of HTML.
 
@@ -261,3 +261,12 @@ Allowed protocols for URI attributes are:
 | `img`        | `src`     | `cid`, `data`, `http`, `https`   |
 | `ins`        | `cite`    | `http`, `https`                  |
 | `q`          | `cite`    | `http`, `https`                  |
+
+## Note 2: Input/output parameters
+
+- Input parameters are always JSON objects.
+
+- We are using structured content (see [MCP documentation](https://modelcontextprotocol.io/specification/draft/server/tools#structured-content)): output parameters are always JSON objects.  
+  - For creations, the output payload contains the id(s) of the created object(s).
+  - For reads, the output payload contains the object(s) read.
+  - For deletions, the output payload contains a `message` field indicating success of the deletion.
