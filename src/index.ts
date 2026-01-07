@@ -132,7 +132,7 @@ interface SquashTMProjectTree {
     folders: SquashTMFolder[];
 }
 
-// Zod schemas for validation
+// Zod schemas for validation of the tool nputs and outputs
 const ListProjectsInputSchema = z.object({});
 
 const ListProjectsOutputSchema = z.object({
@@ -976,6 +976,7 @@ server.registerTool(
         title: "Delete Test Case Folder",
         description: "Delete a test case folder and its content",
         inputSchema: DeleteTestCaseFolderInputSchema,
+        outputSchema: DeleteTestCaseFolderOutputSchema,
     },
     deleteTestCaseFolderHandler
 );
@@ -1045,6 +1046,7 @@ server.registerTool(
         title: "Delete Campaign Folder",
         description: "Delete a campaign folder and its content",
         inputSchema: DeleteCampaignFolderInputSchema,
+        outputSchema: DeleteCampaignFolderOutputSchema,
     },
     deleteCampaignFolderHandler
 );

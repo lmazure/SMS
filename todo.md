@@ -1,13 +1,13 @@
 # Next step
 
-- the tests of get_folder should verify all the fields
-- test the creation of a project with no label
 
 # Before merging the branch
 
 
 # Later on
 
+- the tests of get_folder should verify all the fields
+- test the creation of a project with no label
 - spin off dev.md from README.md
     - describe in it how to run the dev version in Claude desktop
 -studies
@@ -30,19 +30,7 @@
 
 # Bugs
 
-- 1: when running the tests while there is no project
-     ```
-      FAIL  src/integration.test.ts > SquashTM Integration Tests > should verify the project is deleted
-     SyntaxError: Unexpected token 'N', "No projects found." is not valid JSON
-      ❯ src/integration.test.ts:62:33
-          60|
-          61|         const result = await listProjectsHandler();
-          62|         const outputJson = JSON.parse(result.content[0].text);
-            |                                 ^
-          63|
-          64|         if (Array.isArray(outputJson)) {
-     ```
-     This is related to the question of the format of error case and corner cases.
+
 
 # SquashTM bugs
 
