@@ -47,7 +47,7 @@ function logErrorToConsole(correlationId: string, message: string) {
 // Create server instance
 const server = new McpServer({
     name: "SquashTM",
-    version: "0.0.1",
+    version: "0.0.2",
 });
 
 // structures of the SquashTM API responses
@@ -65,7 +65,7 @@ interface SquashTMProject {
 }
 
 interface SquashTMPaginatedResponse<T> {
-    _embedded?: {
+    _embedded: {
         [key: string]: T[];
     };
     page: {
@@ -227,6 +227,14 @@ const CreateRequirementFoldersInputSchema = z.object({
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
+const CreateFoldersOutputSchema: z.ZodType<any> = z.lazy(() => z.object({
+    name: z.string().describe("Name of the folder"),
+    id: z.number().describe("ID of the folder"),
+    children: z.array(CreateFoldersOutputSchema).optional().describe("Subfolders"),
+}).describe("Folder structure"));
+
+type CreateFoldersOutput = z.infer<typeof CreateFoldersOutputSchema>;
+
 const DeleteRequirementFolderInputSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to delete")
 });
@@ -371,11 +379,11 @@ export const listProjectsHandler = async () => {
             "GET"
         );
 
-        if (data?._embedded?.projects) {
+        if (data._embedded.projects) {
             allProjects.push(...data._embedded.projects);
         }
 
-        if (data?.page) {
+        if (data.page) {
             totalPages = data.page.totalPages;
             currentPage++;
         } else {
@@ -803,7 +811,7 @@ async function createFolderRecursive(
     folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
     endpoint: string,
     children?: FolderStructure[]
-): Promise<void> {
+): Promise<CreateFoldersOutput> {
     const payload = {
         _type: folderType,
         name: name,
@@ -823,11 +831,12 @@ async function createFolderRecursive(
     );
     const newId = response.id;
 
+    const childIds: number[] = [];
     if (children && children.length > 0) {
         // Recursively create children
         // Parent is now the folder we just created
         for (const child of children) {
-            await createFolderRecursive(
+            const c = await createFolderRecursive(
                 correlationId,
                 projectId,
                 child.name,
@@ -836,9 +845,15 @@ async function createFolderRecursive(
                 folderType,
                 endpoint,
                 child.children
-            );;
+            );
+            childIds.push(c);
         }
     }
+    return {
+        name: name,
+        id: newId,
+        children: childIds
+    };
 }
 
 // 'create_requirement_folders' tool
@@ -849,25 +864,20 @@ export const createRequirementFoldersHandler = async (args: z.infer<typeof Creat
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "requirement-folder" : "project";
 
-    await createFolderRecursive(
-        correlationId,
-        args.project_id,
-        args.name,
-        parentId,
-        parentType,
-        "requirement-folder",
-        "requirement-folders",
-        args.children
-    );
-
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: "Requirement folders created successfully",
-            },
-        ],
+    const folderData = {
+        folder: await createFolderRecursive(
+            correlationId,
+            args.project_id,
+            args.name,
+            parentId,
+            parentType,
+            "requirement-folder",
+            "requirement-folders",
+            args.children
+        )
     };
+
+    const returnedData = formatResponse(folderData);
     logToFile(correlationId, "create_requirement_folders returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
@@ -877,6 +887,7 @@ server.registerTool(
         title: "Create Requirement Folders",
         description: "Create requirement folders recursively",
         inputSchema: CreateRequirementFoldersInputSchema,
+        outputSchema: CreateFoldersOutputSchema,
     },
     createRequirementFoldersHandler
 );
@@ -919,25 +930,20 @@ export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTe
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "test-case-folder" : "project";
 
-    await createFolderRecursive(
-        correlationId,
-        args.project_id,
-        args.name,
-        parentId,
-        parentType,
-        "test-case-folder",
-        "test-case-folders",
-        args.children
-    );
-
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: "Test case folders created successfully",
-            },
-        ],
+    const folderData = {
+        folder: await createFolderRecursive(
+            correlationId,
+            args.project_id,
+            args.name,
+            parentId,
+            parentType,
+            "test-case-folder",
+            "test-case-folders",
+            args.children
+        )
     };
+
+    const returnedData = formatResponse(folderData);
     logToFile(correlationId, "create_test_case_folders returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
@@ -947,6 +953,7 @@ server.registerTool(
         title: "Create Test Case Folders",
         description: "Create test case folders recursively",
         inputSchema: CreateTestCaseFoldersInputSchema,
+        outputSchema: CreateFoldersOutputSchema,
     },
     createTestCaseFoldersHandler
 );
@@ -989,25 +996,20 @@ export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCa
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "campaign-folder" : "project";
 
-    await createFolderRecursive(
-        correlationId,
-        args.project_id,
-        args.name,
-        parentId,
-        parentType,
-        "campaign-folder",
-        "campaign-folders",
-        args.children
-    );
-
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: "Campaign folders created successfully",
-            },
-        ],
+    const folderData = {
+        folder: await createFolderRecursive(
+            correlationId,
+            args.project_id,
+            args.name,
+            parentId,
+            parentType,
+            "campaign-folder",
+            "campaign-folders",
+            args.children
+        )
     };
+
+    const returnedData = formatResponse(folderData);
     logToFile(correlationId, "create_campaign_folders returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
@@ -1017,6 +1019,7 @@ server.registerTool(
         title: "Create Campaign Folders",
         description: "Create campaign folders recursively",
         inputSchema: CreateCampaignFoldersInputSchema,
+        outputSchema: CreateFoldersOutputSchema,
     },
     createCampaignFoldersHandler
 );

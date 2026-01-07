@@ -39,9 +39,9 @@ describe('SquashTM Integration Tests', () => {
         expect(result.structuredContent.projects).toBeDefined();
         expect(result.structuredContent.projects.length).toBeGreaterThan(0);
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeDefined();
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId)?.name).toBe(projectName);
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId)?.label).toBe(projectLabel);
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId)?.description).toBe(projectDescription);
+        expect(result.structuredContent.projects.find((p: any) => p.id === projectId).name).toBe(projectName);
+        expect(result.structuredContent.projects.find((p: any) => p.id === projectId).label).toBe(projectLabel);
+        expect(result.structuredContent.projects.find((p: any) => p.id === projectId).description).toBe(projectDescription);
 
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);

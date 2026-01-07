@@ -54,7 +54,24 @@ describe('Campaign Folders Integration Tests', () => {
         });
 
         expect(result).toBeDefined();
-        expect(result.content[0].text).toContain('Campaign folders created successfully');
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folder).toBeDefined();
+        expect(result.structuredContent.folder.id).toBeDefined();
+        expect(result.structuredContent.folder.name).toBe("Root Campaign Folder");
+        expect(result.structuredContent.folder.children).toBeDefined();
+        expect(result.structuredContent.folder.children.length).toBe(2);
+        expect(result.structuredContent.folder.children[0].name).toBe("Child Campaign Folder 1");
+        expect(result.structuredContent.folder.children[0].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].name).toBe("Child Campaign Folder 2");
+        expect(result.structuredContent.folder.children[1].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children.length).toBe(1);
+        expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild Campaign Folder");
+        expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the campaign folder tree and verify structure', async () => {
@@ -71,12 +88,16 @@ describe('Campaign Folders Integration Tests', () => {
 
         const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Campaign Folder");
         expect(rootFolder).toBeDefined();
-        expect(rootFolder?.children).toHaveLength(2);
+        expect(rootFolder.children).toHaveLength(2);
 
-        const child2 = rootFolder?.children.find((f: any) => f.name === "Child Campaign Folder 2");
+        const child1 = rootFolder.children.find((f: any) => f.name === "Child Campaign Folder 1");
+        expect(child1).toBeDefined();
+        expect(child1.children).toHaveLength(0);
+
+        const child2 = rootFolder.children.find((f: any) => f.name === "Child Campaign Folder 2");
         expect(child2).toBeDefined();
-        expect(child2?.children).toHaveLength(1);
-        expect(child2?.children[0].name).toBe("Grandchild Campaign Folder");
+        expect(child2.children).toHaveLength(1);
+        expect(child2.children[0].name).toBe("Grandchild Campaign Folder");
 
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);

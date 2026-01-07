@@ -54,8 +54,24 @@ describe('Test Case Folders Integration Tests', () => {
         });
 
         expect(result).toBeDefined();
-        // Adjust expectation based on actual return value, assuming text confirmation
-        expect(result.content[0].text).toContain('Test case folders created successfully');
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folder).toBeDefined();
+        expect(result.structuredContent.folder.id).toBeDefined();
+        expect(result.structuredContent.folder.name).toBe("Root TC Folder");
+        expect(result.structuredContent.folder.children).toBeDefined();
+        expect(result.structuredContent.folder.children.length).toBe(2);
+        expect(result.structuredContent.folder.children[0].name).toBe("Child TC Folder 1");
+        expect(result.structuredContent.folder.children[0].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].name).toBe("Child TC Folder 2");
+        expect(result.structuredContent.folder.children[1].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children.length).toBe(1);
+        expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild TC Folder");
+        expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the test case folder tree and verify structure', async () => {
@@ -71,12 +87,16 @@ describe('Test Case Folders Integration Tests', () => {
 
         const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root TC Folder");
         expect(rootFolder).toBeDefined();
-        expect(rootFolder?.children).toHaveLength(2);
+        expect(rootFolder.children).toHaveLength(2);
 
-        const child2 = rootFolder?.children.find((f: any) => f.name === "Child TC Folder 2");
+        const child1 = rootFolder.children.find((f: any) => f.name === "Child TC Folder 1");
+        expect(child1).toBeDefined();
+        expect(child1.children).toHaveLength(0);
+
+        const child2 = rootFolder.children.find((f: any) => f.name === "Child TC Folder 2");
         expect(child2).toBeDefined();
-        expect(child2?.children).toHaveLength(1);
-        expect(child2?.children[0].name).toBe("Grandchild TC Folder");
+        expect(child2.children).toHaveLength(1);
+        expect(child2.children[0].name).toBe("Grandchild TC Folder");
 
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);
