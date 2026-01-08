@@ -1,12 +1,14 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createProjectHandler,
-    deleteProjectHandler,
     createCampaignFoldersHandler,
     getCampaignFoldersTreeHandler,
     deleteCampaignFolderHandler
 } from '../index.js';
+import {
+    createProjectHandler,
+    deleteProjectHandler
+} from '../projects.js';
 
 describe('Campaign Folders Integration Tests', () => {
     const timestamp = Date.now();

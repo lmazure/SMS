@@ -1,11 +1,13 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createProjectHandler,
-    deleteProjectHandler,
     createRequirementFoldersHandler,
     getRequirementFoldersTreeHandler,
     deleteRequirementFolderHandler
 } from '../index.js';
+import {
+    createProjectHandler,
+    deleteProjectHandler
+} from '../projects.js';
 
 describe('Requirement Folders Integration Tests', () => {
     const timestamp = Date.now();

@@ -1,48 +1,19 @@
 #!/usr/bin/env node
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import {
-    ErrorCode,
-    McpError
-} from "@modelcontextprotocol/sdk/types.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import "dotenv/config";
 import { fileURLToPath } from 'url';
-import { appendFileSync } from 'fs';
-import { EOL } from 'os';
-
-// Validate required environment variables
-if (!process.env.SQUASHTM_API_KEY) {
-    throw new Error("SQUASHTM_API_KEY environment variable is required");
-}
-if (!process.env.SQUASHTM_URL) {
-    throw new Error("SQUASHTM_URL environment variable is required");
-}
-const SQUASHTM_API_KEY = process.env.SQUASHTM_API_KEY;
-const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
-const SQUASHTM_API_URL = `${SQUASHTM_URL}/api/rest/latest`;
-const LOG_FILE = 'sms.log';
-
-function generateCorrelationId() {
-    return Math.random().toString(36).substring(2, 9);
-}
-
-function logToFile(correlationId: string, message: string) {
-    const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${correlationId}: ${message}${EOL}`;
-    try {
-        appendFileSync(LOG_FILE, logMessage);
-    } catch (error) {
-        // Fallback to console if writing to file fails
-        console.error(`Failed to write to log file: ${error}`);
-    }
-}
-
-function logErrorToConsole(correlationId: string, message: string) {
-    console.error(message);
-    logToFile(correlationId, message);
-}
+import {
+    generateCorrelationId,
+    logToFile,
+    logErrorToConsole,
+    formatResponse,
+    makeSquashRequest,
+    SquashTMProject,
+    SquashTMPaginatedResponse
+} from "./utils.js";
 
 // Create server instance
 const server = new McpServer({
@@ -50,32 +21,7 @@ const server = new McpServer({
     version: "0.0.2",
 });
 
-// structures of the SquashTM API responses
-interface SquashTMProject {
-    _type: string;
-    id: number;
-    name: string;
-    description: string;
-    label: string;
-    _links: {
-        self: {
-            href: string;
-        };
-    };
-}
-
-interface SquashTMPaginatedResponse<T> {
-    _embedded: {
-        [key: string]: T[];
-    };
-    page: {
-        size: number;
-        totalElements: number;
-        totalPages: number;
-        number: number;
-    };
-}
-
+// structures of the SquashTM API responses (not exported - internal to this module)
 interface SquashTMFolder {
     _type: string;
     id: number;
@@ -132,37 +78,7 @@ interface SquashTMProjectTree {
     folders: SquashTMFolder[];
 }
 
-// Zod schemas for validation of the tool nputs and outputs
-const ListProjectsInputSchema = z.object({});
-
-const ListProjectsOutputSchema = z.object({
-    projects: z.array(
-        z.object({
-            id: z.number().describe("The ID of the project"),
-            name: z.string().describe("The name of the project"),
-            label: z.string().optional().describe("The label of the project"),
-            description: z.string().describe("The description of the project (rich text)"),
-        })
-    ),
-});
-
-const CreateProjectInputSchema = z.object({
-    name: z.string().describe("The name of the project to create"),
-    label: z.string().optional().describe("The label of the project to create"),
-    description: z.string().describe("The description of the project to create (rich text)"),
-});
-
-const CreateProjectOutputSchema = z.object({
-    id: z.number().describe("The ID of the newly created project"),
-});
-
-const DeleteProjectInputSchema = z.object({
-    id: z.number().describe("The ID of the project to delete"),
-});
-
-const DeleteProjectOutputSchema = z.object({
-    message: z.string().describe("Message indicating success of the deletion of the project"),
-});
+// Zod schemas for validation of the tool inputs and outputs
 
 const CreateTestCasesInputSchema = z.object({
     project_id: z.number().describe("The ID of the project where the test cases will be created"),
@@ -278,220 +194,12 @@ interface FolderStructure {
     children?: FolderStructure[];
 }
 
-// Format the response to be returned to the MCP client
-function formatResponse(data: any) {
-    return {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(data, null, 2),
-            },
-        ],
-        structuredContent: data,
-    };
-}
 
-// Make a request to the SquashTM REST API
-export async function makeSquashRequest<T>(correlationId: string, endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
-    const headers: Record<string, string> = {
-        Authorization: `Bearer ${SQUASHTM_API_KEY}`,
-        Accept: "application/json",
-    };
+import { registerProjectTools } from "./projects.js";
 
-    if (body) {
-        headers["Content-Type"] = "application/json";
-    }
+// Register project management tools
+registerProjectTools(server);
 
-    logToFile(correlationId, `SquashTM REST API Request: method=${method} endpoint=${endpoint} body=${body ? JSON.stringify(body) : "<empty>"}`);
-
-    try {
-        const response = await fetch(SQUASHTM_API_URL + "/" + endpoint, {
-            method,
-            headers,
-            body: body ? JSON.stringify(body) : undefined,
-        });
-
-        if (!response.ok) {
-            const text = await response.text();
-            logErrorToConsole(correlationId, `SquashTM REST API Response Status: ${response.status} Payload: ${text}`);
-            // if the response is JSON, extract the message from the "message" field
-            // otherwise, use the text
-            let message = text;
-            try {
-                const json = JSON.parse(text);
-                message = json.message || text;
-            } catch {
-                // Not JSON
-            }
-            throw new McpError(
-                ErrorCode.InternalError,
-                `Request failed:\nstatus=${response.status}\nerror=${message}`
-            );
-        }
-
-        if (response.status === 204) {
-            return {} as T;
-        }
-
-        const text = await response.text();
-        logToFile(correlationId, `REST API Response Status: ${response.status} Payload: ${text}`);
-
-        if (text.length === 0) {
-            return {} as T;
-        }
-
-        const contentType = response.headers.get("content-type");
-        if (contentType?.includes("application/json")) {
-            try {
-                return JSON.parse(text) as T;
-            } catch (e) {
-                const m = `Failed to parse SquashTM REST API JSON response: ${text}`;
-                logErrorToConsole(correlationId, m);
-                throw new McpError(ErrorCode.InternalError, m);
-            }
-        } else {
-            const m = `Unexpected SquashTM REST API response format: ${text}`;
-            logErrorToConsole(correlationId, m);
-            throw new McpError(ErrorCode.InternalError, m);
-        }
-    } catch (error) {
-        if (error instanceof McpError) {
-            throw error;
-        }
-        const m = `Error making SquashTM REST API request: ${error}`;
-        logErrorToConsole(correlationId, m);
-        throw new McpError(ErrorCode.InternalError, m);
-    }
-}
-
-// 'list_projects' tool
-export const listProjectsHandler = async () => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "list_projects");
-    let allProjects: SquashTMProject[] = [];
-    let currentPage = 0;
-    let totalPages = 1;
-
-    while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashTMPaginatedResponse<SquashTMProject>>(
-            correlationId,
-            `projects?type=STANDARD&page=${currentPage}&size=50`,
-            "GET"
-        );
-
-        if (data._embedded.projects) {
-            allProjects.push(...data._embedded.projects);
-        }
-
-        if (data.page) {
-            totalPages = data.page.totalPages;
-            currentPage++;
-        } else {
-            break;
-        }
-    }
-
-    const detailedProjects = {
-        projects: await Promise.all(
-            allProjects.map(async (p) => {
-                const details = await makeSquashRequest<SquashTMProject>(
-                    correlationId,
-                    `projects/${p.id}`,
-                    "GET"
-                );
-                return {
-                    id: p.id,
-                    name: p.name,
-                    ...(details.label && { label: details.label }),
-                    description: details.description,
-                };
-            })
-        )
-    };
-
-    const returnedData = formatResponse(detailedProjects);
-
-    logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
-server.registerTool(
-    "list_projects",
-    {
-        title: "List Projects",
-        description: "Get list of SquashTM projects",
-        inputSchema: ListProjectsInputSchema,
-        outputSchema: ListProjectsOutputSchema,
-    },
-    listProjectsHandler
-);
-
-// 'create_project' tool
-export const createProjectHandler = async (args: z.infer<typeof CreateProjectInputSchema>) => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "create_project " + JSON.stringify(args));
-    const payload = {
-        _type: "project",
-        name: args.name,
-        label: args.label,
-        description: args.description,
-    };
-
-    const response = await makeSquashRequest<any>(
-        correlationId,
-        "projects",
-        "POST",
-        payload
-    );
-
-    const projectData = {
-        id: response.id,
-    };
-
-    const returnedData = formatResponse(projectData);
-
-    logToFile(correlationId, "create_project returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
-server.registerTool(
-    "create_project",
-    {
-        title: "Create Project",
-        description: "Create a new project in SquashTM",
-        inputSchema: CreateProjectInputSchema,
-        outputSchema: CreateProjectOutputSchema,
-    },
-    createProjectHandler
-);
-
-// 'delete_project' tool
-export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInputSchema>) => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "delete_project " + JSON.stringify(args));
-    await makeSquashRequest<any>(
-        correlationId,
-        `projects/${args.id}`,
-        "DELETE"
-    );
-
-    const projectData = {
-        message: `Project ${args.id} deleted successfully`,
-    };
-
-    const returnedData = formatResponse(projectData);
-
-    logToFile(correlationId, "delete_project returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
-server.registerTool(
-    "delete_project",
-    {
-        title: "Delete Project",
-        description: "Delete a project in SquashTM",
-        inputSchema: DeleteProjectInputSchema,
-        outputSchema: DeleteProjectOutputSchema,
-    },
-    deleteProjectHandler
-);
 
 // Get folder details
 async function getDetailedFolders(correlationId: string, folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {

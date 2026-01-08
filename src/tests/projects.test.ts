@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { listProjectsHandler, createProjectHandler, deleteProjectHandler } from '../index.js';
+import { listProjectsHandler, createProjectHandler, deleteProjectHandler } from '../projects.js';
 
 describe('SquashTM Integration Tests', () => {
     // Generate a unique project name to avoid collisions
