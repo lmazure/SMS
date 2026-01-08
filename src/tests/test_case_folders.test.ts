@@ -4,7 +4,7 @@ import {
     createTestCaseFoldersHandler,
     getTestCaseFoldersTreeHandler,
     deleteTestCaseFolderHandler
-} from '../index.js';
+} from '../folders.js';
 import {
     createProjectHandler,
     deleteProjectHandler

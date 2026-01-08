@@ -3,7 +3,7 @@ import {
     createRequirementFoldersHandler,
     getRequirementFoldersTreeHandler,
     deleteRequirementFolderHandler
-} from '../index.js';
+} from '../folders.js';
 import {
     createProjectHandler,
     deleteProjectHandler

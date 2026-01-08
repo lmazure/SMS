@@ -63,6 +63,67 @@ export interface SquashTMProject {
     };
 }
 
+export interface SquashTMFolder {
+    _type: string;
+    id: number;
+    name: string;
+    url: string;
+    children: SquashTMFolder[];
+}
+
+export interface SquashTMFolderDetail {
+    _type: string;
+    id: number;
+    name: string;
+    description: string;
+    created_by: string;
+    created_on: string;
+    last_modified_by: string;
+    last_modified_on: string;
+}
+
+export interface SquashTMTestCaseDetail {
+    id: number;
+    name: string;
+    description: string;
+    prerequisite: string;
+    created_by: string;
+    created_on: string;
+    last_modified_by: string;
+    last_modified_on: string;
+}
+
+export interface SquashTMRequirementDetail {
+    id: number;
+    name: string;
+    current_version: {
+        created_by: string;
+        created_on: string;
+        last_modified_by: string;
+        last_modified_on: string;
+        description: string;
+        reference: string;
+        version_number: number;
+        criticality: string;
+        category: {
+            code: string;
+        };
+        status: string;
+    };
+}
+
+export interface SquashTMProjectTree {
+    _type: string;
+    id: number;
+    name: string;
+    folders: SquashTMFolder[];
+}
+
+export interface FolderStructure {
+    name: string;
+    children?: FolderStructure[];
+}
+
 export interface SquashTMPaginatedResponse<T> {
     _embedded: {
         [key: string]: T[];

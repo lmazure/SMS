@@ -4,7 +4,7 @@ import {
     createCampaignFoldersHandler,
     getCampaignFoldersTreeHandler,
     deleteCampaignFolderHandler
-} from '../index.js';
+} from '../folders.js';
 import {
     createProjectHandler,
     deleteProjectHandler

@@ -11,7 +11,7 @@
 - test the creation of a project with no label
 - spin off dev.md from README.md
     - describe in it how to run the dev version in Claude desktop
--studies
+- studies
     - format of outputs
         - what should be returned for deletion? (see bug 1)
 - add more tests and get the tests more detailled
