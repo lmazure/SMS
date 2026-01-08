@@ -1,38 +1,44 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createProjectHandler,
-    deleteProjectHandler,
-    // @ts-ignore
     createTestCaseFoldersHandler,
-    // @ts-ignore
     getTestCaseFoldersTreeHandler,
-    // @ts-ignore
     deleteTestCaseFolderHandler
-} from '../index.js';
+} from '../folders.js';
+import {
+    createProjectHandler,
+    deleteProjectHandler
+} from '../projects.js';
 
 describe('Test Case Folders Integration Tests', () => {
-    const timestamp = Date.now();
-    const projectName = `Test Case Folder Test Project ${timestamp}`;
+    const timestamp: number = Date.now();
+    const projectName: string = `Name of the Test Case Folder Test Project ${timestamp}`;
+    const projectLabel: string = `Label of the Test Case Folder Test Project ${timestamp}`;
+    const projectDescription: string = `Description of the Test Case Folder Test Project ${timestamp}`;
     let projectId: number | undefined;
 
     beforeAll(async () => {
         // Create a project for testing
         const result = await createProjectHandler({
             name: projectName,
-            description: "Project for test case folder tests"
+            label: projectLabel,
+            description: projectDescription
         });
-        const match = result.content[0].text.match(/ID: (\d+)/);
-        if (match) {
-            projectId = parseInt(match[1], 10);
-        }
+        expect(result).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.id).toBeDefined();
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
+
+        projectId = result.structuredContent.id;
     });
 
     it('should create a test case folder structure', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        // @ts-ignore
         const result = await createTestCaseFoldersHandler({
             project_id: projectId,
             name: "Root TC Folder",
@@ -50,33 +56,53 @@ describe('Test Case Folders Integration Tests', () => {
         });
 
         expect(result).toBeDefined();
-        // Adjust expectation based on actual return value, assuming text confirmation
-        expect(result.content[0].text).toContain('Test case folders created successfully');
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folder).toBeDefined();
+        expect(result.structuredContent.folder.id).toBeDefined();
+        expect(result.structuredContent.folder.name).toBe("Root TC Folder");
+        expect(result.structuredContent.folder.children).toBeDefined();
+        expect(result.structuredContent.folder.children.length).toBe(2);
+        expect(result.structuredContent.folder.children[0].name).toBe("Child TC Folder 1");
+        expect(result.structuredContent.folder.children[0].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].name).toBe("Child TC Folder 2");
+        expect(result.structuredContent.folder.children[1].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children.length).toBe(1);
+        expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild TC Folder");
+        expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the test case folder tree and verify structure', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        // @ts-ignore
         const result = await getTestCaseFoldersTreeHandler({
             project_id: projectId
         });
-
         expect(result).toBeDefined();
-        const tree = JSON.parse(result.content[0].text);
-        const projectNode = tree.find((p: any) => p.id === projectId);
-        expect(projectNode).toBeDefined();
-        expect(projectNode.folders).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folders).toBeDefined();
 
-        const rootFolder = projectNode.folders.find((f: any) => f.name === "Root TC Folder");
+        const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root TC Folder");
         expect(rootFolder).toBeDefined();
         expect(rootFolder.children).toHaveLength(2);
+
+        const child1 = rootFolder.children.find((f: any) => f.name === "Child TC Folder 1");
+        expect(child1).toBeDefined();
+        expect(child1.children).toHaveLength(0);
 
         const child2 = rootFolder.children.find((f: any) => f.name === "Child TC Folder 2");
         expect(child2).toBeDefined();
         expect(child2.children).toHaveLength(1);
         expect(child2.children[0].name).toBe("Grandchild TC Folder");
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the test case folder', async () => {
@@ -84,21 +110,24 @@ describe('Test Case Folders Integration Tests', () => {
         if (!projectId) return;
 
         // First get the ID of the root folder
-        // @ts-ignore
         const treeResult = await getTestCaseFoldersTreeHandler({ project_id: projectId });
-        const tree = JSON.parse(treeResult.content[0].text);
-        const projectNode = tree.find((p: any) => p.id === projectId);
-        const rootFolder = projectNode.folders.find((f: any) => f.name === "Root TC Folder");
+        expect(treeResult).toBeDefined();
+        expect(treeResult.structuredContent).toBeDefined();
+        const rootFolder = treeResult.structuredContent.folders.find((f: any) => f.name === "Root TC Folder");
         expect(rootFolder).toBeDefined();
 
         // Delete it
-        // @ts-ignore
         const result = await deleteTestCaseFolderHandler({
             folder_id: rootFolder.id
         });
 
         expect(result).toBeDefined();
-        expect(result.content[0].text).toContain(`Test case folder ${rootFolder.id} deleted successfully`);
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.message).toContain(`Test case folder ${rootFolder.id} deleted successfully`);
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should cleanup the project', async () => {

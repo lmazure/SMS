@@ -9,9 +9,8 @@ A Model Context Protocol (MCP) server for SquashTM that allows AI assistants lik
 ### For Claude Desktop
 
 Add this configuration to your Claude Desktop config file:
-
-**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`  
-**Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -20,7 +19,7 @@ Add this configuration to your Claude Desktop config file:
       "command": "npx",
       "args": [
         "-y",
-        "github:lmazure/SMS#v0.0.2"
+        "github:lmazure/SMS#v0.0.3"
       ],
       "env": {
         "SQUASHTM_URL": "https://your-squashtm-instance.com/squash",

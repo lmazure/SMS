@@ -1,38 +1,44 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createProjectHandler,
-    deleteProjectHandler,
-    // @ts-ignore
     createCampaignFoldersHandler,
-    // @ts-ignore
     getCampaignFoldersTreeHandler,
-    // @ts-ignore
     deleteCampaignFolderHandler
-} from '../index.js';
+} from '../folders.js';
+import {
+    createProjectHandler,
+    deleteProjectHandler
+} from '../projects.js';
 
 describe('Campaign Folders Integration Tests', () => {
-    const timestamp = Date.now();
-    const projectName = `Campaign Folder Test Project ${timestamp}`;
+    const timestamp: number = Date.now();
+    const projectName: string = `Name of the Campaign Folder Test Project ${timestamp}`;
+    const projectLabel: string = `Label of the Campaign Folder Test Project ${timestamp}`;
+    const projectDescription: string = `Description of the Campaign Folder Test Project ${timestamp}`;
     let projectId: number | undefined;
 
     beforeAll(async () => {
         // Create a project for testing
         const result = await createProjectHandler({
             name: projectName,
-            description: "Project for campaign folder tests"
+            label: projectLabel,
+            description: projectDescription
         });
-        const match = result.content[0].text.match(/ID: (\d+)/);
-        if (match) {
-            projectId = parseInt(match[1], 10);
-        }
+        expect(result).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.id).toBeDefined();
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
+
+        projectId = result.structuredContent.id;
     });
 
     it('should create a campaign folder structure', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        // @ts-ignore
         const result = await createCampaignFoldersHandler({
             project_id: projectId,
             name: "Root Campaign Folder",
@@ -50,32 +56,54 @@ describe('Campaign Folders Integration Tests', () => {
         });
 
         expect(result).toBeDefined();
-        expect(result.content[0].text).toContain('Campaign folders created successfully');
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folder).toBeDefined();
+        expect(result.structuredContent.folder.id).toBeDefined();
+        expect(result.structuredContent.folder.name).toBe("Root Campaign Folder");
+        expect(result.structuredContent.folder.children).toBeDefined();
+        expect(result.structuredContent.folder.children.length).toBe(2);
+        expect(result.structuredContent.folder.children[0].name).toBe("Child Campaign Folder 1");
+        expect(result.structuredContent.folder.children[0].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].name).toBe("Child Campaign Folder 2");
+        expect(result.structuredContent.folder.children[1].id).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children).toBeDefined();
+        expect(result.structuredContent.folder.children[1].children.length).toBe(1);
+        expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild Campaign Folder");
+        expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the campaign folder tree and verify structure', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        // @ts-ignore
         const result = await getCampaignFoldersTreeHandler({
             project_id: projectId
         });
 
         expect(result).toBeDefined();
-        const tree = JSON.parse(result.content[0].text);
-        const projectNode = tree.find((p: any) => p.id === projectId);
-        expect(projectNode).toBeDefined();
-        expect(projectNode.folders).toBeDefined();
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.folders).toBeDefined();
 
-        const rootFolder = projectNode.folders.find((f: any) => f.name === "Root Campaign Folder");
+        const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Campaign Folder");
         expect(rootFolder).toBeDefined();
         expect(rootFolder.children).toHaveLength(2);
+
+        const child1 = rootFolder.children.find((f: any) => f.name === "Child Campaign Folder 1");
+        expect(child1).toBeDefined();
+        expect(child1.children).toHaveLength(0);
 
         const child2 = rootFolder.children.find((f: any) => f.name === "Child Campaign Folder 2");
         expect(child2).toBeDefined();
         expect(child2.children).toHaveLength(1);
         expect(child2.children[0].name).toBe("Grandchild Campaign Folder");
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the campaign folder', async () => {
@@ -83,21 +111,24 @@ describe('Campaign Folders Integration Tests', () => {
         if (!projectId) return;
 
         // First get the ID of the root folder
-        // @ts-ignore
         const treeResult = await getCampaignFoldersTreeHandler({ project_id: projectId });
-        const tree = JSON.parse(treeResult.content[0].text);
-        const projectNode = tree.find((p: any) => p.id === projectId);
-        const rootFolder = projectNode.folders.find((f: any) => f.name === "Root Campaign Folder");
+        expect(treeResult).toBeDefined();
+        expect(treeResult.structuredContent).toBeDefined();
+        const rootFolder = treeResult.structuredContent.folders.find((f: any) => f.name === "Root Campaign Folder");
         expect(rootFolder).toBeDefined();
 
         // Delete it
-        // @ts-ignore
         const result = await deleteCampaignFolderHandler({
             folder_id: rootFolder.id
         });
 
         expect(result).toBeDefined();
-        expect(result.content[0].text).toContain(`Campaign folder ${rootFolder.id} deleted successfully`);
+        expect(result.structuredContent).toBeDefined();
+        expect(result.structuredContent.message).toContain(`Campaign folder ${rootFolder.id} deleted successfully`);
+
+        // ensure the text and the structured content are the same
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should cleanup the project', async () => {
