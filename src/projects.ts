@@ -56,7 +56,7 @@ export const listProjectsHandler = async () => {
             "GET"
         );
 
-        if (data._embedded.projects) {
+        if (data._embedded?.projects) {
             allProjects.push(...data._embedded.projects);
         }
 

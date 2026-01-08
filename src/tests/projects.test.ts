@@ -66,7 +66,6 @@ describe('SquashTM Integration Tests', () => {
         expect(result).toBeDefined();
         expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.projects).toBeDefined();
-        expect(result.structuredContent.projects.length).toBeGreaterThan(0);
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeUndefined();
 
         // ensure the text and the structured content are the same
