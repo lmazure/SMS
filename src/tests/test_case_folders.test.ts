@@ -11,10 +11,10 @@ import {
 } from '../projects.js';
 
 describe('Test Case Folders Integration Tests', () => {
-    const timestamp = Date.now();
-    const projectName = `Name of the Test Case Folder Test Project ${timestamp}`;
-    const projectLabel = `Label of the Test Case Folder Test Project ${timestamp}`;
-    const projectDescription = `Description of the Test Case Folder Test Project ${timestamp}`;
+    const timestamp: number = Date.now();
+    const projectName: string = `Name of the Test Case Folder Test Project ${timestamp}`;
+    const projectLabel: string = `Label of the Test Case Folder Test Project ${timestamp}`;
+    const projectDescription: string = `Description of the Test Case Folder Test Project ${timestamp}`;
     let projectId: number | undefined;
 
     beforeAll(async () => {

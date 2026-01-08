@@ -11,10 +11,10 @@ import {
 } from '../projects.js';
 
 describe('Campaign Folders Integration Tests', () => {
-    const timestamp = Date.now();
-    const projectName = `Name of the Campaign Folder Test Project ${timestamp}`;
-    const projectLabel = `Label of the Campaign Folder Test Project ${timestamp}`;
-    const projectDescription = `Description of the Campaign Folder Test Project ${timestamp}`;
+    const timestamp: number = Date.now();
+    const projectName: string = `Name of the Campaign Folder Test Project ${timestamp}`;
+    const projectLabel: string = `Label of the Campaign Folder Test Project ${timestamp}`;
+    const projectDescription: string = `Description of the Campaign Folder Test Project ${timestamp}`;
     let projectId: number | undefined;
 
     beforeAll(async () => {

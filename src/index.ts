@@ -9,16 +9,7 @@ import {
     generateCorrelationId,
     logToFile,
     logErrorToConsole,
-    formatResponse,
     makeSquashRequest,
-    SquashTMProject,
-    SquashTMFolder,
-    SquashTMFolderDetail,
-    SquashTMTestCaseDetail,
-    SquashTMRequirementDetail,
-    SquashTMProjectTree,
-    FolderStructure,
-    SquashTMPaginatedResponse
 } from "./utils.js";
 
 // Create server instance
@@ -49,21 +40,6 @@ registerProjectTools(server);
 
 // Register folder management tools
 registerFolderTools(server);
-
-// Re-export folder handlers for backward compatibility (e.g. tests)
-export {
-    getRequirementFolderContentHandler,
-    getRequirementFoldersTreeHandler,
-    getTestCaseFoldersTreeHandler,
-    getTestCaseFolderContentHandler,
-    getCampaignFoldersTreeHandler,
-    createRequirementFoldersHandler,
-    deleteRequirementFolderHandler,
-    createTestCaseFoldersHandler,
-    deleteTestCaseFolderHandler,
-    createCampaignFoldersHandler,
-    deleteCampaignFolderHandler
-} from "./folders.js";
 
 // 'create_test_cases' tool
 server.registerTool(
