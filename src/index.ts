@@ -34,12 +34,16 @@ const CreateTestCasesInputSchema = z.object({
 
 import { registerProjectTools } from "./projects.js";
 import { registerFolderTools } from "./folders.js";
+import { registerRequirementTools } from "./requirements.js";
 
 // Register project management tools
 registerProjectTools(server);
 
 // Register folder management tools
 registerFolderTools(server);
+
+// Register requirement management tools
+registerRequirementTools(server);
 
 // 'create_test_cases' tool
 server.registerTool(
