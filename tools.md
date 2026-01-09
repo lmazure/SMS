@@ -49,11 +49,11 @@ Retrieves a detailed tree of requirement folders for a specified project.
 - `folders` (array): List of folders, where each folder includes:
   - `id` (number): The folder ID
   - `name` (string): The folder name
-  - `description` (string): The folder description (rich text)
+  - `description` (string, optional): The folder description (rich text) (absent if the folder has no description)
   - `created_by` (string): Who created the folder
   - `created_on` (string): Creation timestamp
-  - `modified_by` (string, optional): Who last modified the folder
-  - `modified_on` (string, optional): Last modification timestamp
+  - `modified_by` (string, optional): Who last modified the folder (absent if the folder has never been modified)
+  - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
 ### `get_requirement_folder_content`
@@ -112,11 +112,11 @@ Retrieves a detailed tree of test case folders for a specified project.
 - `folders` (array): List of folders, where each folder includes:
   - `id` (number): The folder ID
   - `name` (string): The folder name
-  - `description` (string): The folder description (rich text)
+  - `description` (string, optional): The folder description (rich text) (absent if the folder has no description)
   - `created_by` (string): Who created the folder
   - `created_on` (string): Creation timestamp
-  - `modified_by` (string, optional): Who last modified the folder
-  - `modified_on` (string, optional): Last modification timestamp
+  - `modified_by` (string, optional): Who last modified the folder (absent if the folder has never been modified)
+  - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
 ### `get_test_case_folder_content`
@@ -190,11 +190,11 @@ Retrieves a detailed tree of campaign folders for a specified project.
 - `folders` (array): List of folders, where each folder includes:
   - `id` (number): The folder ID
   - `name` (string): The folder name
-  - `description` (string): The folder description (rich text)
+  - `description` (string, optional): The folder description (rich text) (absent if the folder has no description)
   - `created_by` (string): Who created the folder
   - `created_on` (string): Creation timestamp
-  - `modified_by` (string, optional): Who last modified the folder
-  - `modified_on` (string, optional): Last modification timestamp
+  - `modified_by` (string, optional): Who last modified the folder (absent if the folder has never been modified)
+  - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
 ### `create_campaign_folders`

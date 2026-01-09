@@ -20,11 +20,11 @@ const ReturnedFolderSchema: z.ZodType<any> = z.lazy(() =>
     z.object({
         id: z.number().describe("The ID of the folder"),
         name: z.string().describe("The name of the folder"),
-        description: z.string().describe("The description of the folder"),
+        description: z.string().optional().describe("The description of the folder (rich text) (absent if the folder has no description)"),
         created_by: z.string().describe("The user who created the folder"),
         created_on: z.string().describe("The date when the folder was created"),
-        modified_by: z.string().optional().describe("The user who last modified the folder"),
-        modified_on: z.string().optional().describe("The date when the folder was last modified"),
+        modified_by: z.string().optional().describe("The user who last modified the folder (absent if the folder has never been modified)"),
+        modified_on: z.string().optional().describe("The date when the folder was last modified (absent if the folder has never been modified)"),
         children: z.array(ReturnedFolderSchema).describe("Subfolders"),
     })
 );
@@ -115,7 +115,7 @@ const DeleteCampaignFolderOutputSchema = z.object({
 
 // Get folder details
 async function getDetailedFolders(correlationId: string, folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
-    return Promise.all(folders.map(async folder => {
+    return Promise.all(folders.map(async (folder: SquashTMFolder) => {
         const details = await makeSquashRequest<SquashTMFolderDetail>(
             correlationId,
             `${type}/${folder.id}`,
@@ -124,7 +124,7 @@ async function getDetailedFolders(correlationId: string, folders: SquashTMFolder
         return {
             id: folder.id,
             name: folder.name,
-            description: details.description,
+            ...(details.description && { description: details.description }),
             created_by: details.created_by,
             created_on: details.created_on,
             ...(details.last_modified_by && { modified_by: details.last_modified_by }),
