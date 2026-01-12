@@ -6,9 +6,9 @@ import {
     formatResponse,
     makeSquashRequest,
     SquashTMFolder,
-    SquashTMFolderDetail,
-    SquashTMTestCaseDetail,
-    SquashTMRequirementDetail,
+    SquashTMFolderDetails,
+    SquashTMTestCaseDetails,
+    SquashTMRequirementDetails,
     SquashTMProjectTree,
     FolderStructure,
     SquashTMPaginatedResponse
@@ -172,7 +172,7 @@ function buildFolderTree(folders: FolderDetails[]): ReturnedFolder[] {
 
 // Get folder details
 async function getFolderDetails(correlationId: string, folderID: number, type: "requirement-folder" | "test-case-folder" | "campaign-folder"): Promise<FolderDetails> {
-    const details = await makeSquashRequest<SquashTMFolderDetail>(
+    const details = await makeSquashRequest<SquashTMFolderDetails>(
         correlationId,
         `${type}s/${folderID}`,
         "GET"
@@ -221,7 +221,7 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
 
     const detailedRequirements = await Promise.all(
         allRequirements.map(async (req) => {
-            const details = await makeSquashRequest<SquashTMRequirementDetail>(
+            const details = await makeSquashRequest<SquashTMRequirementDetails>(
                 correlationId,
                 `requirements/${req.id}`,
                 "GET"
@@ -266,7 +266,7 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
         "GET"
     );
 
-    // the hierarchy returned by Squash TM is garbage, we need to rebuild it
+    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
 
     const allFolderIds = data.flatMap(project =>
         project.folders.flatMap(function flatten(folder): number[] {
@@ -294,7 +294,7 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
         "GET"
     );
 
-    // the hierarchy returned by Squash TM is garbage, we need to rebuild it
+    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
 
     const allFolderIds = data.flatMap(project =>
         project.folders.flatMap(function flatten(folder): number[] {
@@ -344,7 +344,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
 
     const detailedTestCases = await Promise.all(
         allTestCases.map(async (tc) => {
-            const details = await makeSquashRequest<SquashTMTestCaseDetail>(
+            const details = await makeSquashRequest<SquashTMTestCaseDetails>(
                 correlationId,
                 `test-cases/${tc.id}`,
                 "GET"
@@ -385,7 +385,7 @@ export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCamp
         "GET"
     );
 
-    // the hierarchy returned by Squash TM is garbage, we need to rebuild it
+    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
 
     const allFolderIds = data.flatMap(project =>
         project.folders.flatMap(function flatten(folder): number[] {

@@ -71,7 +71,7 @@ export interface SquashTMFolder {
     children: SquashTMFolder[];
 }
 
-export interface SquashTMFolderDetail {
+export interface SquashTMFolderDetails {
     _type: string;
     id: number;
     name: string;
@@ -86,7 +86,7 @@ export interface SquashTMFolderDetail {
     last_modified_on: string;
 }
 
-export interface SquashTMTestCaseDetail {
+export interface SquashTMTestCaseDetails {
     id: number;
     name: string;
     description: string;
@@ -97,7 +97,7 @@ export interface SquashTMTestCaseDetail {
     last_modified_on: string;
 }
 
-export interface SquashTMRequirementDetail {
+export interface SquashTMRequirementDetails {
     id: number;
     name: string;
     current_version: {

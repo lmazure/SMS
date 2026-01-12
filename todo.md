@@ -1,7 +1,7 @@
 # Next step
 
-- put back management of the descriptions
-- in utils.ts, rename the SquashTMXXXDetail into SquashTMXXXDetails
+- merge common folder code
+- gérer https://github.com/lmazure/SMS/security/dependabot/3
 
 # Before merging the branch
 
