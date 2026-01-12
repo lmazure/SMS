@@ -127,6 +127,26 @@ const DeleteCampaignFolderOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the campaign folder"),
 });
 
+// Get folder details
+async function getFolderDetails(correlationId: string, folderID: number, type: "requirement-folder" | "test-case-folder" | "campaign-folder"): Promise<FolderDetails> {
+    const details = await makeSquashRequest<SquashTMFolderDetails>(
+        correlationId,
+        `${type}s/${folderID}`,
+        "GET"
+        );
+        return {
+            id: folderID,
+            name: details.name,
+            ...(details.description && { description: details.description }),
+            ...(details.parent._type === type && { parent_folder_id: details.parent.id }),
+            created_by: details.created_by,
+            created_on: details.created_on,
+            ...(details.last_modified_by && { modified_by: details.last_modified_by }),
+            ...(details.last_modified_on && { modified_on: details.last_modified_on }),
+        };
+}
+
+// Build the folder tree
 function buildFolderTree(folders: FolderDetails[]): ReturnedFolder[] {
 
     // Create a map for quick lookup
@@ -170,6 +190,7 @@ function buildFolderTree(folders: FolderDetails[]): ReturnedFolder[] {
     return roots;
 }
 
+// Get the folder tree from SquashTM
 async function getFoldersTree(
     correlationId: string,
     projectId: number,
@@ -196,25 +217,6 @@ async function getFoldersTree(
     const resultData = { folders: buildFolderTree(allFolderDetails) };
 
     return formatResponse(resultData);
-}
-
-// Get folder details
-async function getFolderDetails(correlationId: string, folderID: number, type: "requirement-folder" | "test-case-folder" | "campaign-folder"): Promise<FolderDetails> {
-    const details = await makeSquashRequest<SquashTMFolderDetails>(
-        correlationId,
-        `${type}s/${folderID}`,
-        "GET"
-        );
-        return {
-            id: folderID,
-            name: details.name,
-            ...(details.description && { description: details.description }),
-            ...(details.parent._type === type && { parent_folder_id: details.parent.id }),
-            created_by: details.created_by,
-            created_on: details.created_on,
-            ...(details.last_modified_by && { modified_by: details.last_modified_by }),
-            ...(details.last_modified_on && { modified_on: details.last_modified_on }),
-        };
 }
 
 // 'get_requirement_folder_content' tool
