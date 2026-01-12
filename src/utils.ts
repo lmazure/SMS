@@ -76,6 +76,10 @@ export interface SquashTMFolderDetail {
     id: number;
     name: string;
     description: string;
+    parent: {
+        _type: string;
+        id: number;
+    };
     created_by: string;
     created_on: string;
     last_modified_by: string;

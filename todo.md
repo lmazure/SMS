@@ -1,10 +1,13 @@
 # Next step
 
+- put back management of the descriptions
+
 # Before merging the branch
 
 
 # Later on
 
+- validate code with eslint
 - the tests of get_folder should verify all the fields
 - test the creation of a project with no label
 - spin off dev.md from README.md

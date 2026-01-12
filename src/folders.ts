@@ -14,6 +14,17 @@ import {
     SquashTMPaginatedResponse
 } from "./utils.js";
 
+type FolderDetails = {
+    id: number;
+    name: string;
+    description?: string;
+    parent_folder_id?: number;
+    created_by: string;
+    created_on: string;
+    modified_by?: string;
+    modified_on?: string;
+}
+
 // Zod schemas for validation of the tool inputs and outputs
 
 const ReturnedFolderSchema: z.ZodType<any> = z.lazy(() =>
@@ -113,25 +124,66 @@ const DeleteCampaignFolderOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the campaign folder"),
 });
 
-// Get folder details
-async function getDetailedFolders(correlationId: string, folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
-    return Promise.all(folders.map(async (folder: SquashTMFolder) => {
-        const details = await makeSquashRequest<SquashTMFolderDetail>(
-            correlationId,
-            `${type}/${folder.id}`,
-            "GET"
-        );
-        return {
+function buildFolderTree(folders: FolderDetails[]): ReturnedFolder[] {
+
+    // Create a map for quick lookup
+    const folderMap = new Map<number, ReturnedFolder>();
+
+    // Initialize all folders with empty children arrays
+    folders.forEach(folder => {
+        folderMap.set(folder.id, {
             id: folder.id,
             name: folder.name,
+            description: folder.description,
+            created_by: folder.created_by,
+            created_on: folder.created_on,
+            modified_by: folder.modified_by,
+            modified_on: folder.modified_on,
+            children: []
+        });
+    });
+
+    // Build the tree by assigning children to parents
+    const roots: ReturnedFolder[] = [];
+
+    folders.forEach(folder => {
+        const node = folderMap.get(folder.id)!;
+
+        if (folder.parent_folder_id === undefined) {
+            // This is a root folder
+            roots.push(node);
+        } else {
+            // This is a child folder - add it to its parent
+            const parent = folderMap.get(folder.parent_folder_id);
+            if (parent) {
+                parent.children.push(node);
+            } else {
+                // Parent not found - treat as root
+                roots.push(node);
+            }
+        }
+    });
+
+    return roots;
+}
+
+// Get folder details
+async function getFolderDetails(correlationId: string, folderID: number, type: "requirement-folder" | "test-case-folder" | "campaign-folder"): Promise<FolderDetails> {
+    const details = await makeSquashRequest<SquashTMFolderDetail>(
+        correlationId,
+        `${type}s/${folderID}`,
+        "GET"
+        );
+        return {
+            id: folderID,
+            name: details.name,
             ...(details.description && { description: details.description }),
+            ...(details.parent._type === type && { parent_folder_id: details.parent.id }),
             created_by: details.created_by,
             created_on: details.created_on,
             ...(details.last_modified_by && { modified_by: details.last_modified_by }),
             ...(details.last_modified_on && { modified_on: details.last_modified_on }),
-            children: await getDetailedFolders(correlationId, folder.children || [], type)
         };
-    }));
 }
 
 // 'get_requirement_folder_content' tool
@@ -211,9 +263,17 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
         "GET"
     );
 
-    const resultData = {
-        folders: await getDetailedFolders(correlationId, data[0].folders, "requirement-folders")
-    };
+    // the hierarchy returned by Squash TM is garbage, we need to rebuild it
+
+    const allFolderIds = data.flatMap(project =>
+        project.folders.flatMap(function flatten(folder): number[] {
+          const id = folder._type === "requirement-folder" ? [folder.id] : [];
+          return [...id, ...folder.children.flatMap(flatten)];
+        }));
+
+    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, "requirement-folder")));
+
+    const resultData = { folders: buildFolderTree(allFolderDetails) };
 
     const returnedData = formatResponse(resultData);
 
@@ -231,9 +291,17 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
         "GET"
     );
 
-    const resultData = {
-        folders: await getDetailedFolders(correlationId, data[0].folders, "test-case-folders")
-    };
+    // the hierarchy returned by Squash TM is garbage, we need to rebuild it
+
+    const allFolderIds = data.flatMap(project =>
+        project.folders.flatMap(function flatten(folder): number[] {
+          const id = folder._type === "test-case-folder" ? [folder.id] : [];
+          return [...id, ...folder.children.flatMap(flatten)];
+        }));
+
+    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, "test-case-folder")));
+
+    const resultData = { folders: buildFolderTree(allFolderDetails) };
 
     const returnedData = formatResponse(resultData);
 
@@ -314,9 +382,17 @@ export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCamp
         "GET"
     );
 
-    const resultData = {
-        folders: await getDetailedFolders(correlationId, data[0].folders, "campaign-folders")
-    };
+    // the hierarchy returned by Squash TM is garbage, we need to rebuild it
+
+    const allFolderIds = data.flatMap(project =>
+        project.folders.flatMap(function flatten(folder): number[] {
+          const id = folder._type === "campaign-folder" ? [folder.id] : [];
+          return [...id, ...folder.children.flatMap(flatten)];
+        }));
+
+    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, "campaign-folder")));
+
+    const resultData = { folders: buildFolderTree(allFolderDetails) };
 
     const returnedData = formatResponse(resultData);
 
