@@ -1,6 +1,7 @@
 # Next step
 
 - put back management of the descriptions
+- in utils.ts, rename the SquashTMXXXDetail into SquashTMXXXDetails
 
 # Before merging the branch
 
