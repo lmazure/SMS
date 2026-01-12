@@ -18,7 +18,7 @@ const ListProjectsOutputSchema = z.object({
             id: z.number().describe("The ID of the project"),
             name: z.string().describe("The name of the project"),
             label: z.string().optional().describe("The label of the project"),
-            description: z.string().describe("The description of the project (rich text)"),
+            description: z.string().optional().describe("The description of the project (rich text)"),
         })
     ),
 });
@@ -26,7 +26,7 @@ const ListProjectsOutputSchema = z.object({
 const CreateProjectInputSchema = z.object({
     name: z.string().describe("The name of the project to create"),
     label: z.string().optional().describe("The label of the project to create"),
-    description: z.string().describe("The description of the project to create (rich text)"),
+    description: z.string().optional().describe("The description of the project to create (rich text)"),
 });
 
 const CreateProjectOutputSchema = z.object({
@@ -80,7 +80,7 @@ export const listProjectsHandler = async () => {
                     id: p.id,
                     name: p.name,
                     ...(details.label && { label: details.label }),
-                    description: details.description,
+                    ...(details.description && { description: details.description }),
                 };
             })
         )

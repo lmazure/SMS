@@ -120,11 +120,13 @@ export interface SquashTMProjectTree {
     _type: string;
     id: number;
     name: string;
+    description: string;
     folders: SquashTMFolder[];
 }
 
 export interface FolderStructure {
     name: string;
+    description: string | undefined;
     children?: FolderStructure[];
 }
 

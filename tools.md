@@ -11,8 +11,8 @@ Retrieves a list of all SquashTM projects you have access to.
 **Output:** An array of objects, each containing:
 - `id` (number): The project ID
 - `name` (string): The project name
-- `label` (string): The project label
-- `description` (string): The project description (rich text)
+- `label` (string, optional): The project label
+- `description` (string, optional): The project description (rich text)
 
 ### `create_project`
 
@@ -21,7 +21,7 @@ Creates a new project in SquashTM.
 **Input:**
 - `name` (string): The name of the project
 - `label` (string, optional): The label of the project
-- `description` (string): The description of the project (rich text)
+- `description` (string, optional): The description of the project (rich text)
 
 **Output:** An object containing:
 - `id` (number): The ID of the newly created project
@@ -78,9 +78,10 @@ Creates requirement folders recursively.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `name` (string): Name of the folder
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
-- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+- `name` (string): Name of the folder
+- `description` (string, optional): Description of the folder (rich text)
+- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
@@ -157,9 +158,10 @@ Creates test case folders recursively.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `name` (string): Name of the folder
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
-- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+- `name` (string): Name of the folder
+- `description` (string, optional): Description of the folder (rich text)
+- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
@@ -203,9 +205,10 @@ Creates campaign folders recursively.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `name` (string): Name of the folder
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
-- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+- `name` (string): Name of the folder
+- `description` (string, optional): Description of the folder (rich text)
+- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:

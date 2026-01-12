@@ -75,6 +75,7 @@ const CreateRequirementFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the requirement folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
+    description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
@@ -98,6 +99,7 @@ const CreateTestCaseFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the test case folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
+    description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
@@ -113,6 +115,7 @@ const CreateCampaignFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the campaign folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
+    description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
@@ -405,6 +408,7 @@ async function createFolderRecursive(
     correlationId: string,
     projectId: number,
     name: string,
+    description: string | undefined,
     parentId: number,
     parentType: "project" | "requirement-folder" | "test-case-folder" | "campaign-folder",
     folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
@@ -414,6 +418,7 @@ async function createFolderRecursive(
     const payload = {
         _type: folderType,
         name: name,
+        description: description,
         parent: {
             _type: parentType,
             id: parentId
@@ -439,6 +444,7 @@ async function createFolderRecursive(
                 correlationId,
                 projectId,
                 child.name,
+                child.description,
                 newId,
                 folderType, // Parent is now this folder type
                 folderType,
@@ -468,6 +474,7 @@ export const createRequirementFoldersHandler = async (args: z.infer<typeof Creat
             correlationId,
             args.project_id,
             args.name,
+            args.description,
             parentId,
             parentType,
             "requirement-folder",
@@ -514,6 +521,7 @@ export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTe
             correlationId,
             args.project_id,
             args.name,
+            args.description,
             parentId,
             parentType,
             "test-case-folder",
@@ -560,6 +568,7 @@ export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCa
             correlationId,
             args.project_id,
             args.name,
+            args.description,
             parentId,
             parentType,
             "campaign-folder",

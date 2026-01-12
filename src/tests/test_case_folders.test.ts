@@ -10,7 +10,7 @@ import {
     deleteProjectHandler
 } from '../projects.js';
 
-describe('Test Case Folders Integration Tests', () => {
+describe('Test Case Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();
     const projectName: string = `Name of the Test Case Folder Test Project ${timestamp}`;
     const projectLabel: string = `Label of the Test Case Folder Test Project ${timestamp}`;
@@ -42,14 +42,20 @@ describe('Test Case Folders Integration Tests', () => {
         const result = await createTestCaseFoldersHandler({
             project_id: projectId,
             name: "Root TC Folder",
+            description: "Description of the Root TC Folder",
             children: [
                 {
-                    name: "Child TC Folder 1"
+                    name: "Child TC Folder 1",
+                    description: "Description of the Child TC Folder 1"
                 },
                 {
                     name: "Child TC Folder 2",
+                    description: "Description of the Child TC Folder 2",
                     children: [
-                        { name: "Grandchild TC Folder" }
+                        {
+                            name: "Grandchild TC Folder",
+                            description: "Description of the Grandchild TC Folder"
+                        }
                     ]
                 }
             ]

@@ -9,7 +9,7 @@ import {
     deleteProjectHandler
 } from '../projects.js';
 
-describe('Requirement Folders Integration Tests', () => {
+describe('Requirement Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();
     const projectName: string = `Name of the Requirement Folder Test Project ${timestamp}`;
     const projectLabel: string = `Label of the Requirement Folder Test Project ${timestamp}`;
@@ -40,14 +40,20 @@ describe('Requirement Folders Integration Tests', () => {
         const result = await createRequirementFoldersHandler({
             project_id: projectId,
             name: "Root Requirement Folder",
+            description: "Description of the Root Requirement Folder",
             children: [
                 {
-                    name: "Child Requirement Folder 1"
+                    name: "Child Requirement Folder 1",
+                    description: "Description of the Child Requirement Folder 1",
                 },
                 {
                     name: "Child Requirement Folder 2",
+                    description: "Description of the Child Requirement Folder 2",
                     children: [
-                        { name: "Grandchild Requirement Folder" }
+                        {
+                            name: "Grandchild Requirement Folder",
+                            description: "Description of the Grandchild Requirement Folder"
+                        }
                     ]
                 }
             ]
@@ -88,16 +94,24 @@ describe('Requirement Folders Integration Tests', () => {
 
         const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Requirement Folder");
         expect(rootFolder).toBeDefined();
+        expect(rootFolder.id).toBeDefined();
+        expect(rootFolder.description).toBe("Description of the Root Requirement Folder");
         expect(rootFolder.children).toHaveLength(2);
 
         const child1 = rootFolder.children.find((f: any) => f.name === "Child Requirement Folder 1");
         expect(child1).toBeDefined();
+        expect(child1.id).toBeDefined();
+        expect(child1.description).toBe("Description of the Child Requirement Folder 1");
         expect(child1.children).toHaveLength(0);
 
         const child2 = rootFolder.children.find((f: any) => f.name === "Child Requirement Folder 2");
         expect(child2).toBeDefined();
+        expect(child2.id).toBeDefined();
+        expect(child2.description).toBe("Description of the Child Requirement Folder 2");
         expect(child2.children).toHaveLength(1);
+        expect(child2.children[0].id).toBeDefined();
         expect(child2.children[0].name).toBe("Grandchild Requirement Folder");
+        expect(child2.children[0].description).toBe("Description of the Grandchild Requirement Folder");
 
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);
