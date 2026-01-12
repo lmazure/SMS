@@ -170,6 +170,34 @@ function buildFolderTree(folders: FolderDetails[]): ReturnedFolder[] {
     return roots;
 }
 
+async function getFoldersTree(
+    correlationId: string,
+    projectId: number,
+    folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
+    resource: "requirement-folders" | "test-case-folders" | "campaign-folders",
+): Promise<ReturnType<typeof formatResponse>> {
+
+    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+        correlationId,
+        `${resource}/tree/${projectId}`,
+        "GET"
+    );
+
+    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
+
+    const allFolderIds = data.flatMap(project =>
+        project.folders.flatMap(function flatten(folder): number[] {
+            const id = folder._type === folderType ? [folder.id] : [];
+            return [...id, ...folder.children.flatMap(flatten)];
+        }));
+
+    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, folderType)));
+
+    const resultData = { folders: buildFolderTree(allFolderDetails) };
+
+    return formatResponse(resultData);
+}
+
 // Get folder details
 async function getFolderDetails(correlationId: string, folderID: number, type: "requirement-folder" | "test-case-folder" | "campaign-folder"): Promise<FolderDetails> {
     const details = await makeSquashRequest<SquashTMFolderDetails>(
@@ -260,25 +288,12 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
 export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
-    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+    const returnedData = await getFoldersTree(
         correlationId,
-        `requirement-folders/tree/${args.project_id}`,
-        "GET"
+        args.project_id,
+        "requirement-folder",
+        "requirement-folders",
     );
-
-    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
-
-    const allFolderIds = data.flatMap(project =>
-        project.folders.flatMap(function flatten(folder): number[] {
-          const id = folder._type === "requirement-folder" ? [folder.id] : [];
-          return [...id, ...folder.children.flatMap(flatten)];
-        }));
-
-    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, "requirement-folder")));
-
-    const resultData = { folders: buildFolderTree(allFolderDetails) };
-
-    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -288,25 +303,12 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
 export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTestCaseFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
-    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+    const returnedData = await getFoldersTree(
         correlationId,
-        `test-case-folders/tree/${args.project_id}`,
-        "GET"
+        args.project_id,
+        "test-case-folder",
+        "test-case-folders",
     );
-
-    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
-
-    const allFolderIds = data.flatMap(project =>
-        project.folders.flatMap(function flatten(folder): number[] {
-          const id = folder._type === "test-case-folder" ? [folder.id] : [];
-          return [...id, ...folder.children.flatMap(flatten)];
-        }));
-
-    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, "test-case-folder")));
-
-    const resultData = { folders: buildFolderTree(allFolderDetails) };
-
-    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -379,25 +381,12 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
 export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
-    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+    const returnedData = await getFoldersTree(
         correlationId,
-        `campaign-folders/tree/${args.project_id}`,
-        "GET"
+        args.project_id,
+        "campaign-folder",
+        "campaign-folders",
     );
-
-    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
-
-    const allFolderIds = data.flatMap(project =>
-        project.folders.flatMap(function flatten(folder): number[] {
-          const id = folder._type === "campaign-folder" ? [folder.id] : [];
-          return [...id, ...folder.children.flatMap(flatten)];
-        }));
-
-    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, "campaign-folder")));
-
-    const resultData = { folders: buildFolderTree(allFolderDetails) };
-
-    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
