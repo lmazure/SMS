@@ -56,6 +56,30 @@ Retrieves a detailed tree of requirement folders for a specified project.
   - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
+### `create_requirements`
+
+Creates one or more requirements in a specified SquashTM project.
+
+**Input:**
+- `project_id` (number): The project ID in which to create the requirements
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new requirements (optional, if not specified, the requirements will be created at the root level)
+- `requirements` (array): List of requirements to create, each containing:
+  - `name` (string): Requirement name
+  - `description` (string): Requirement description (rich text)
+
+**Output:** An object containing:
+- `requirements` (array): List of requirements, where each requirement includes:
+  - `id` (number): The requirement ID
+  - `name` (string): The requirement name
+
+### `delete_requirement`
+
+**Input:**
+- `id` (number): The ID of the requirement to delete
+
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the requirement
+
 ### `get_requirement_folder_content`
 
 Retrieves the list of requirements within a specific requirement folder.

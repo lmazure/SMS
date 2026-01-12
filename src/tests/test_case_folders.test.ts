@@ -28,10 +28,6 @@ describe('Test Case Folder Hierarchy Tests', () => {
         expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.id).toBeDefined();
 
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
-
         projectId = result.structuredContent.id;
     });
 

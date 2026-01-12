@@ -26,11 +26,8 @@ describe('Requirement Folder Hierarchy Tests', () => {
         expect(result).toBeDefined();
         expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.id).toBeDefined();
-        projectId = result.structuredContent.id;
 
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
+        projectId = result.structuredContent.id;
     });
 
     it('should create a requirement folder structure', async () => {

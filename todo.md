@@ -1,13 +1,22 @@
 # Next step
 
-- merge common folder code
+- déclarer le schéma de retour de get_requirement_folder_content
+- implement the creation of requirements at the root level
+- fix the tests
+- dans les tests, supprimer les
+        expect(projectId).toBeDefined();
+        if (!projectId) return;
+        expect(folderId).toBeDefined();
+        if (!folderId) return;
 - gérer https://github.com/lmazure/SMS/security/dependabot/3
+
 
 # Before merging the branch
 
 
 # Later on
 
+- when a tool has both project_id and parent_folder_id, we do not verify that the parent_folder_id belongs to the project
 - validate code with eslint
 - the tests of get_folder should verify all the fields
 - test the creation of a project with no label

@@ -58,10 +58,6 @@ const GetCampaignFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the campaign folders tree for"),
 });
 
-const GetRequirementFolderContentInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
-});
-
 const GetTestCaseFolderContentInputSchema = z.object({
     folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
 });
@@ -219,72 +215,6 @@ async function getFoldersTree(
     return formatResponse(resultData);
 }
 
-// 'get_requirement_folder_content' tool
-export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
-    let allRequirements: any[] = [];
-    let currentPage = 0;
-    let totalPages = 1;
-
-    while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
-            correlationId,
-            `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
-            "GET"
-        );
-
-        if (!data || !data._embedded || !data._embedded.content) {
-            break;
-        }
-
-        const requirements = data._embedded.content.filter((item: any) => item._type === "requirement");
-        allRequirements.push(...requirements);
-
-        if (data.page) {
-            totalPages = data.page.totalPages;
-            currentPage++;
-        } else {
-            break;
-        }
-    }
-
-    const detailedRequirements = await Promise.all(
-        allRequirements.map(async (req) => {
-            const details = await makeSquashRequest<SquashTMRequirementDetails>(
-                correlationId,
-                `requirements/${req.id}`,
-                "GET"
-            );
-            return {
-                id: details.id,
-                name: details.name,
-                reference: details.current_version.reference,
-                version: details.current_version.version_number,
-                description: details.current_version.description,
-                created_by: details.current_version.created_by,
-                created_on: details.current_version.created_on,
-                last_modified_by: details.current_version.last_modified_by,
-                last_modified_on: details.current_version.last_modified_on,
-                criticality: details.current_version.criticality,
-                category: details.current_version.category?.code,
-                status: details.current_version.status,
-            };
-        })
-    );
-
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(detailedRequirements, null, 2),
-            },
-        ],
-    };
-
-    logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
 
 // 'get_requirement_folders_tree' tool
 export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeInputSchema>) => {
@@ -595,16 +525,6 @@ export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCam
 
 // Register folder management tools
 export function registerFolderTools(server: McpServer) {
-    server.registerTool(
-        "get_requirement_folder_content",
-        {
-            title: "Get Requirement Folder Content",
-            description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
-            inputSchema: GetRequirementFolderContentInputSchema,
-        },
-        getRequirementFolderContentHandler
-    );
-
     server.registerTool(
         "get_requirement_folders_tree",
         {
