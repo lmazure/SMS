@@ -1,6 +1,5 @@
 # Next step
 
-- gérer https://github.com/lmazure/SMS/security/dependabot/3
 - add tests for folders with no description
 - add tests for projects with no description
 - add tests for projects with no label
