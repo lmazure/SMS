@@ -16,7 +16,7 @@
 
 # Later on
 
-- when a tool has both project_id and parent_folder_id, we do not verify that the parent_folder_id belongs to the project
+- when a tool has both project_id and parent_folder_id, we do not verify that the parent_folder_id belongs to the project, or set the two fields as exclusive
 - validate code with eslint
 - the tests of get_folder should verify all the fields
 - test the creation of a project with no label
