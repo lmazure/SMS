@@ -1,7 +1,5 @@
 # Next step
 
-- implement the creation of requirements at the root level
-- fix the tests
 - dans les tests, supprimer les
         expect(projectId).toBeDefined();
         if (!projectId) return;

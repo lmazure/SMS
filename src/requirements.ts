@@ -62,6 +62,10 @@ const DeleteRequirementOutputSchema = z.object({
 export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
+
+    const endpoint = args.folder_id ? `requirement-folders/${args.folder_id}/content` : `projects/${args.project_id}/requirements-library/content`;
+    const answerFieldName = args.folder_id ? "content" : "requirement-library-content";
+
     let allRequirements: any[] = [];
     let currentPage = 0;
     let totalPages = 1;
@@ -69,15 +73,15 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
     while (currentPage < totalPages) {
         const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
             correlationId,
-            `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
+            endpoint + `?page=${currentPage}&size=50`,
             "GET"
         );
 
-        if (!data || !data._embedded || !data._embedded.content) {
+        if (!data || !data._embedded || !data._embedded[answerFieldName]) {
             break;
         }
 
-        const requirements = data._embedded.content.filter((item: any) => item._type === "requirement");
+        const requirements = data._embedded[answerFieldName].filter((item: any) => item._type === "requirement");
         allRequirements.push(...requirements);
 
         if (data.page) {

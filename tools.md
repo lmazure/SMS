@@ -85,9 +85,10 @@ Creates one or more requirements in a specified SquashTM project.
 Retrieves the list of requirements within a specific requirement folder.
 
 **Input:**
-- `folder_id` (number): The ID of the requirement folder
+- `project_id` (number): The project ID from which to retrieve the requirements
+- `parent_folder_id` (number, optional): The ID of an existing folder from which to retrieve the requirements (optional, if not specified, the requirements will be retrieved from the root level)
 
-**Output:** An array of requirement objects, each containing:
+**Output:** An object containing:
 - `requirements` (array): List of requirements, where each requirement includes:
   - `id` (number): The requirement ID
   - `name` (string): The requirement name
