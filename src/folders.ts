@@ -59,7 +59,7 @@ const GetCampaignFoldersTreeInputSchema = z.object({
 });
 
 const GetTestCaseFolderContentInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
+    parent_folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
 });
 
 const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
@@ -257,7 +257,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
     while (currentPage < totalPages) {
         const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
             correlationId,
-            `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
+            `test-case-folders/${args.parent_folder_id}/content?page=${currentPage}&size=50`,
             "GET"
         );
 

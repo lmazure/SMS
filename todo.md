@@ -1,10 +1,5 @@
 # Next step
 
-- dans les tests, supprimer les
-        expect(projectId).toBeDefined();
-        if (!projectId) return;
-        expect(folderId).toBeDefined();
-        if (!folderId) return;
 - gérer https://github.com/lmazure/SMS/security/dependabot/3
 - add tests for folders with no description
 - add tests for projects with no description

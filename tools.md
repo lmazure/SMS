@@ -151,7 +151,7 @@ Retrieves a detailed tree of test case folders for a specified project.
 Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned. The other types of test cases are not returned.
 
 **Input:**
-- `folder_id` (number): The ID of the test case folder
+- `parent_folder_id` (number): The ID of the test case folder
 
 **Output:** An array of test case objects, each containing:
 - `id` (number): The test case ID

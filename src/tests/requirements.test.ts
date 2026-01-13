@@ -119,8 +119,6 @@ describe('Requirements Integration Tests', () => {
     it ('should get the content of the project root', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
-        expect(folderId).toBeDefined();
-        if (!folderId) return;
 
         const result = await getRequirementFolderContentHandler({ project_id: projectId });
         expect(result).toBeDefined();
