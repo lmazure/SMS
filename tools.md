@@ -88,13 +88,14 @@ Retrieves the list of requirements within a specific requirement folder.
 - `folder_id` (number): The ID of the requirement folder
 
 **Output:** An array of requirement objects, each containing:
-- `id` (number): The requirement ID
-- `name` (string): The requirement name
-- `description` (string): The requirement description (rich text)
-- `created_by` (string): Who created the requirement
-- `created_on` (string): Creation timestamp
-- `last_modified_by` (string): Who last modified the requirement
-- `last_modified_on` (string): Last modification timestamp
+- `requirements` (array): List of requirements, where each requirement includes:
+  - `id` (number): The requirement ID
+  - `name` (string): The requirement name
+  - `description` (string): The requirement description (rich text)
+  - `created_by` (string): Who created the requirement
+  - `created_on` (string): Creation timestamp
+  - `last_modified_by` (string): Who last modified the requirement
+  - `last_modified_on` (string): Last modification timestamp
 
 ### `create_requirement_folders`
 

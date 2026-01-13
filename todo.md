@@ -1,6 +1,5 @@
 # Next step
 
-- déclarer le schéma de retour de get_requirement_folder_content
 - implement the creation of requirements at the root level
 - fix the tests
 - dans les tests, supprimer les
@@ -9,10 +8,11 @@
         expect(folderId).toBeDefined();
         if (!folderId) return;
 - gérer https://github.com/lmazure/SMS/security/dependabot/3
-
+- add tests for folders with no description
+- add tests for projects with no description
+- add tests for projects with no label
 
 # Before merging the branch
-
 
 # Later on
 

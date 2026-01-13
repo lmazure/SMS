@@ -16,6 +16,20 @@ const GetRequirementFolderContentInputSchema = z.object({
     folder_id: z.number().optional().describe("The ID of the requirement folder to retrieve content for (optional, if not specified, the requirements of the project root will be retrieved)"),
 });
 
+const GetRequirementFolderContentOutputSchema = z.object({
+    requirements: z.array(
+        z.object({
+            id: z.number().describe("The ID of the requirement"),
+            name: z.string().describe("The name of the requirement"),
+            description: z.string().describe("The description of the requirement (rich text)"),
+            created_by: z.string().describe("Who created the requirement"),
+            created_on: z.string().describe("Creation timestamp"),
+            last_modified_by: z.string().describe("Who last modified the requirement"),
+            last_modified_on: z.string().describe("Last modification timestamp"),
+        })
+    ),
+});
+
 const CreateRequirementsInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the requirements"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new requirements (optional, if not specified, the requirements will be created at the root level)"),
@@ -180,6 +194,7 @@ export function registerRequirementTools(server: McpServer) {
             title: "Get Requirement Folder Content",
             description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
             inputSchema: GetRequirementFolderContentInputSchema,
+            outputSchema: GetRequirementFolderContentOutputSchema,
         },
         getRequirementFolderContentHandler
     );
