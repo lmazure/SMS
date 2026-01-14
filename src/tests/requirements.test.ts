@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { createRequirementsHandler,
-         deleteRequirementHandler,
-         getRequirementFolderContentHandler } from '../requirements.js';
+import {
+    createRequirementsHandler,
+    deleteRequirementHandler,
+    getRequirementFolderContentHandler
+} from '../requirements.js';
 import { createRequirementFoldersHandler } from '../folders.js';
 import { createProjectHandler, deleteProjectHandler } from '../projects.js';
 
@@ -71,7 +73,7 @@ describe('Requirements Integration Tests', () => {
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);
         expect(outputJson).toEqual(result.structuredContent);
-        
+
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
     });
@@ -111,12 +113,12 @@ describe('Requirements Integration Tests', () => {
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);
         expect(outputJson).toEqual(result.structuredContent);
-        
+
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
     });
 
-    it ('should get the content of the project root', async () => {
+    it('should get the content of the project root', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
@@ -126,7 +128,7 @@ describe('Requirements Integration Tests', () => {
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(2);
 
-        const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) => 
+        const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) =>
             a.name.localeCompare(b.name)
         );
         const [req1, req2] = requirements;
@@ -138,9 +140,9 @@ describe('Requirements Integration Tests', () => {
         // ensure the text and the structured content are the same
         const outputJson = JSON.parse(result.content[0].text);
         expect(outputJson).toEqual(result.structuredContent);
-     });
+    });
 
-     it ('should get the content of a requirement folder', async () => {
+    it('should get the content of a requirement folder', async () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
         expect(folderId).toBeDefined();
@@ -152,7 +154,7 @@ describe('Requirements Integration Tests', () => {
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(2);
 
-        const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) => 
+        const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) =>
             a.name.localeCompare(b.name)
         );
         const [req1, req2] = requirements;

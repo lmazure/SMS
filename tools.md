@@ -309,7 +309,7 @@ Allowed protocols for URI attributes are:
 
 - Input parameters are always JSON objects.
 
-- We are using structured content (see [MCP documentation](https://modelcontextprotocol.io/specification/draft/server/tools#structured-content)): output parameters are always JSON objects.  
+- We are using structured content (see [MCP documentation](https://modelcontextprotocol.io/specification/draft/server/tools#structured-content)): output parameters are always JSON objects. 
   - For creations, the output payload contains the id(s) of the created object(s).
   - For reads, the output payload contains the object(s) read.
   - For deletions, the output payload contains a `message` field indicating success of the deletion.

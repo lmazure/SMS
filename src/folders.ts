@@ -466,7 +466,7 @@ export function registerFolderTools(server: McpServer) {
         "get_requirement_folders_tree",
         {
             title: "Get Requirement Folders Tree",
-            description: "Get the requirement folders tree for specified project with detailed folder info",
+            description: "Get the requirement folders tree for specified project with detailed folder info in SquashTM",
             inputSchema: GetRequirementFoldersTreeInputSchema,
             outputSchema: GetFoldersTreeOutputSchema,
         },
@@ -477,7 +477,7 @@ export function registerFolderTools(server: McpServer) {
         "get_test_case_folder_tree",
         {
             title: "Get Test Case Folders Tree",
-            description: "Get the test case folders tree for specified project with detailed folder info",
+            description: "Get the test case folders tree for specified project with detailed folder info in SquashTM",
             inputSchema: GetTestCaseFoldersTreeInputSchema,
             outputSchema: GetFoldersTreeOutputSchema,
         },
@@ -490,7 +490,7 @@ export function registerFolderTools(server: McpServer) {
         "get_campaign_folder_tree",
         {
             title: "Get Campaign Folders Tree",
-            description: "Get the campaign folders tree for specified project with detailed folder info",
+            description: "Get the campaign folders tree for specified project with detailed folder info ",
             inputSchema: GetCampaignFoldersTreeInputSchema,
             outputSchema: GetFoldersTreeOutputSchema,
         },
@@ -501,7 +501,7 @@ export function registerFolderTools(server: McpServer) {
         "create_requirement_folders",
         {
             title: "Create Requirement Folders",
-            description: "Create requirement folders recursively",
+            description: "Create requirement folders recursively in SquashTM",
             inputSchema: CreateRequirementFoldersInputSchema,
             outputSchema: CreateFoldersOutputSchema,
         },
@@ -512,7 +512,7 @@ export function registerFolderTools(server: McpServer) {
         "delete_requirement_folder",
         {
             title: "Delete Requirement Folder",
-            description: "Delete a requirement folder and its content",
+            description: "Delete a requirement folder and its content in SquashTM",
             inputSchema: DeleteRequirementFolderInputSchema,
             outputSchema: DeleteRequirementFolderOutputSchema,
         },
@@ -523,7 +523,7 @@ export function registerFolderTools(server: McpServer) {
         "create_test_case_folders",
         {
             title: "Create Test Case Folders",
-            description: "Create test case folders recursively",
+            description: "Create test case folders recursively in SquashTM",
             inputSchema: CreateTestCaseFoldersInputSchema,
             outputSchema: CreateFoldersOutputSchema,
         },
@@ -534,7 +534,7 @@ export function registerFolderTools(server: McpServer) {
         "delete_test_case_folder",
         {
             title: "Delete Test Case Folder",
-            description: "Delete a test case folder and its content",
+            description: "Delete a test case folder and its content in SquashTM",
             inputSchema: DeleteTestCaseFolderInputSchema,
             outputSchema: DeleteTestCaseFolderOutputSchema,
         },
@@ -545,7 +545,7 @@ export function registerFolderTools(server: McpServer) {
         "create_campaign_folders",
         {
             title: "Create Campaign Folders",
-            description: "Create campaign folders recursively",
+            description: "Create campaign folders recursively in SquashTM",
             inputSchema: CreateCampaignFoldersInputSchema,
             outputSchema: CreateFoldersOutputSchema,
         },
@@ -556,7 +556,7 @@ export function registerFolderTools(server: McpServer) {
         "delete_campaign_folder",
         {
             title: "Delete Campaign Folder",
-            description: "Delete a campaign folder and its content",
+            description: "Delete a campaign folder and its content in SquashTM",
             inputSchema: DeleteCampaignFolderInputSchema,
             outputSchema: DeleteCampaignFolderOutputSchema,
         },

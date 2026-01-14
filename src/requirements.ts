@@ -196,7 +196,7 @@ export function registerRequirementTools(server: McpServer) {
         "get_requirement_folder_content",
         {
             title: "Get Requirement Folder Content",
-            description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
+            description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders) in SquashTM",
             inputSchema: GetRequirementFolderContentInputSchema,
             outputSchema: GetRequirementFolderContentOutputSchema,
         },

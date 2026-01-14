@@ -4,8 +4,6 @@
 - add tests for folders with no description
 - add tests for projects with no description
 - add tests for projects with no label
-- manage create / read / delete classic tests cases
-- create integration tests for create_test_case, list_test_cases, and delete_test_case
 
 # Before merging the branch
 

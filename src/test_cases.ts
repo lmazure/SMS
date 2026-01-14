@@ -196,7 +196,7 @@ export function registerTestCaseTools(server: McpServer) {
         "get_test_case_folder_content",
         {
             title: "Get Test Case Folder Content",
-            description: "Get the test cases of a test case folder (only includes items of type 'test-case')",
+            description: "Get the test cases of a test case folder (only includes items of type 'test-case') in SquashTM",
             inputSchema: GetTestCaseFolderContentInputSchema,
             outputSchema: GetTestCaseFolderContentOutputSchema,
         },
