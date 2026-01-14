@@ -9,8 +9,8 @@ A Model Context Protocol (MCP) server for SquashTM that allows AI assistants lik
 ### For Claude Desktop
 
 Add this configuration to your Claude Desktop config file:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -31,6 +31,14 @@ Add this configuration to your Claude Desktop config file:
 ```
 
 Replace `your-squashtm-instance.com` and `your-api-key-here` with your actual SquashTM URL and API key.
+
+In case of problem when trying to access the SMS MCP Server, check the logs in the Claude Desktop application.
+- main log file
+    - Windows: `%APPDATA%\Claude\logs\main.log`
+    - macOS: `~/Library/Logs/Claude/main.log`
+- SMS log file
+    - Windows: `%APPDATA%\Claude\logs\mcp-server-squashtm.log`
+    - macOS: `~/Library/Logs/Claude/mcp-server-squashtm.log`
 
 ## Available Tools
 
