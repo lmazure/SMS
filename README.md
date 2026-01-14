@@ -19,7 +19,7 @@ Add this configuration to your Claude Desktop config file:
       "command": "npx",
       "args": [
         "-y",
-        "github:lmazure/SMS#v0.0.3"
+        "github:lmazure/SMS#v0.0.4"
       ],
       "env": {
         "SQUASHTM_URL": "https://your-squashtm-instance.com/squash",
@@ -84,3 +84,20 @@ SMS/
 ├── tsconfig.json     # TypeScript configuration
 └── README.md         # This file
 ```
+
+### Release
+
+1) Update the release number in:
+    - `README.md` where is describe how to declare SMS in Claude Desktop config file
+    - `package.json`
+    - `src/index.ts` where is created the `McpServer` instance
+2) Push the last commits on GitHub
+3) Merge (and squash) the issue branch on the `main` branch
+4) Tag the release:
+    ```bash
+    git tag -a v0.0.4 -m "Release v0.0.4"
+    ```
+5) Push the tag on GitHub:
+    ```bash
+    git push origin v0.0.4
+    ```
