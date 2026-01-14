@@ -33,7 +33,7 @@
   },
   "homepage": "https://github.com/lmazure/SMS#readme",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@modelcontextprotocol/sdk": "^1.25.2",
     "dotenv": "^17.2.3",
     "npm": "^11.7.0",
     "zod": "^3.25.76"

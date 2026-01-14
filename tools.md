@@ -11,8 +11,8 @@ Retrieves a list of all SquashTM projects you have access to.
 **Output:** An array of objects, each containing:
 - `id` (number): The project ID
 - `name` (string): The project name
-- `label` (string): The project label
-- `description` (string): The project description (rich text)
+- `label` (string, optional): The project label
+- `description` (string, optional): The project description (rich text)
 
 ### `create_project`
 
@@ -21,7 +21,7 @@ Creates a new project in SquashTM.
 **Input:**
 - `name` (string): The name of the project
 - `label` (string, optional): The label of the project
-- `description` (string): The description of the project (rich text)
+- `description` (string, optional): The description of the project (rich text)
 
 **Output:** An object containing:
 - `id` (number): The ID of the newly created project
@@ -49,28 +49,54 @@ Retrieves a detailed tree of requirement folders for a specified project.
 - `folders` (array): List of folders, where each folder includes:
   - `id` (number): The folder ID
   - `name` (string): The folder name
-  - `description` (string): The folder description (rich text)
+  - `description` (string, optional): The folder description (rich text) (absent if the folder has no description)
   - `created_by` (string): Who created the folder
   - `created_on` (string): Creation timestamp
-  - `modified_by` (string, optional): Who last modified the folder
-  - `modified_on` (string, optional): Last modification timestamp
+  - `modified_by` (string, optional): Who last modified the folder (absent if the folder has never been modified)
+  - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
+
+### `create_requirements`
+
+Creates one or more requirements in a specified SquashTM project.
+
+**Input:**
+- `project_id` (number): The project ID in which to create the requirements
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new requirements (optional, if not specified, the requirements will be created at the root level)
+- `requirements` (array): List of requirements to create, each containing:
+  - `name` (string): Requirement name
+  - `description` (string): Requirement description (rich text)
+
+**Output:** An object containing:
+- `requirements` (array): List of requirements, where each requirement includes:
+  - `id` (number): The requirement ID
+  - `name` (string): The requirement name
+
+### `delete_requirement`
+
+**Input:**
+- `id` (number): The ID of the requirement to delete
+
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the requirement
 
 ### `get_requirement_folder_content`
 
 Retrieves the list of requirements within a specific requirement folder.
 
 **Input:**
-- `folder_id` (number): The ID of the requirement folder
+- `project_id` (number): The project ID from which to retrieve the requirements
+- `parent_folder_id` (number, optional): The ID of an existing folder from which to retrieve the requirements (optional, if not specified, the requirements will be retrieved from the root level)
 
-**Output:** An array of requirement objects, each containing:
-- `id` (number): The requirement ID
-- `name` (string): The requirement name
-- `description` (string): The requirement description (rich text)
-- `created_by` (string): Who created the requirement
-- `created_on` (string): Creation timestamp
-- `last_modified_by` (string): Who last modified the requirement
-- `last_modified_on` (string): Last modification timestamp
+**Output:** An object containing:
+- `requirements` (array): List of requirements, where each requirement includes:
+  - `id` (number): The requirement ID
+  - `name` (string): The requirement name
+  - `description` (string): The requirement description (rich text)
+  - `created_by` (string): Who created the requirement
+  - `created_on` (string): Creation timestamp
+  - `last_modified_by` (string): Who last modified the requirement
+  - `last_modified_on` (string): Last modification timestamp
 
 ### `create_requirement_folders`
 
@@ -78,9 +104,10 @@ Creates requirement folders recursively.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `name` (string): Name of the folder
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
-- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+- `name` (string): Name of the folder
+- `description` (string, optional): Description of the folder (rich text)
+- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
@@ -112,11 +139,11 @@ Retrieves a detailed tree of test case folders for a specified project.
 - `folders` (array): List of folders, where each folder includes:
   - `id` (number): The folder ID
   - `name` (string): The folder name
-  - `description` (string): The folder description (rich text)
+  - `description` (string, optional): The folder description (rich text) (absent if the folder has no description)
   - `created_by` (string): Who created the folder
   - `created_on` (string): Creation timestamp
-  - `modified_by` (string, optional): Who last modified the folder
-  - `modified_on` (string, optional): Last modification timestamp
+  - `modified_by` (string, optional): Who last modified the folder (absent if the folder has never been modified)
+  - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
 ### `get_test_case_folder_content`
@@ -124,7 +151,8 @@ Retrieves a detailed tree of test case folders for a specified project.
 Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned. The other types of test cases are not returned.
 
 **Input:**
-- `folder_id` (number): The ID of the test case folder
+- `project_id` (number): The project ID from which to retrieve the test cases
+- `folder_id` (number, optional): The ID of an existing folder from which to retrieve the test cases (optional, if not specified, the test cases will be retrieved from the root level)
 
 **Output:** An array of test case objects, each containing:
 - `id` (number): The test case ID
@@ -142,14 +170,27 @@ Creates one or more test cases in a specified SquashTM project.
 
 **Input:**
 - `project_id` (number): The ID of the target project
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new test cases (optional, if not specified, the test cases will be created at the root level)
 - `test_cases` (array): List of test cases to create, each containing:
   - `name` (string): Test case name
   - `description` (string): Test case description (rich text)
-  - `steps` (array): One or more test steps, each with:
+  - `prerequisite` (string, optional): Test case prerequisite (rich text)
+  - `steps` (array, optional): One or more test steps, each with:
     - `action` (string): What action to perform (rich text)
     - `expected_result` (string): Expected outcome (rich text)
 
-**Output:** None
+**Output:** An object containing:
+- `test_cases` (array): List of test cases, where each test case includes:
+  - `id` (number): The test case ID
+  - `name` (string): The test case name
+
+### `delete_test_case`
+
+**Input:**
+- `id` (number): The ID of the test case to delete
+
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the test case
 
 ### `create_test_case_folders`
 
@@ -157,9 +198,10 @@ Creates test case folders recursively.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `name` (string): Name of the folder
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
-- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+- `name` (string): Name of the folder
+- `description` (string, optional): Description of the folder (rich text)
+- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
@@ -190,11 +232,11 @@ Retrieves a detailed tree of campaign folders for a specified project.
 - `folders` (array): List of folders, where each folder includes:
   - `id` (number): The folder ID
   - `name` (string): The folder name
-  - `description` (string): The folder description (rich text)
+  - `description` (string, optional): The folder description (rich text) (absent if the folder has no description)
   - `created_by` (string): Who created the folder
   - `created_on` (string): Creation timestamp
-  - `modified_by` (string, optional): Who last modified the folder
-  - `modified_on` (string, optional): Last modification timestamp
+  - `modified_by` (string, optional): Who last modified the folder (absent if the folder has never been modified)
+  - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
 ### `create_campaign_folders`
@@ -203,9 +245,10 @@ Creates campaign folders recursively.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `name` (string): Name of the folder
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
-- `children` (array, optional): Array of subfolders, each containing `name` and optional `children`
+- `name` (string): Name of the folder
+- `description` (string, optional): Description of the folder (rich text)
+- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
@@ -266,7 +309,7 @@ Allowed protocols for URI attributes are:
 
 - Input parameters are always JSON objects.
 
-- We are using structured content (see [MCP documentation](https://modelcontextprotocol.io/specification/draft/server/tools#structured-content)): output parameters are always JSON objects.  
+- We are using structured content (see [MCP documentation](https://modelcontextprotocol.io/specification/draft/server/tools#structured-content)): output parameters are always JSON objects. 
   - For creations, the output payload contains the id(s) of the created object(s).
   - For reads, the output payload contains the object(s) read.
   - For deletions, the output payload contains a `message` field indicating success of the deletion.

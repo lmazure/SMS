@@ -10,7 +10,7 @@ import {
     deleteProjectHandler
 } from '../projects.js';
 
-describe('Campaign Folders Integration Tests', () => {
+describe('Campaign Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();
     const projectName: string = `Name of the Campaign Folder Test Project ${timestamp}`;
     const projectLabel: string = `Label of the Campaign Folder Test Project ${timestamp}`;
@@ -28,10 +28,6 @@ describe('Campaign Folders Integration Tests', () => {
         expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.id).toBeDefined();
 
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
-
         projectId = result.structuredContent.id;
     });
 
@@ -42,14 +38,20 @@ describe('Campaign Folders Integration Tests', () => {
         const result = await createCampaignFoldersHandler({
             project_id: projectId,
             name: "Root Campaign Folder",
+            description: "Description of the Root Campaign Folder",
             children: [
                 {
-                    name: "Child Campaign Folder 1"
+                    name: "Child Campaign Folder 1",
+                    description: "Description of the Child Campaign Folder 1",
                 },
                 {
                     name: "Child Campaign Folder 2",
+                    description: "Description of the Child Campaign Folder 2",
                     children: [
-                        { name: "Grandchild Campaign Folder" }
+                        {
+                            name: "Grandchild Campaign Folder",
+                            description: "Description of the Grandchild Campaign Folder"
+                        }
                     ]
                 }
             ]

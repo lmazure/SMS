@@ -71,18 +71,22 @@ export interface SquashTMFolder {
     children: SquashTMFolder[];
 }
 
-export interface SquashTMFolderDetail {
+export interface SquashTMFolderDetails {
     _type: string;
     id: number;
     name: string;
     description: string;
+    parent: {
+        _type: string;
+        id: number;
+    };
     created_by: string;
     created_on: string;
     last_modified_by: string;
     last_modified_on: string;
 }
 
-export interface SquashTMTestCaseDetail {
+export interface SquashTMTestCaseDetails {
     id: number;
     name: string;
     description: string;
@@ -93,7 +97,7 @@ export interface SquashTMTestCaseDetail {
     last_modified_on: string;
 }
 
-export interface SquashTMRequirementDetail {
+export interface SquashTMRequirementDetails {
     id: number;
     name: string;
     current_version: {
@@ -116,11 +120,13 @@ export interface SquashTMProjectTree {
     _type: string;
     id: number;
     name: string;
+    description: string;
     folders: SquashTMFolder[];
 }
 
 export interface FolderStructure {
     name: string;
+    description: string | undefined;
     children?: FolderStructure[];
 }
 
@@ -137,7 +143,10 @@ export interface SquashTMPaginatedResponse<T> {
 }
 
 // Make a request to the SquashTM REST API
+let requestCounter = 0;
 export async function makeSquashRequest<T>(correlationId: string, endpoint: string, method: "GET" | "POST" | "DELETE" | "PATCH", body?: any): Promise<T> {
+    const requestId = `${correlationId}#${++requestCounter}`;
+
     const headers: Record<string, string> = {
         Authorization: `Bearer ${SQUASHTM_API_KEY}`,
         Accept: "application/json",
@@ -147,7 +156,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
         headers["Content-Type"] = "application/json";
     }
 
-    logToFile(correlationId, `SquashTM REST API Request: method=${method} endpoint=${endpoint} body=${body ? JSON.stringify(body) : "<empty>"}`);
+    logToFile(requestId, `SquashTM REST API Request: method=${method} endpoint=${endpoint} body=${body ? JSON.stringify(body) : "<empty>"}`);
 
     try {
         const response = await fetch(SQUASHTM_API_URL + "/" + endpoint, {
@@ -158,7 +167,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
 
         if (!response.ok) {
             const text = await response.text();
-            logErrorToConsole(correlationId, `SquashTM REST API Response Status: ${response.status} Payload: ${text}`);
+            logErrorToConsole(requestId, `SquashTM REST API Response Status: ${response.status} Payload: ${text}`);
             // if the response is JSON, extract the message from the "message" field
             // otherwise, use the text
             let message = text;
@@ -175,11 +184,12 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
         }
 
         if (response.status === 204) {
+            logToFile(requestId, `SquashTM REST API Response: Status: ${response.status}`);
             return {} as T;
         }
 
         const text = await response.text();
-        logToFile(correlationId, `REST API Response Status: ${response.status} Payload: ${text}`);
+        logToFile(requestId, `SquashTM REST API Response: Status: ${response.status} Payload: ${text}`);
 
         if (text.length === 0) {
             return {} as T;
@@ -191,12 +201,12 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
                 return JSON.parse(text) as T;
             } catch (e) {
                 const m = `Failed to parse SquashTM REST API JSON response: ${text}`;
-                logErrorToConsole(correlationId, m);
+                logErrorToConsole(requestId, m);
                 throw new McpError(ErrorCode.InternalError, m);
             }
         } else {
             const m = `Unexpected SquashTM REST API response format: ${text}`;
-            logErrorToConsole(correlationId, m);
+            logErrorToConsole(requestId, m);
             throw new McpError(ErrorCode.InternalError, m);
         }
     } catch (error) {
@@ -204,7 +214,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
             throw error;
         }
         const m = `Error making SquashTM REST API request: ${error}`;
-        logErrorToConsole(correlationId, m);
+        logErrorToConsole(requestId, m);
         throw new McpError(ErrorCode.InternalError, m);
     }
 }

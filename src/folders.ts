@@ -6,13 +6,24 @@ import {
     formatResponse,
     makeSquashRequest,
     SquashTMFolder,
-    SquashTMFolderDetail,
-    SquashTMTestCaseDetail,
-    SquashTMRequirementDetail,
+    SquashTMFolderDetails,
+    SquashTMTestCaseDetails,
+    SquashTMRequirementDetails,
     SquashTMProjectTree,
     FolderStructure,
     SquashTMPaginatedResponse
 } from "./utils.js";
+
+type FolderDetails = {
+    id: number;
+    name: string;
+    description?: string;
+    parent_folder_id?: number;
+    created_by: string;
+    created_on: string;
+    modified_by?: string;
+    modified_on?: string;
+}
 
 // Zod schemas for validation of the tool inputs and outputs
 
@@ -20,11 +31,11 @@ const ReturnedFolderSchema: z.ZodType<any> = z.lazy(() =>
     z.object({
         id: z.number().describe("The ID of the folder"),
         name: z.string().describe("The name of the folder"),
-        description: z.string().describe("The description of the folder"),
+        description: z.string().optional().describe("The description of the folder (rich text) (absent if the folder has no description)"),
         created_by: z.string().describe("The user who created the folder"),
         created_on: z.string().describe("The date when the folder was created"),
-        modified_by: z.string().optional().describe("The user who last modified the folder"),
-        modified_on: z.string().optional().describe("The date when the folder was last modified"),
+        modified_by: z.string().optional().describe("The user who last modified the folder (absent if the folder has never been modified)"),
+        modified_on: z.string().optional().describe("The date when the folder was last modified (absent if the folder has never been modified)"),
         children: z.array(ReturnedFolderSchema).describe("Subfolders"),
     })
 );
@@ -47,13 +58,7 @@ const GetCampaignFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the campaign folders tree for"),
 });
 
-const GetRequirementFolderContentInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the requirement folder to retrieve content for"),
-});
 
-const GetTestCaseFolderContentInputSchema = z.object({
-    folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
-});
 
 const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
     name: z.string().describe("Name of the folder"),
@@ -64,6 +69,7 @@ const CreateRequirementFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the requirement folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
+    description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
@@ -87,6 +93,7 @@ const CreateTestCaseFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the test case folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
+    description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
@@ -102,6 +109,7 @@ const CreateCampaignFoldersInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the campaign folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
+    description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 });
 
@@ -114,108 +122,108 @@ const DeleteCampaignFolderOutputSchema = z.object({
 });
 
 // Get folder details
-async function getDetailedFolders(correlationId: string, folders: SquashTMFolder[], type: "requirement-folders" | "test-case-folders" | "campaign-folders"): Promise<ReturnedFolder[]> {
-    return Promise.all(folders.map(async folder => {
-        const details = await makeSquashRequest<SquashTMFolderDetail>(
-            correlationId,
-            `${type}/${folder.id}`,
-            "GET"
-        );
-        return {
-            id: folder.id,
-            name: folder.name,
-            description: details.description,
-            created_by: details.created_by,
-            created_on: details.created_on,
-            ...(details.last_modified_by && { modified_by: details.last_modified_by }),
-            ...(details.last_modified_on && { modified_on: details.last_modified_on }),
-            children: await getDetailedFolders(correlationId, folder.children || [], type)
-        };
-    }));
+async function getFolderDetails(correlationId: string, folderID: number, type: "requirement-folder" | "test-case-folder" | "campaign-folder"): Promise<FolderDetails> {
+    const details = await makeSquashRequest<SquashTMFolderDetails>(
+        correlationId,
+        `${type}s/${folderID}`,
+        "GET"
+    );
+    return {
+        id: folderID,
+        name: details.name,
+        ...(details.description && { description: details.description }),
+        ...(details.parent._type === type && { parent_folder_id: details.parent.id }),
+        created_by: details.created_by,
+        created_on: details.created_on,
+        ...(details.last_modified_by && { modified_by: details.last_modified_by }),
+        ...(details.last_modified_on && { modified_on: details.last_modified_on }),
+    };
 }
 
-// 'get_requirement_folder_content' tool
-export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
-    let allRequirements: any[] = [];
-    let currentPage = 0;
-    let totalPages = 1;
+// Build the folder tree
+function buildFolderTree(folders: FolderDetails[]): ReturnedFolder[] {
 
-    while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
-            correlationId,
-            `requirement-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
-            "GET"
-        );
+    // Create a map for quick lookup
+    const folderMap = new Map<number, ReturnedFolder>();
 
-        if (!data || !data._embedded || !data._embedded.content) {
-            break;
-        }
+    // Initialize all folders with empty children arrays
+    folders.forEach(folder => {
+        folderMap.set(folder.id, {
+            id: folder.id,
+            name: folder.name,
+            description: folder.description,
+            created_by: folder.created_by,
+            created_on: folder.created_on,
+            modified_by: folder.modified_by,
+            modified_on: folder.modified_on,
+            children: []
+        });
+    });
 
-        const requirements = data._embedded.content.filter((item: any) => item._type === "requirement");
-        allRequirements.push(...requirements);
+    // Build the tree by assigning children to parents
+    const roots: ReturnedFolder[] = [];
 
-        if (data.page) {
-            totalPages = data.page.totalPages;
-            currentPage++;
+    folders.forEach(folder => {
+        const node = folderMap.get(folder.id)!;
+
+        if (folder.parent_folder_id === undefined) {
+            // This is a root folder
+            roots.push(node);
         } else {
-            break;
+            // This is a child folder - add it to its parent
+            const parent = folderMap.get(folder.parent_folder_id);
+            if (parent) {
+                parent.children.push(node);
+            } else {
+                // Parent not found - treat as root
+                roots.push(node);
+            }
         }
-    }
+    });
 
-    const detailedRequirements = await Promise.all(
-        allRequirements.map(async (req) => {
-            const details = await makeSquashRequest<SquashTMRequirementDetail>(
-                correlationId,
-                `requirements/${req.id}`,
-                "GET"
-            );
-            return {
-                id: details.id,
-                name: details.name,
-                reference: details.current_version.reference,
-                version: details.current_version.version_number,
-                description: details.current_version.description,
-                created_by: details.current_version.created_by,
-                created_on: details.current_version.created_on,
-                last_modified_by: details.current_version.last_modified_by,
-                last_modified_on: details.current_version.last_modified_on,
-                criticality: details.current_version.criticality,
-                category: details.current_version.category?.code,
-                status: details.current_version.status,
-            };
-        })
+    return roots;
+}
+
+// Get the folder tree from SquashTM
+async function getFoldersTree(
+    correlationId: string,
+    projectId: number,
+    folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
+    resource: "requirement-folders" | "test-case-folders" | "campaign-folders",
+): Promise<ReturnType<typeof formatResponse>> {
+
+    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+        correlationId,
+        `${resource}/tree/${projectId}`,
+        "GET"
     );
 
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(detailedRequirements, null, 2),
-            },
-        ],
-    };
+    // the hierarchy returned by SquashTM is garbage, we need to rebuild it
 
-    logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
+    const allFolderIds = data.flatMap(project =>
+        project.folders.flatMap(function flatten(folder): number[] {
+            const id = folder._type === folderType ? [folder.id] : [];
+            return [...id, ...folder.children.flatMap(flatten)];
+        }));
+
+    const allFolderDetails = await Promise.all(allFolderIds.map(id => getFolderDetails(correlationId, id, folderType)));
+
+    const resultData = { folders: buildFolderTree(allFolderDetails) };
+
+    return formatResponse(resultData);
+}
+
 
 // 'get_requirement_folders_tree' tool
 export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetRequirementFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_requirement_folders_tree " + JSON.stringify(args));
-    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+    const returnedData = await getFoldersTree(
         correlationId,
-        `requirement-folders/tree/${args.project_id}`,
-        "GET"
+        args.project_id,
+        "requirement-folder",
+        "requirement-folders",
     );
-
-    const resultData = {
-        folders: await getDetailedFolders(correlationId, data[0].folders, "requirement-folders")
-    };
-
-    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_requirement_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -225,100 +233,29 @@ export const getRequirementFoldersTreeHandler = async (args: z.infer<typeof GetR
 export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTestCaseFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_test_case_folders_tree " + JSON.stringify(args));
-    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+    const returnedData = await getFoldersTree(
         correlationId,
-        `test-case-folders/tree/${args.project_id}`,
-        "GET"
+        args.project_id,
+        "test-case-folder",
+        "test-case-folders",
     );
-
-    const resultData = {
-        folders: await getDetailedFolders(correlationId, data[0].folders, "test-case-folders")
-    };
-
-    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_test_case_folders_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
-// 'get_test_case_folder_content' tool
-export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentInputSchema>) => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
-    let allTestCases: any[] = [];
-    let currentPage = 0;
-    let totalPages = 1;
 
-    while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
-            correlationId,
-            `test-case-folders/${args.folder_id}/content?page=${currentPage}&size=50`,
-            "GET"
-        );
-
-        if (!data || !data._embedded || !data._embedded.content) {
-            break;
-        }
-
-        const testCases = data._embedded.content.filter((item: any) => item._type === "test-case");
-        allTestCases.push(...testCases);
-
-        if (data.page) {
-            totalPages = data.page.totalPages;
-            currentPage++;
-        } else {
-            break;
-        }
-    }
-
-    const detailedTestCases = await Promise.all(
-        allTestCases.map(async (tc) => {
-            const details = await makeSquashRequest<SquashTMTestCaseDetail>(
-                correlationId,
-                `test-cases/${tc.id}`,
-                "GET"
-            );
-            return {
-                id: details.id,
-                name: details.name,
-                prerequisite: details.prerequisite,
-                description: details.description,
-                created_by: details.created_by,
-                created_on: details.created_on,
-                last_modified_by: details.last_modified_by,
-                last_modified_on: details.last_modified_on,
-            };
-        })
-    );
-
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(detailedTestCases, null, 2),
-            },
-        ],
-    };
-
-    logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
 
 // 'get_campaign_folders_tree' tool
 export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeInputSchema>) => {
     const correlationId = generateCorrelationId();
     logToFile(correlationId, "get_campaign_folder_tree " + JSON.stringify(args));
-    const data = await makeSquashRequest<SquashTMProjectTree[]>(
+    const returnedData = await getFoldersTree(
         correlationId,
-        `campaign-folders/tree/${args.project_id}`,
-        "GET"
+        args.project_id,
+        "campaign-folder",
+        "campaign-folders",
     );
-
-    const resultData = {
-        folders: await getDetailedFolders(correlationId, data[0].folders, "campaign-folders")
-    };
-
-    const returnedData = formatResponse(resultData);
 
     logToFile(correlationId, "get_campaign_folder_tree returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
@@ -329,6 +266,7 @@ async function createFolderRecursive(
     correlationId: string,
     projectId: number,
     name: string,
+    description: string | undefined,
     parentId: number,
     parentType: "project" | "requirement-folder" | "test-case-folder" | "campaign-folder",
     folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
@@ -338,6 +276,7 @@ async function createFolderRecursive(
     const payload = {
         _type: folderType,
         name: name,
+        description: description,
         parent: {
             _type: parentType,
             id: parentId
@@ -363,6 +302,7 @@ async function createFolderRecursive(
                 correlationId,
                 projectId,
                 child.name,
+                child.description,
                 newId,
                 folderType, // Parent is now this folder type
                 folderType,
@@ -392,6 +332,7 @@ export const createRequirementFoldersHandler = async (args: z.infer<typeof Creat
             correlationId,
             args.project_id,
             args.name,
+            args.description,
             parentId,
             parentType,
             "requirement-folder",
@@ -438,6 +379,7 @@ export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTe
             correlationId,
             args.project_id,
             args.name,
+            args.description,
             parentId,
             parentType,
             "test-case-folder",
@@ -484,6 +426,7 @@ export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCa
             correlationId,
             args.project_id,
             args.name,
+            args.description,
             parentId,
             parentType,
             "campaign-folder",
@@ -520,20 +463,10 @@ export const deleteCampaignFolderHandler = async (args: z.infer<typeof DeleteCam
 // Register folder management tools
 export function registerFolderTools(server: McpServer) {
     server.registerTool(
-        "get_requirement_folder_content",
-        {
-            title: "Get Requirement Folder Content",
-            description: "Get the requirements of a requirement folder (only includes the requirements, not the subfolders)",
-            inputSchema: GetRequirementFolderContentInputSchema,
-        },
-        getRequirementFolderContentHandler
-    );
-
-    server.registerTool(
         "get_requirement_folders_tree",
         {
             title: "Get Requirement Folders Tree",
-            description: "Get the requirement folders tree for specified project with detailed folder info",
+            description: "Get the requirement folders tree for specified project with detailed folder info in SquashTM",
             inputSchema: GetRequirementFoldersTreeInputSchema,
             outputSchema: GetFoldersTreeOutputSchema,
         },
@@ -544,28 +477,20 @@ export function registerFolderTools(server: McpServer) {
         "get_test_case_folder_tree",
         {
             title: "Get Test Case Folders Tree",
-            description: "Get the test case folders tree for specified project with detailed folder info",
+            description: "Get the test case folders tree for specified project with detailed folder info in SquashTM",
             inputSchema: GetTestCaseFoldersTreeInputSchema,
             outputSchema: GetFoldersTreeOutputSchema,
         },
         getTestCaseFoldersTreeHandler
     );
 
-    server.registerTool(
-        "get_test_case_folder_content",
-        {
-            title: "Get Test Case Folder Content",
-            description: "Get the test cases of a test case folder (only includes items of type 'test-case')",
-            inputSchema: GetTestCaseFolderContentInputSchema,
-        },
-        getTestCaseFolderContentHandler
-    );
+
 
     server.registerTool(
         "get_campaign_folder_tree",
         {
             title: "Get Campaign Folders Tree",
-            description: "Get the campaign folders tree for specified project with detailed folder info",
+            description: "Get the campaign folders tree for specified project with detailed folder info ",
             inputSchema: GetCampaignFoldersTreeInputSchema,
             outputSchema: GetFoldersTreeOutputSchema,
         },
@@ -576,7 +501,7 @@ export function registerFolderTools(server: McpServer) {
         "create_requirement_folders",
         {
             title: "Create Requirement Folders",
-            description: "Create requirement folders recursively",
+            description: "Create requirement folders recursively in SquashTM",
             inputSchema: CreateRequirementFoldersInputSchema,
             outputSchema: CreateFoldersOutputSchema,
         },
@@ -587,7 +512,7 @@ export function registerFolderTools(server: McpServer) {
         "delete_requirement_folder",
         {
             title: "Delete Requirement Folder",
-            description: "Delete a requirement folder and its content",
+            description: "Delete a requirement folder and its content in SquashTM",
             inputSchema: DeleteRequirementFolderInputSchema,
             outputSchema: DeleteRequirementFolderOutputSchema,
         },
@@ -598,7 +523,7 @@ export function registerFolderTools(server: McpServer) {
         "create_test_case_folders",
         {
             title: "Create Test Case Folders",
-            description: "Create test case folders recursively",
+            description: "Create test case folders recursively in SquashTM",
             inputSchema: CreateTestCaseFoldersInputSchema,
             outputSchema: CreateFoldersOutputSchema,
         },
@@ -609,7 +534,7 @@ export function registerFolderTools(server: McpServer) {
         "delete_test_case_folder",
         {
             title: "Delete Test Case Folder",
-            description: "Delete a test case folder and its content",
+            description: "Delete a test case folder and its content in SquashTM",
             inputSchema: DeleteTestCaseFolderInputSchema,
             outputSchema: DeleteTestCaseFolderOutputSchema,
         },
@@ -620,7 +545,7 @@ export function registerFolderTools(server: McpServer) {
         "create_campaign_folders",
         {
             title: "Create Campaign Folders",
-            description: "Create campaign folders recursively",
+            description: "Create campaign folders recursively in SquashTM",
             inputSchema: CreateCampaignFoldersInputSchema,
             outputSchema: CreateFoldersOutputSchema,
         },
@@ -631,7 +556,7 @@ export function registerFolderTools(server: McpServer) {
         "delete_campaign_folder",
         {
             title: "Delete Campaign Folder",
-            description: "Delete a campaign folder and its content",
+            description: "Delete a campaign folder and its content in SquashTM",
             inputSchema: DeleteCampaignFolderInputSchema,
             outputSchema: DeleteCampaignFolderOutputSchema,
         },
