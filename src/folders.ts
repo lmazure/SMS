@@ -58,9 +58,7 @@ const GetCampaignFoldersTreeInputSchema = z.object({
     project_id: z.number().describe("Project ID to retrieve the campaign folders tree for"),
 });
 
-const GetTestCaseFolderContentInputSchema = z.object({
-    parent_folder_id: z.number().describe("The ID of the test case folder to retrieve content for"),
-});
+
 
 const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
     name: z.string().describe("Name of the folder"),
@@ -129,17 +127,17 @@ async function getFolderDetails(correlationId: string, folderID: number, type: "
         correlationId,
         `${type}s/${folderID}`,
         "GET"
-        );
-        return {
-            id: folderID,
-            name: details.name,
-            ...(details.description && { description: details.description }),
-            ...(details.parent._type === type && { parent_folder_id: details.parent.id }),
-            created_by: details.created_by,
-            created_on: details.created_on,
-            ...(details.last_modified_by && { modified_by: details.last_modified_by }),
-            ...(details.last_modified_on && { modified_on: details.last_modified_on }),
-        };
+    );
+    return {
+        id: folderID,
+        name: details.name,
+        ...(details.description && { description: details.description }),
+        ...(details.parent._type === type && { parent_folder_id: details.parent.id }),
+        created_by: details.created_by,
+        created_on: details.created_on,
+        ...(details.last_modified_by && { modified_by: details.last_modified_by }),
+        ...(details.last_modified_on && { modified_on: details.last_modified_on }),
+    };
 }
 
 // Build the folder tree
@@ -246,68 +244,7 @@ export const getTestCaseFoldersTreeHandler = async (args: z.infer<typeof GetTest
     return returnedData;
 };
 
-// 'get_test_case_folder_content' tool
-export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentInputSchema>) => {
-    const correlationId = generateCorrelationId();
-    logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
-    let allTestCases: any[] = [];
-    let currentPage = 0;
-    let totalPages = 1;
 
-    while (currentPage < totalPages) {
-        const data = await makeSquashRequest<SquashTMPaginatedResponse<any>>(
-            correlationId,
-            `test-case-folders/${args.parent_folder_id}/content?page=${currentPage}&size=50`,
-            "GET"
-        );
-
-        if (!data || !data._embedded || !data._embedded.content) {
-            break;
-        }
-
-        const testCases = data._embedded.content.filter((item: any) => item._type === "test-case");
-        allTestCases.push(...testCases);
-
-        if (data.page) {
-            totalPages = data.page.totalPages;
-            currentPage++;
-        } else {
-            break;
-        }
-    }
-
-    const detailedTestCases = await Promise.all(
-        allTestCases.map(async (tc) => {
-            const details = await makeSquashRequest<SquashTMTestCaseDetails>(
-                correlationId,
-                `test-cases/${tc.id}`,
-                "GET"
-            );
-            return {
-                id: details.id,
-                name: details.name,
-                prerequisite: details.prerequisite,
-                description: details.description,
-                created_by: details.created_by,
-                created_on: details.created_on,
-                last_modified_by: details.last_modified_by,
-                last_modified_on: details.last_modified_on,
-            };
-        })
-    );
-
-    const returnedData = {
-        content: [
-            {
-                type: "text" as const,
-                text: JSON.stringify(detailedTestCases, null, 2),
-            },
-        ],
-    };
-
-    logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
-    return returnedData;
-};
 
 // 'get_campaign_folders_tree' tool
 export const getCampaignFoldersTreeHandler = async (args: z.infer<typeof GetCampaignFoldersTreeInputSchema>) => {
@@ -547,15 +484,7 @@ export function registerFolderTools(server: McpServer) {
         getTestCaseFoldersTreeHandler
     );
 
-    server.registerTool(
-        "get_test_case_folder_content",
-        {
-            title: "Get Test Case Folder Content",
-            description: "Get the test cases of a test case folder (only includes items of type 'test-case')",
-            inputSchema: GetTestCaseFolderContentInputSchema,
-        },
-        getTestCaseFolderContentHandler
-    );
+
 
     server.registerTool(
         "get_campaign_folder_tree",

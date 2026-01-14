@@ -151,7 +151,8 @@ Retrieves a detailed tree of test case folders for a specified project.
 Retrieves the list of test cases within a specific test case folder. Only items of type `test-case` are returned. The other types of test cases are not returned.
 
 **Input:**
-- `parent_folder_id` (number): The ID of the test case folder
+- `project_id` (number): The project ID from which to retrieve the test cases
+- `folder_id` (number, optional): The ID of an existing folder from which to retrieve the test cases (optional, if not specified, the test cases will be retrieved from the root level)
 
 **Output:** An array of test case objects, each containing:
 - `id` (number): The test case ID
@@ -169,14 +170,27 @@ Creates one or more test cases in a specified SquashTM project.
 
 **Input:**
 - `project_id` (number): The ID of the target project
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new test cases (optional, if not specified, the test cases will be created at the root level)
 - `test_cases` (array): List of test cases to create, each containing:
   - `name` (string): Test case name
   - `description` (string): Test case description (rich text)
-  - `steps` (array): One or more test steps, each with:
+  - `prerequisite` (string, optional): Test case prerequisite (rich text)
+  - `steps` (array, optional): One or more test steps, each with:
     - `action` (string): What action to perform (rich text)
     - `expected_result` (string): Expected outcome (rich text)
 
-**Output:** None
+**Output:** An object containing:
+- `test_cases` (array): List of test cases, where each test case includes:
+  - `id` (number): The test case ID
+  - `name` (string): The test case name
+
+### `delete_test_case`
+
+**Input:**
+- `id` (number): The ID of the test case to delete
+
+**Output:** An object containing:
+- `message` (string): Message indicating success of the deletion of the test case
 
 ### `create_test_case_folders`
 
