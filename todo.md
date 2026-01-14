@@ -1,11 +1,17 @@
+# Before merging the branch
+
 # Next step
 
-- manage reference of requirements
+- manage requirement reference
+- manage test case reference
 - add tests for folders with no description
 - add tests for projects with no description
 - add tests for projects with no label
-
-# Before merging the branch
+- manage test case steps
+- manage test case datasets
+- create dev documentation
+    - explaining how to run a dev version of the MCP Server in Claude desktop
+    - (?) move the rationale for input output format in it
 
 # Later on
 
