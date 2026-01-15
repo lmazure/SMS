@@ -5,10 +5,12 @@ import { EOL } from 'os';
 
 // Environment variables (exported for use in other modules)
 if (!process.env.SQUASHTM_API_KEY) {
-    throw new Error("SQUASHTM_API_KEY environment variable is required");
+    console.error("SQUASHTM_API_KEY environment variable is required");
+    throw new McpError(ErrorCode.InternalError, "SQUASHTM_API_KEY environment variable is required");
 }
 if (!process.env.SQUASHTM_URL) {
-    throw new Error("SQUASHTM_URL environment variable is required");
+    console.error("SQUASHTM_URL environment variable is required");
+    throw new McpError(ErrorCode.InternalError, "SQUASHTM_URL environment variable is required");
 }
 export const SQUASHTM_API_KEY = process.env.SQUASHTM_API_KEY;
 export const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
@@ -177,10 +179,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
             } catch {
                 // Not JSON
             }
-            throw new McpError(
-                ErrorCode.InternalError,
-                `Request failed:\nstatus=${response.status}\nerror=${message}`
-            );
+            throw new McpError(ErrorCode.InternalError, `Request failed:\nstatus=${response.status}\nerror=${message}`);
         }
 
         if (response.status === 204) {

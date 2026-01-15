@@ -6,6 +6,10 @@ A Model Context Protocol (MCP) server for SquashTM that allows AI assistants lik
 
 ## Installation & Configuration
 
+### Prerequisites
+
+- Node.js (>= 18.0.0)
+
 ### For Claude Desktop
 
 Add this configuration to your Claude Desktop config file:
@@ -78,11 +82,12 @@ Then either:
 
 ```
 SMS/
-├── src/              # Source TypeScript files
-├── build/            # Compiled JavaScript (generated)
-├── package.json      # Dependencies and scripts
-├── tsconfig.json     # TypeScript configuration
-└── README.md         # This file
+├── src/                  # Source TypeScript files
+│   └── tests/            # Test files   
+├── build/                # Compiled JavaScript (generated)
+├── package.json          # Dependencies and scripts
+├── tsconfig.json         # TypeScript configuration
+└── README.md             # Project documentation
 ```
 
 ### Release
@@ -95,6 +100,8 @@ SMS/
 3) Merge (and squash) the issue branch on the `main` branch
 4) Tag the release:
     ```bash
+    git switch main
+    git pull
     git tag -a v0.0.4 -m "Release v0.0.4"
     ```
 5) Push the tag on GitHub:
