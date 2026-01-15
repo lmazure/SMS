@@ -6,11 +6,15 @@ A Model Context Protocol (MCP) server for SquashTM that allows AI assistants lik
 
 ## Installation & Configuration
 
+### Prerequisites
+
+- Node.js (>= 18.0.0)
+
 ### For Claude Desktop
 
 Add this configuration to your Claude Desktop config file:
-- **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
 ```json
 {
@@ -31,6 +35,14 @@ Add this configuration to your Claude Desktop config file:
 ```
 
 Replace `your-squashtm-instance.com` and `your-api-key-here` with your actual SquashTM URL and API key.
+
+In case of problem when trying to access the SMS MCP Server, check the logs in the Claude Desktop application.
+- main log file
+    - Windows: `%APPDATA%\Claude\logs\main.log`
+    - macOS: `~/Library/Logs/Claude/main.log`
+- SMS log file
+    - Windows: `%APPDATA%\Claude\logs\mcp-server-squashtm.log`
+    - macOS: `~/Library/Logs/Claude/mcp-server-squashtm.log`
 
 ## Available Tools
 
@@ -70,11 +82,12 @@ Then either:
 
 ```
 SMS/
-├── src/              # Source TypeScript files
-├── build/            # Compiled JavaScript (generated)
-├── package.json      # Dependencies and scripts
-├── tsconfig.json     # TypeScript configuration
-└── README.md         # This file
+├── src/                  # Source TypeScript files
+│   └── tests/            # Test files   
+├── build/                # Compiled JavaScript (generated)
+├── package.json          # Dependencies and scripts
+├── tsconfig.json         # TypeScript configuration
+└── README.md             # Project documentation
 ```
 
 ### Release
@@ -87,6 +100,8 @@ SMS/
 3) Merge (and squash) the issue branch on the `main` branch
 4) Tag the release:
     ```bash
+    git switch main
+    git pull
     git tag -a v0.0.4 -m "Release v0.0.4"
     ```
 5) Push the tag on GitHub:

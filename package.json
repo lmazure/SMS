@@ -32,6 +32,9 @@
     "url": "https://github.com/lmazure/SMS/issues"
   },
   "homepage": "https://github.com/lmazure/SMS#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.2",
     "dotenv": "^17.2.3",
