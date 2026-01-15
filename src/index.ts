@@ -11,7 +11,7 @@ console.error("SQUASHTM_API_KEY:", process.env.SQUASHTM_API_KEY ? "SET (hidden)"
 // Create server instance
 const server = new McpServer({
     name: "SquashTM",
-    version: "0.0.7",
+    version: "0.0.8",
 });
 
 // Start server

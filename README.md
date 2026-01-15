@@ -23,7 +23,7 @@ Add this configuration to your Claude Desktop config file:
       "command": "npx",
       "args": [
         "-y",
-        "github:lmazure/SMS#v0.0.7"
+        "github:lmazure/SMS#v0.0.8"
       ],
       "env": {
         "SQUASHTM_URL": "https://your-squashtm-instance.com/squash",
