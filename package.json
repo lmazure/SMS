@@ -1,6 +1,6 @@
 {
   "name": "squashtm-mcp-server",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "MCP Server for SquashTM",
   "main": "build/index.js",
   "type": "module",
@@ -32,13 +32,9 @@
     "url": "https://github.com/lmazure/SMS/issues"
   },
   "homepage": "https://github.com/lmazure/SMS#readme",
-  "engines": {
-    "node": ">=18.0.0"
-  },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "^1.25.1",
     "dotenv": "^17.2.3",
-    "npm": "^11.7.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
