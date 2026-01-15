@@ -3,16 +3,28 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { fileURLToPath } from 'url';
 
-// Debug logging
-console.error("=== SquashTM MCP Server Starting ===");
-console.error("SQUASHTM_URL:", process.env.SQUASHTM_URL || "MISSING");
-console.error("SQUASHTM_API_KEY:", process.env.SQUASHTM_API_KEY ? "SET (hidden)" : "MISSING");
-
 // Create server instance
 const server = new McpServer({
     name: "SquashTM",
-    version: "0.0.8",
+    version: "0.0.9",
 });
+
+// Register tools
+import { registerProjectTools } from "./projects.js";
+import { registerFolderTools } from "./folders.js";
+import { registerRequirementTools } from "./requirements.js";
+import { registerTestCaseTools } from "./test_cases.js";
+
+try {
+    registerProjectTools(server);
+    registerFolderTools(server);
+    registerRequirementTools(server);
+    registerTestCaseTools(server);
+    console.error("All tools registered successfully");
+} catch (error) {
+    console.error("Error registering tools:", error);
+    throw error;
+}
 
 // Start server
 async function main() {
