@@ -1,6 +1,6 @@
 {
   "name": "squashtm-mcp-server",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "MCP Server for SquashTM",
   "main": "build/index.js",
   "type": "module",
