@@ -163,6 +163,10 @@ Retrieves the list of test cases within a specific test case folder. Only items 
 - `reference` (string, optional): The test case reference (absent if the test case has no reference)
 - `prerequisite` (string): The test case prerequisite (rich text)
 - `description` (string): The test case description (rich text)
+- `steps` (array): List of test steps, each containing:
+  - `action` (string): What action to perform (rich text)
+  - `expected_result` (string): Expected outcome (rich text)
+- `verified_requirement_ids` (array): List of requirement IDs verified by this test case
 - `created_by` (string): Who created the test case
 - `created_on` (string): Creation timestamp
 - `last_modified_by` (string): Who last modified the test case
@@ -183,6 +187,7 @@ Creates one or more test cases in a specified SquashTM project.
   - `steps` (array, optional): One or more test steps, each with:
     - `action` (string): What action to perform (rich text)
     - `expected_result` (string): Expected outcome (rich text)
+  - `verified_requirement_ids` (array): List of requirement IDs verified by this test case
 
 **Output:** An object containing:
 - `test_cases` (array): List of test cases, where each test case includes:
