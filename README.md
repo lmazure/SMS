@@ -2,7 +2,7 @@
 
 A Model Context Protocol (MCP) server for SquashTM that allows AI assistants like Claude to create and manage test cases.
 
-⚠️ **Note:** This is a learning/playground project. Do not use!
+⚠️ This is a learning/playground project. **Do not use!**
 
 ## Installation & Configuration
 
@@ -11,7 +11,7 @@ A Model Context Protocol (MCP) server for SquashTM that allows AI assistants lik
 - Node.js (>= 18.0.0)
 - Environment variables:
     - `SQUASHTM_URL`: URL of your SquashTM instance
-    - `SQUASHTM_API_KEY`: API key for authentication
+    - `SQUASHTM_API_KEY`: SquashTM API key for authentication
     - `SMS_LOG_FILE` (optional): Path to the log file
 
 ### For Claude Desktop
@@ -54,61 +54,4 @@ See [tools.md](tools.md).
 
 ## Development
 
-### Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/lmazure/SMS.git
-cd SMS
-
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-```
-
-### Testing with MCP Inspector
-
-The MCP Inspector allows you to test your server locally:
-
-```bash
-npm run inspect
-```
-
-Then either:
-- **Option 1:** Copy the token from the console and paste it in the Inspector's Configuration panel
-- **Option 2:** Click the link displayed in the console (format: `http://localhost:<port>/?MCP_PROXY_AUTH_TOKEN=<token>`)
-
-**Note for WSL2 users:** Access at `http://localhost:<port>` instead of `http://127.0.0.1:<port>`
-
-## Project Structure
-
-```
-SMS/
-├── src/                  # Source TypeScript files
-│   └── tests/            # Test files   
-├── build/                # Compiled JavaScript (generated)
-├── package.json          # Dependencies and scripts
-├── tsconfig.json         # TypeScript configuration
-└── README.md             # Project documentation
-```
-
-### Release
-
-1) Update the release number in:
-    - `README.md` where is describe how to declare SMS in Claude Desktop config file
-    - `package.json`
-    - `src/index.ts` where is created the `McpServer` instance
-2) Push the last commits on GitHub
-3) Merge (and squash) the issue branch on the `main` branch
-4) Tag the release:
-    ```bash
-    git switch main
-    git pull
-    git tag -a v0.0.4 -m "Release v0.0.4"
-    ```
-5) Push the tag on GitHub:
-    ```bash
-    git push origin v0.0.4
-    ```
+See [dev.md](dev.md).

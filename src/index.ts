@@ -4,9 +4,10 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { fileURLToPath } from 'url';
 
 // Create server instance
+const SMS_VERSION = "0.0.10.dev";
 const server = new McpServer({
     name: "SquashTM",
-    version: "0.0.9",
+    version: SMS_VERSION,
 });
 
 // Register tools
@@ -30,7 +31,7 @@ try {
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
-    console.error("SquashTM MCP Server running on stdio");
+    console.error(`SquashTM MCP Server (version ${SMS_VERSION}) running on stdio`);
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
