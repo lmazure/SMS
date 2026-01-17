@@ -59,28 +59,49 @@ describe('Test Cases Integration Tests', () => {
             test_cases: [
                 {
                     name: `Test Case 1 for project ${projectId}`,
+                    reference: `REF-1-${projectId}`,
                     description: '<p>Description for test case 1</p>',
                     prerequisite: '<p>Prerequisite for test case 1</p>',
                 },
                 {
                     name: `Test Case 2 for project ${projectId}`,
+                    reference: `REF-2-${projectId}`,
                     description: '<p>Description for test case 2</p>',
+                },
+                {
+                    name: `Test Case 3 for project ${projectId}`,
+                    description: '<p>Description for test case 3</p><br><p>This test case has no reference</p>',
+                },
+                {
+                    name: `Test Case 4 for project ${projectId}`,
+                    reference: ``,
+                    description: '<p>Description for test case 4</p><br><p>This test case has an empty reference</p>',
                 },
             ],
         });
 
         assertResultMatchSchema(result, CreateTestCasesOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
-        expect(result.structuredContent.test_cases.length).toBe(2);
+        expect(result.structuredContent.test_cases.length).toBe(4);
 
-        const [tc1, tc2] = result.structuredContent.test_cases;
+        const [tc1, tc2, tc3, tc4] = result.structuredContent.test_cases;
         expect(tc1.id).toBeGreaterThan(0);
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId}`);
+        expect(tc1.reference).toBe(`REF-1-${projectId}`);
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId}`);
+        expect(tc2.reference).toBe(`REF-2-${projectId}`);
+        expect(tc3.id).toBeGreaterThan(0);
+        expect(tc3.name).toBe(`Test Case 3 for project ${projectId}`);
+        expect(tc3.reference).toBeUndefined();
+        expect(tc4.id).toBeGreaterThan(0);
+        expect(tc4.name).toBe(`Test Case 4 for project ${projectId}`);
+        expect(tc4.reference).toBeUndefined();
 
         testCaseToBeDeleted.push(tc1.id);
         testCaseToBeDeleted.push(tc2.id);
+        testCaseToBeDeleted.push(tc3.id);
+        testCaseToBeDeleted.push(tc4.id);
     });
 
     it('should create test cases in a folder', async () => {
@@ -95,27 +116,39 @@ describe('Test Cases Integration Tests', () => {
             test_cases: [
                 {
                     name: `Test Case 1 for project ${projectId} in folder ${folderId}`,
+                    reference: `REF-1-${projectId}-${folderId}`,
                     description: '<p>Description for test case 1</p>',
                 },
                 {
                     name: `Test Case 2 for project ${projectId} in folder ${folderId}`,
+                    reference: `REF-2-${projectId}-${folderId}`,
                     description: '<p>Description for test case 2</p>',
                 },
+                {
+                    name: `Test Case 3 for project ${projectId} in folder ${folderId}`,
+                    description: '<p>Description for test case 3</p><br><p>This test case has no reference</p>',
+                }
             ],
         });
 
         assertResultMatchSchema(result, CreateTestCasesOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
-        expect(result.structuredContent.test_cases.length).toBe(2);
+        expect(result.structuredContent.test_cases.length).toBe(3);
 
-        const [tc1, tc2] = result.structuredContent.test_cases;
+        const [tc1, tc2, tc3] = result.structuredContent.test_cases;
         expect(tc1.id).toBeGreaterThan(0);
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId} in folder ${folderId}`);
+        expect(tc1.reference).toBe(`REF-1-${projectId}-${folderId}`);
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId} in folder ${folderId}`);
+        expect(tc2.reference).toBe(`REF-2-${projectId}-${folderId}`);
+        expect(tc3.id).toBeGreaterThan(0);
+        expect(tc3.name).toBe(`Test Case 3 for project ${projectId} in folder ${folderId}`);
+        expect(tc3.reference).toBeUndefined();
 
         testCaseToBeDeleted.push(tc1.id);
         testCaseToBeDeleted.push(tc2.id);
+        testCaseToBeDeleted.push(tc3.id);
     });
 
     it('should get the content of the project root', async () => {
@@ -125,16 +158,28 @@ describe('Test Cases Integration Tests', () => {
         const result = await getTestCaseFolderContentHandler({ project_id: projectId });
         assertResultMatchSchema(result, GetTestCaseFolderContentOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
-        expect(result.structuredContent.test_cases.length).toBe(2);
+        expect(result.structuredContent.test_cases.length).toBe(4);
 
         const testCases = result.structuredContent.test_cases.toSorted((a: { name: string; }, b: { name: string; }) =>
             a.name.localeCompare(b.name)
         );
-        const [tc1, tc2] = testCases;
+        const [tc1, tc2, tc3, tc4] = testCases;
         expect(tc1.id).toBeGreaterThan(0);
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId}`);
+        expect(tc1.reference).toBe(`REF-1-${projectId}`);
+        expect(tc1.description).toBe('<p>Description for test case 1</p>');
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId}`);
+        expect(tc2.reference).toBe(`REF-2-${projectId}`);
+        expect(tc2.description).toBe('<p>Description for test case 2</p>');
+        expect(tc3.id).toBeGreaterThan(0);
+        expect(tc3.name).toBe(`Test Case 3 for project ${projectId}`);
+        expect(tc3.reference).toBeUndefined();
+        expect(tc3.description).toBe('<p>Description for test case 3</p><br><p>This test case has no reference</p>');
+        expect(tc4.id).toBeGreaterThan(0);
+        expect(tc4.name).toBe(`Test Case 4 for project ${projectId}`);
+        expect(tc4.reference).toBeUndefined();
+        expect(tc4.description).toBe('<p>Description for test case 4</p><br><p>This test case has an empty reference</p>');
     });
 
     it('should get the content of a test case folder', async () => {
@@ -146,16 +191,24 @@ describe('Test Cases Integration Tests', () => {
         const result = await getTestCaseFolderContentHandler({ project_id: projectId, folder_id: folderId });
         assertResultMatchSchema(result, GetTestCaseFolderContentOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
-        expect(result.structuredContent.test_cases.length).toBe(2);
+        expect(result.structuredContent.test_cases.length).toBe(3);
 
         const testCases = result.structuredContent.test_cases.toSorted((a: { name: string; }, b: { name: string; }) =>
             a.name.localeCompare(b.name)
         );
-        const [tc1, tc2] = testCases;
+        const [tc1, tc2, tc3] = testCases;
         expect(tc1.id).toBeGreaterThan(0);
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId} in folder ${folderId}`);
+        expect(tc1.reference).toBe(`REF-1-${projectId}-${folderId}`);
+        expect(tc1.description).toBe('<p>Description for test case 1</p>');
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId} in folder ${folderId}`);
+        expect(tc2.reference).toBe(`REF-2-${projectId}-${folderId}`);
+        expect(tc2.description).toBe('<p>Description for test case 2</p>');
+        expect(tc3.id).toBeGreaterThan(0);
+        expect(tc3.name).toBe(`Test Case 3 for project ${projectId} in folder ${folderId}`);
+        expect(tc3.reference).toBeUndefined();
+        expect(tc3.description).toBe('<p>Description for test case 3</p><br><p>This test case has no reference</p>');
     });
 
     afterAll(async () => {

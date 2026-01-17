@@ -74,7 +74,8 @@ describe('Requirements Integration Tests', () => {
                     name: `Requirement 4 for project ${projectId}`,
                     reference: ``,
                     description: '<p>Description for requirement 4</p><br><p>This requirement has an empty reference</p>',
-                },],
+                },
+            ],
         });
 
         assertResultMatchSchema(result, CreateRequirementsOutputSchema);

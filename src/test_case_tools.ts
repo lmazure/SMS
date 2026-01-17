@@ -23,6 +23,7 @@ export const GetTestCaseFolderContentOutputSchema = z.object({
         z.object({
             id: z.number().describe("The ID of the test case"),
             name: z.string().describe("The name of the test case"),
+            reference: z.string().optional().describe("The reference of the test case (absent if the test case has no reference)"),
             description: z.string().describe("The description of the test case (rich text)"),
             prerequisite: z.string().optional().describe("The prerequisite of the test case (rich text)"),
             created_by: z.string().describe("Who created the test case"),
@@ -39,6 +40,7 @@ const CreateTestCasesInputSchema = z.object({
     test_cases: z.array(
         z.object({
             name: z.string().trim().min(1).describe("The name of the test case"),
+            reference: z.string().trim().min(1).optional().describe("The reference of the test case (absent if the test case has no reference)"),
             description: z.string().trim().min(1).describe("The description of the test case (rich text)"),
             prerequisite: z.string().trim().min(1).optional().describe("The prerequisite of the test case (rich text)"),
             steps: z.array(z.object({
@@ -54,6 +56,7 @@ export const CreateTestCasesOutputSchema = z.object({
         z.object({
             id: z.number().describe("The ID of the created test case"),
             name: z.string().describe("The name of the created test case"),
+            reference: z.string().optional().describe("The reference of the created test case (absent if the test case has no reference)"),
         }).strict()
     ),
 }).strict();
@@ -110,6 +113,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
             return {
                 id: details.id,
                 name: details.name,
+                ...(details.reference && { reference: details.reference }),
                 prerequisite: details.prerequisite,
                 description: details.description,
                 created_by: details.created_by,
@@ -140,6 +144,7 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
         const payload: any = {
             _type: "test-case",
             name: tc.name,
+            ...(tc.reference && { reference: tc.reference }),
             description: tc.description,
             prerequisite: tc.prerequisite,
             parent: {
@@ -162,7 +167,8 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
 
         createdTestCases.push({
             id: response.id,
-            name: response.name,
+            name: tc.name,
+            ...(tc.reference && { reference: tc.reference }),
         });
     }
 

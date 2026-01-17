@@ -160,6 +160,7 @@ Retrieves the list of test cases within a specific test case folder. Only items 
 **Output:** An array of test case objects, each containing:
 - `id` (number): The test case ID
 - `name` (string): The test case name
+- `reference` (string, optional): The test case reference (absent if the test case has no reference)
 - `prerequisite` (string): The test case prerequisite (rich text)
 - `description` (string): The test case description (rich text)
 - `created_by` (string): Who created the test case
@@ -176,6 +177,7 @@ Creates one or more test cases in a specified SquashTM project.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new test cases (optional, if not specified, the test cases will be created at the root level)
 - `test_cases` (array): List of test cases to create, each containing:
   - `name` (string): Test case name
+  - `reference` (string, optional): Test case reference (absent if the test case has no reference)
   - `description` (string): Test case description (rich text)
   - `prerequisite` (string, optional): Test case prerequisite (rich text)
   - `steps` (array, optional): One or more test steps, each with:
@@ -186,6 +188,7 @@ Creates one or more test cases in a specified SquashTM project.
 - `test_cases` (array): List of test cases, where each test case includes:
   - `id` (number): The test case ID
   - `name` (string): The test case name
+  - `reference` (string, optional): The test case reference (absent if the test case has no reference)
 
 ### `delete_test_case`
 

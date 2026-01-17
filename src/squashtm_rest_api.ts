@@ -57,6 +57,7 @@ export interface SquashTMFolderDetails {
 export interface SquashTMTestCaseDetails {
     id: number;
     name: string;
+    reference: string;
     description: string;
     prerequisite: string;
     created_by: string;
