@@ -64,8 +64,8 @@ const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
 const CreateRequirementFolderInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the requirement folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folder (optional, if not specified, the folders will be created at the root level)"),
-    name: z.string().describe("Name of the folder"),
-    description: z.string().optional().describe("Description of the folder (rich text)"),
+    name: z.string().trim().min(1).describe("Name of the folder"),
+    description: z.string().trim().min(1).optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 }).strict();
 
@@ -92,8 +92,8 @@ export const DeleteRequirementFolderOutputSchema = z.object({
 const CreateTestCaseFolderInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the test case folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folder (optional, if not specified, the folders will be created at the root level)"),
-    name: z.string().describe("Name of the folder"),
-    description: z.string().optional().describe("Description of the folder (rich text)"),
+    name: z.string().trim().min(1).describe("Name of the folder"),
+    description: z.string().trim().min(1).optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 }).strict();
 
@@ -108,8 +108,8 @@ export const DeleteTestCaseFolderOutputSchema = z.object({
 const CreateCampaignFolderInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the campaign folder"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folder (optional, if not specified, the folders will be created at the root level)"),
-    name: z.string().describe("Name of the folder"),
-    description: z.string().optional().describe("Description of the folder (rich text)"),
+    name: z.string().trim().min(1).describe("Name of the folder"),
+    description: z.string().trim().min(1).optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 }).strict();
 

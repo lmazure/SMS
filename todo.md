@@ -2,11 +2,6 @@
 
 # Next step
 
-- export all output schemas
-- add strict to all schemas
-- add .trim().min(1) to all required string fields
-- validate all outputs with schemas
-
 - manage test case reference
 - manage traceability
 - test requirement deletion

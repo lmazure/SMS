@@ -38,12 +38,12 @@ const CreateTestCasesInputSchema = z.object({
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new test cases (optional, if not specified, the test cases will be created at the root level)"),
     test_cases: z.array(
         z.object({
-            name: z.string().describe("The name of the test case"),
-            description: z.string().describe("The description of the test case (rich text)"),
-            prerequisite: z.string().optional().describe("The prerequisite of the test case (rich text)"),
+            name: z.string().trim().min(1).describe("The name of the test case"),
+            description: z.string().trim().min(1).describe("The description of the test case (rich text)"),
+            prerequisite: z.string().trim().min(1).optional().describe("The prerequisite of the test case (rich text)"),
             steps: z.array(z.object({
-                action: z.string().describe("The action to perform"),
-                expected_result: z.string().describe("The expected result"),
+                action: z.string().trim().min(1).describe("The action to perform"),
+                expected_result: z.string().trim().min(1).describe("The expected result"),
             })).optional().describe("List of test steps"),
         }).strict()
     ).min(1).describe("The list of test cases to create"),

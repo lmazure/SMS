@@ -26,9 +26,9 @@ export const ListProjectsOutputSchema = z.object({
 }).strict();
 
 const CreateProjectInputSchema = z.object({
-    name: z.string().describe("The name of the project to create"),
-    label: z.string().optional().describe("The label of the project to create"),
-    description: z.string().optional().describe("The description of the project to create (rich text)"),
+    name: z.string().trim().min(1).describe("The name of the project to create"),
+    label: z.string().trim().min(1).optional().describe("The label of the project to create"),
+    description: z.string().trim().min(1).optional().describe("The description of the project to create (rich text)"),
 }).strict();
 
 export const CreateProjectOutputSchema = z.object({
