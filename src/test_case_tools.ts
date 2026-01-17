@@ -1,12 +1,14 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
-    generateCorrelationId,
-    logToFile,
-    formatResponse,
     makeSquashRequest,
     SquashTMTestCaseDetails,
     SquashTMPaginatedResponse
+} from "./squashtm_rest_api.js";
+import {
+    generateCorrelationId,
+    logToFile,
+    formatResponse,
 } from "./utils.js";
 
 // Zod schemas

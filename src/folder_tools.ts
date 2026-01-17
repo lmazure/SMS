@@ -1,9 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import {
-    generateCorrelationId,
-    logToFile,
-    formatResponse,
     makeSquashRequest,
     SquashTMFolder,
     SquashTMFolderDetails,
@@ -12,6 +9,11 @@ import {
     SquashTMProjectTree,
     FolderStructure,
     SquashTMPaginatedResponse
+} from "./squashtm_rest_api.js";
+import {
+    generateCorrelationId,
+    logToFile,
+    formatResponse,
 } from "./utils.js";
 
 type FolderDetails = {

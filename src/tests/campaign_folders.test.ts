@@ -4,11 +4,11 @@ import {
     createCampaignFoldersHandler,
     getCampaignFoldersTreeHandler,
     deleteCampaignFolderHandler
-} from '../folders.js';
+} from '../folder_tools.js';
 import {
     createProjectHandler,
     deleteProjectHandler
-} from '../projects.js';
+} from '../project_tools.js';
 
 describe('Campaign Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();

@@ -3,9 +3,14 @@ import {
     createRequirementsHandler,
     deleteRequirementHandler,
     getRequirementFolderContentHandler
-} from '../requirements.js';
-import { createRequirementFoldersHandler } from '../folders.js';
-import { createProjectHandler, deleteProjectHandler } from '../projects.js';
+} from '../requirement_tools.js';
+import {
+    createRequirementFoldersHandler
+} from '../folder_tools.js';
+import {
+    createProjectHandler,
+    deleteProjectHandler
+} from '../project_tools.js';
 
 describe('Requirements Integration Tests', () => {
     const timestamp: number = Date.now();

@@ -10,10 +10,10 @@ const server = new McpServer({
 });
 
 // Register tools
-import { registerProjectTools } from "./projects.js";
-import { registerFolderTools } from "./folders.js";
-import { registerRequirementTools } from "./requirements.js";
-import { registerTestCaseTools } from "./test_cases.js";
+import { registerProjectTools } from "./project_tools.js";
+import { registerFolderTools } from "./folder_tools.js";
+import { registerRequirementTools } from "./requirement_tools.js";
+import { registerTestCaseTools } from "./test_case_tools.js";
 
 try {
     registerProjectTools(server);

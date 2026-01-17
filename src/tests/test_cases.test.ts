@@ -4,9 +4,14 @@ import {
     createTestCasesHandler,
     deleteTestCaseHandler,
     getTestCaseFolderContentHandler
-} from '../test_cases.js';
-import { createTestCaseFoldersHandler } from '../folders.js';
-import { createProjectHandler, deleteProjectHandler } from '../projects.js';
+} from '../test_case_tools.js';
+import {
+    createTestCaseFoldersHandler
+} from '../folder_tools.js';
+import {
+    createProjectHandler,
+    deleteProjectHandler
+} from '../project_tools.js';
 
 describe('Test Cases Integration Tests', () => {
     const timestamp: number = Date.now();
