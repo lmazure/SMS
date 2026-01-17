@@ -67,7 +67,11 @@ export interface SquashTMTestCaseDetails {
     steps: [{
         action: string;
         expected_result: string;
-    }]
+    }],
+    verified_requirements: [{
+        _type: string;
+        id: number;
+    }];
 }
 
 export interface SquashTMRequirementDetails {

@@ -36,6 +36,7 @@ export const GetTestCaseFolderContentOutputSchema = z.object({
                     expected_result: z.string().describe("The expected result"),
                 }).strict()
             ).describe("List of test steps"),
+            verified_requirements: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
         }).strict()
     ),
 }).strict();
@@ -53,6 +54,7 @@ const CreateTestCasesInputSchema = z.object({
                 action: z.string().trim().min(1).describe("The action to perform"),
                 expected_result: z.string().trim().min(1).describe("The expected result"),
             })).min(1).optional().describe("List of test steps"),
+            verified_requirement_ids: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
         }).strict()
     ).min(1).describe("The list of test cases to create"),
 }).strict();
@@ -130,6 +132,9 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                     action: step.action,
                     expected_result: step.expected_result,
                 })),
+                verified_requirements: details.verified_requirements
+                    .filter((req: any) => req._type === "requirement-version")
+                    .map((req: any) => req.id),
             };
         })
     );
@@ -174,6 +179,14 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
             "POST",
             payload
         );
+
+        if (tc.verified_requirement_ids.length > 0) {
+            await makeSquashRequest<any>(
+                correlationId,
+                `test-cases/${response.id}/coverages/${tc.verified_requirement_ids.join(",")}`,
+                "POST",
+            );
+        }
 
         createdTestCases.push({
             id: response.id,

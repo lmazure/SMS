@@ -2,8 +2,6 @@
 
 # Next step
 
-- manage test case reference
-- manage traceability
 - test requirement deletion
 - test test case deletion
 
@@ -17,6 +15,7 @@
 
 # Later on
 
+- support call steps
 - add more tests  
   get the tests more detailled → all return fields should be checked
 - manage requirements / test cases traceability
