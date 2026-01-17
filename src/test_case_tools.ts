@@ -7,7 +7,7 @@ import {
 } from "./squashtm_rest_api.js";
 import {
     generateCorrelationId,
-    logToFile,
+    logToFileAndConsole,
     formatResponse,
 } from "./utils.js";
 
@@ -69,7 +69,7 @@ const DeleteTestCaseOutputSchema = z.object({
 // 'get_test_case_folder_content' tool
 export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "get_test_case_folder_content " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "get_test_case_folder_content " + JSON.stringify(args));
 
     const endpoint = args.folder_id ? `test-case-folders/${args.folder_id}/content` : `projects/${args.project_id}/test-cases-library/content`;
     const answerFieldName = args.folder_id ? "content" : "test-case-library-content";
@@ -122,14 +122,14 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
 
     const returnedData = formatResponse({ test_cases: detailedTestCases });
 
-    logToFile(correlationId, "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "get_test_case_folder_content returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
 // 'create_test_cases' tool
 export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCasesInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "create_test_cases " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "create_test_cases " + JSON.stringify(args));
 
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "test-case-folder" : "project";
@@ -168,14 +168,14 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
 
     const returnedData = formatResponse({ test_cases: createdTestCases });
 
-    logToFile(correlationId, "create_test_cases returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "create_test_cases returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
 // 'delete_test_case' tool
 export const deleteTestCaseHandler = async (args: z.infer<typeof DeleteTestCaseInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "delete_test_case " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "delete_test_case " + JSON.stringify(args));
     await makeSquashRequest<any>(
         correlationId,
         `test-cases/${args.id}`,
@@ -188,7 +188,7 @@ export const deleteTestCaseHandler = async (args: z.infer<typeof DeleteTestCaseI
 
     const returnedData = formatResponse(testCaseData);
 
-    logToFile(correlationId, "delete_test_case returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "delete_test_case returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 

@@ -1,27 +1,26 @@
 import { appendFileSync } from 'fs';
 import { EOL } from 'os';
+import "dotenv/config";
 
-const LOG_FILE = 'sms.log';
+const SMS_LOG_FILE: string | undefined = process.env.SMS_LOG_FILE;
 
 // Utility functions
 export function generateCorrelationId() {
     return Math.random().toString(36).substring(2, 9);
 }
 
-export function logToFile(correlationId: string, message: string) {
+export function logToFileAndConsole(correlationId: string, logLevel: "INFO" | "ERROR", message: string) {
     const timestamp = new Date().toISOString();
-    const logMessage = `[${timestamp}] ${correlationId}: ${message}${EOL}`;
-    try {
-        appendFileSync(LOG_FILE, logMessage);
-    } catch (error) {
-        // Fallback to console if writing to file fails
-        console.error(`Failed to write to log file: ${error}`);
+    const logMessage = `[${timestamp}] ${correlationId}: ${logLevel}: ${message}${EOL}`;
+    console.error(logMessage);
+    if (SMS_LOG_FILE) {
+        try {
+            appendFileSync(SMS_LOG_FILE, logMessage);
+        } catch (error) {
+            // Fallback to console if writing to file fails
+            console.error(`Failed to write to log file ${SMS_LOG_FILE}: ${error}`);
+        }
     }
-}
-
-export function logErrorToConsole(correlationId: string, message: string) {
-    console.error(message);
-    logToFile(correlationId, message);
 }
 
 // Format the response to be returned to the MCP client

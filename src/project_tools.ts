@@ -7,7 +7,7 @@ import {
 } from "./squashtm_rest_api.js";
 import {
     generateCorrelationId,
-    logToFile,
+    logToFileAndConsole,
     formatResponse,
 } from "./utils.js";
 
@@ -46,7 +46,7 @@ const DeleteProjectOutputSchema = z.object({
 // 'list_projects' tool
 export const listProjectsHandler = async () => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "list_projects");
+    logToFileAndConsole(correlationId, "INFO", "list_projects");
     let allProjects: SquashTMProject[] = [];
     let currentPage = 0;
     let totalPages = 1;
@@ -90,14 +90,14 @@ export const listProjectsHandler = async () => {
 
     const returnedData = formatResponse(detailedProjects);
 
-    logToFile(correlationId, "list_projects returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "list_projects returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
 // 'create_project' tool
 export const createProjectHandler = async (args: z.infer<typeof CreateProjectInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "create_project " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "create_project " + JSON.stringify(args));
     const payload = {
         _type: "project",
         name: args.name,
@@ -118,14 +118,14 @@ export const createProjectHandler = async (args: z.infer<typeof CreateProjectInp
 
     const returnedData = formatResponse(projectData);
 
-    logToFile(correlationId, "create_project returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "create_project returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
 // 'delete_project' tool
 export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "delete_project " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "delete_project " + JSON.stringify(args));
     await makeSquashRequest<any>(
         correlationId,
         `projects/${args.id}`,
@@ -138,7 +138,7 @@ export const deleteProjectHandler = async (args: z.infer<typeof DeleteProjectInp
 
     const returnedData = formatResponse(projectData);
 
-    logToFile(correlationId, "delete_project returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "delete_project returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 

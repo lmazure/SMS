@@ -1,11 +1,10 @@
 import { ErrorCode, McpError } from "@modelcontextprotocol/sdk/types.js";
 import "dotenv/config";
 import {
-    logErrorToConsole,
-    logToFile
+    logToFileAndConsole
 } from "./utils.js";
 
-// Environment variables (exported for use in other modules)
+// SquashTM API environment variables
 if (!process.env.SQUASHTM_API_KEY) {
     console.error("SQUASHTM_API_KEY environment variable is required");
     throw new McpError(ErrorCode.InternalError, "SQUASHTM_API_KEY environment variable is required");
@@ -14,9 +13,9 @@ if (!process.env.SQUASHTM_URL) {
     console.error("SQUASHTM_URL environment variable is required");
     throw new McpError(ErrorCode.InternalError, "SQUASHTM_URL environment variable is required");
 }
-export const SQUASHTM_API_KEY = process.env.SQUASHTM_API_KEY;
-export const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
-export const SQUASHTM_API_URL = `${SQUASHTM_URL}/api/rest/latest`;
+const SQUASHTM_API_KEY = process.env.SQUASHTM_API_KEY;
+const SQUASHTM_URL = process.env.SQUASHTM_URL.replace(/\/$/, '');
+const SQUASHTM_API_URL = `${SQUASHTM_URL}/api/rest/latest`;
 
 // SquashTM API type definitions
 export interface SquashTMProject {
@@ -125,7 +124,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
         headers["Content-Type"] = "application/json";
     }
 
-    logToFile(requestId, `SquashTM REST API Request: method=${method} endpoint=${endpoint} body=${body ? JSON.stringify(body) : "<empty>"}`);
+    logToFileAndConsole(requestId, "INFO", `SquashTM REST API Request: method=${method} endpoint=${endpoint} body=${body ? JSON.stringify(body) : "<empty>"}`);
 
     try {
         const response = await fetch(SQUASHTM_API_URL + "/" + endpoint, {
@@ -136,7 +135,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
 
         if (!response.ok) {
             const text = await response.text();
-            logErrorToConsole(requestId, `SquashTM REST API Response Status: ${response.status} Payload: ${text}`);
+            logToFileAndConsole(requestId, "ERROR", `SquashTM REST API Response Status: ${response.status} Payload: ${text}`);
             // if the response is JSON, extract the message from the "message" field
             // otherwise, use the text
             let message = text;
@@ -150,12 +149,12 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
         }
 
         if (response.status === 204) {
-            logToFile(requestId, `SquashTM REST API Response: Status: ${response.status}`);
+            logToFileAndConsole(requestId, "INFO", `SquashTM REST API Response: Status: ${response.status}`);
             return {} as T;
         }
 
         const text = await response.text();
-        logToFile(requestId, `SquashTM REST API Response: Status: ${response.status} Payload: ${text}`);
+        logToFileAndConsole(requestId, "INFO", `SquashTM REST API Response: Status: ${response.status} Payload: ${text}`);
 
         if (text.length === 0) {
             return {} as T;
@@ -167,12 +166,12 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
                 return JSON.parse(text) as T;
             } catch (e) {
                 const m = `Failed to parse SquashTM REST API JSON response: ${text}`;
-                logErrorToConsole(requestId, m);
+                logToFileAndConsole(requestId, "ERROR", m);
                 throw new McpError(ErrorCode.InternalError, m);
             }
         } else {
             const m = `Unexpected SquashTM REST API response format: ${text}`;
-            logErrorToConsole(requestId, m);
+            logToFileAndConsole(requestId, "ERROR", m);
             throw new McpError(ErrorCode.InternalError, m);
         }
     } catch (error) {
@@ -180,7 +179,7 @@ export async function makeSquashRequest<T>(correlationId: string, endpoint: stri
             throw error;
         }
         const m = `Error making SquashTM REST API request: ${error}`;
-        logErrorToConsole(requestId, m);
+        logToFileAndConsole(requestId, "ERROR", m);
         throw new McpError(ErrorCode.InternalError, m);
     }
 }

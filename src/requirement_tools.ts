@@ -7,7 +7,7 @@ import {
 } from "./squashtm_rest_api.js";
 import {
     generateCorrelationId,
-    logToFile,
+    logToFileAndConsole,
     formatResponse,
 } from "./utils.js";
 
@@ -63,7 +63,7 @@ const DeleteRequirementOutputSchema = z.object({
 // 'get_requirement_folder_content' tool
 export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "get_requirement_folder_content " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "get_requirement_folder_content " + JSON.stringify(args));
 
     const endpoint = args.folder_id ? `requirement-folders/${args.folder_id}/content` : `projects/${args.project_id}/requirements-library/content`;
     const answerFieldName = args.folder_id ? "content" : "requirement-library-content";
@@ -120,14 +120,14 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
 
     const returnedData = formatResponse({ requirements: detailedRequirements });
 
-    logToFile(correlationId, "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "get_requirement_folder_content returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
 // 'create_requirements' tool
 export const createRequirementsHandler = async (args: z.infer<typeof CreateRequirementsInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "create_requirements " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "create_requirements " + JSON.stringify(args));
 
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "requirement-folder" : "project";
@@ -168,14 +168,14 @@ export const createRequirementsHandler = async (args: z.infer<typeof CreateRequi
 
     const returnedData = formatResponse({ requirements: createdRequirements });
 
-    logToFile(correlationId, "create_requirements returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "create_requirements returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
 // 'delete_requirement' tool
 export const deleteRequirementHandler = async (args: z.infer<typeof DeleteRequirementInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFile(correlationId, "delete_requirement " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "delete_requirement " + JSON.stringify(args));
     await makeSquashRequest<any>(
         correlationId,
         `requirements/${args.id}`,
@@ -188,7 +188,7 @@ export const deleteRequirementHandler = async (args: z.infer<typeof DeleteRequir
 
     const returnedData = formatResponse(requirementData);
 
-    logToFile(correlationId, "delete_requirement returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "delete_requirement returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 

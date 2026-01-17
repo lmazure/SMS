@@ -9,6 +9,10 @@ A Model Context Protocol (MCP) server for SquashTM that allows AI assistants lik
 ### Prerequisites
 
 - Node.js (>= 18.0.0)
+- Environment variables:
+    - `SQUASHTM_URL`: URL of your SquashTM instance
+    - `SQUASHTM_API_KEY`: API key for authentication
+    - `SMS_LOG_FILE` (optional): Path to the log file
 
 ### For Claude Desktop
 
