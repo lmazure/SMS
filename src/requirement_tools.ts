@@ -27,8 +27,8 @@ export const GetRequirementFolderContentOutputSchema = z.object({
             description: z.string().describe("The description of the requirement (rich text)"),
             created_by: z.string().describe("Who created the requirement"),
             created_on: z.string().describe("Creation timestamp"),
-            last_modified_by: z.string().describe("Who last modified the requirement"),
-            last_modified_on: z.string().describe("Last modification timestamp"),
+            last_modified_by: z.string().optional().describe("Who last modified the requirement (absent if the requirement has not been modified since creation)"),
+            last_modified_on: z.string().optional().describe("Last modification timestamp (absent if the requirement has not been modified since creation)"),
         }).strict()
     ),
 }).strict();
@@ -111,8 +111,8 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
                 description: details.current_version.description,
                 created_by: details.current_version.created_by,
                 created_on: details.current_version.created_on,
-                last_modified_by: details.current_version.last_modified_by,
-                last_modified_on: details.current_version.last_modified_on,
+                ...(details.current_version.last_modified_by && { last_modified_by: details.current_version.last_modified_by }),
+                ...(details.current_version.last_modified_on && { last_modified_on: details.current_version.last_modified_on }),
             };
         })
     );

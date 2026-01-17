@@ -3,15 +3,20 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
     createTestCasesHandler,
     deleteTestCaseHandler,
-    getTestCaseFolderContentHandler
+    getTestCaseFolderContentHandler,
+    CreateTestCasesOutputSchema,
+    GetTestCaseFolderContentOutputSchema
 } from '../test_case_tools.js';
 import {
-    createTestCaseFoldersHandler
+    createTestCaseFoldersHandler,
+    CreateFoldersOutputSchema
 } from '../folder_tools.js';
 import {
     createProjectHandler,
-    deleteProjectHandler
+    deleteProjectHandler,
+    CreateProjectOutputSchema
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('Test Cases Integration Tests', () => {
     const timestamp: number = Date.now();
@@ -29,8 +34,7 @@ describe('Test Cases Integration Tests', () => {
             description: projectDescription,
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateProjectOutputSchema);
         expect(result.structuredContent.id).toBeDefined();
 
         projectId = result.structuredContent.id;
@@ -39,8 +43,7 @@ describe('Test Cases Integration Tests', () => {
             project_id: (projectId as number),
             name: "Root Test Case Folder",
         });
-        expect(folderResult).toBeDefined();
-        expect(folderResult.structuredContent).toBeDefined();
+        assertResultMatchSchema(folderResult, CreateFoldersOutputSchema);
         expect(folderResult.structuredContent.folder).toBeDefined();
         expect(folderResult.structuredContent.folder.id).toBeDefined();
 
@@ -66,8 +69,7 @@ describe('Test Cases Integration Tests', () => {
             ],
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateTestCasesOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
         expect(result.structuredContent.test_cases.length).toBe(2);
 
@@ -76,10 +78,6 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId}`);
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
 
         testCaseToBeDeleted.push(tc1.id);
         testCaseToBeDeleted.push(tc2.id);
@@ -106,8 +104,7 @@ describe('Test Cases Integration Tests', () => {
             ],
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateTestCasesOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
         expect(result.structuredContent.test_cases.length).toBe(2);
 
@@ -116,10 +113,6 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId} in folder ${folderId}`);
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId} in folder ${folderId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
 
         testCaseToBeDeleted.push(tc1.id);
         testCaseToBeDeleted.push(tc2.id);
@@ -130,8 +123,7 @@ describe('Test Cases Integration Tests', () => {
         if (!projectId) return;
 
         const result = await getTestCaseFolderContentHandler({ project_id: projectId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetTestCaseFolderContentOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
         expect(result.structuredContent.test_cases.length).toBe(2);
 
@@ -143,10 +135,6 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId}`);
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should get the content of a test case folder', async () => {
@@ -156,8 +144,7 @@ describe('Test Cases Integration Tests', () => {
         if (!folderId) return;
 
         const result = await getTestCaseFolderContentHandler({ project_id: projectId, folder_id: folderId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetTestCaseFolderContentOutputSchema);
         expect(result.structuredContent.test_cases).toBeDefined();
         expect(result.structuredContent.test_cases.length).toBe(2);
 
@@ -169,10 +156,6 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId} in folder ${folderId}`);
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId} in folder ${folderId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     afterAll(async () => {

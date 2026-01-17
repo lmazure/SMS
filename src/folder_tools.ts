@@ -69,13 +69,17 @@ const CreateRequirementFoldersInputSchema = z.object({
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
 }).strict();
 
-export const CreateFoldersOutputSchema: z.ZodType<any> = z.lazy(() => z.object({
-    name: z.string().describe("Name of the folder"),
+const RecursiveCreatedFolderSchema: z.ZodType<any> = z.lazy(() => z.object({
     id: z.number().describe("ID of the folder"),
-    children: z.array(CreateFoldersOutputSchema).optional().describe("Subfolders"),
-}).describe("Folder structure").strict());
+    name: z.string().describe("Name of the folder"),
+    children: z.array(RecursiveCreatedFolderSchema).describe("Subfolders"),
+}).strict());
 
-export type CreateFoldersOutput = z.infer<typeof CreateFoldersOutputSchema>;
+export const CreateFoldersOutputSchema = z.object({
+    folder: RecursiveCreatedFolderSchema.describe("Created folder"),
+}).strict();
+
+export type CreateFoldersOutput = z.infer<typeof RecursiveCreatedFolderSchema>;
 
 const DeleteRequirementFolderInputSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to delete")

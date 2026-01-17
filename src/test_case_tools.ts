@@ -24,11 +24,11 @@ export const GetTestCaseFolderContentOutputSchema = z.object({
             id: z.number().describe("The ID of the test case"),
             name: z.string().describe("The name of the test case"),
             description: z.string().describe("The description of the test case (rich text)"),
-            prerequisite: z.string().describe("The prerequisite of the test case (rich text)"),
+            prerequisite: z.string().optional().describe("The prerequisite of the test case (rich text)"),
             created_by: z.string().describe("Who created the test case"),
             created_on: z.string().describe("Creation timestamp"),
-            last_modified_by: z.string().describe("Who last modified the test case"),
-            last_modified_on: z.string().describe("Last modification timestamp"),
+            last_modified_by: z.string().optional().describe("Who last modified the test case (absent if the test case has not been modified since creation)"),
+            last_modified_on: z.string().optional().describe("Last modification timestamp (absent if the test case has not been modified since creation)"),
         }).strict()
     ),
 }).strict();
@@ -114,8 +114,8 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 description: details.description,
                 created_by: details.created_by,
                 created_on: details.created_on,
-                last_modified_by: details.last_modified_by,
-                last_modified_on: details.last_modified_on,
+                ...(details.last_modified_by && { last_modified_by: details.last_modified_by }),
+                ...(details.last_modified_on && { last_modified_on: details.last_modified_on }),
             };
         })
     );

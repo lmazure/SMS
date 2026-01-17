@@ -2,8 +2,12 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import {
     listProjectsHandler,
     createProjectHandler,
-    deleteProjectHandler
+    deleteProjectHandler,
+    ListProjectsOutputSchema,
+    CreateProjectOutputSchema,
+    DeleteProjectOutputSchema
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('SquashTM Integration Tests', () => {
     // Generate a unique project name to avoid collisions
@@ -20,14 +24,9 @@ describe('SquashTM Integration Tests', () => {
             description: projectDescription
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateProjectOutputSchema);
         expect(result.structuredContent.id).toBeDefined();
         expect(result.structuredContent.id).toBeGreaterThan(0);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
 
         projectId = result.structuredContent.id;
     });
@@ -37,19 +36,14 @@ describe('SquashTM Integration Tests', () => {
         if (!projectId) return;
 
         const result = await listProjectsHandler();
-        expect(result).toBeDefined();
+        assertResultMatchSchema(result, ListProjectsOutputSchema);
 
-        expect(result.structuredContent).toBeDefined();
         expect(result.structuredContent.projects).toBeDefined();
         expect(result.structuredContent.projects.length).toBeGreaterThan(0);
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeDefined();
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId).name).toBe(projectName);
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId).label).toBe(projectLabel);
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId).description).toBe(projectDescription);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the project', async () => {
@@ -57,8 +51,7 @@ describe('SquashTM Integration Tests', () => {
         if (!projectId) return;
 
         const result = await deleteProjectHandler({ id: projectId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, DeleteProjectOutputSchema);
         expect(result.structuredContent.message).toEqual(`Project ${projectId} deleted successfully`);
     });
 
@@ -67,13 +60,8 @@ describe('SquashTM Integration Tests', () => {
         if (!projectId) return;
 
         const result = await listProjectsHandler();
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, ListProjectsOutputSchema);
         expect(result.structuredContent.projects).toBeDefined();
         expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeUndefined();
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 });

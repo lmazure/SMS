@@ -13,6 +13,7 @@ import {
     createProjectHandler,
     deleteProjectHandler
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('Requirements Integration Tests', () => {
     const timestamp: number = Date.now();
@@ -76,9 +77,8 @@ describe('Requirements Integration Tests', () => {
                 },],
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
-        expect(CreateRequirementsOutputSchema.safeParse(result.structuredContent).success).toBe(true);
+        assertResultMatchSchema(result, CreateRequirementsOutputSchema);
+
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(4);
 
@@ -95,10 +95,6 @@ describe('Requirements Integration Tests', () => {
         expect(req4.id).toBeGreaterThan(0);
         expect(req4.name).toBe(`Requirement 4 for project ${projectId}`);
         expect(req4.reference).toBeUndefined();
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
 
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
@@ -133,18 +129,7 @@ describe('Requirements Integration Tests', () => {
             ],
         });
 
-        // ensure that the structured (JSON) respect the output schema
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
-        expect(CreateRequirementsOutputSchema.safeParse(result.structuredContent).success).toBe(true);
-
-        // ensure the text and the structured content are the same
-        expect(result.content).toBeDefined();
-        expect(result.content.length).toBe(1);
-        expect(result.content[0]).toBeDefined();
-        expect(result.content[0].text).toBeDefined();
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
+        assertResultMatchSchema(result, CreateRequirementsOutputSchema);
 
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(3);
@@ -160,8 +145,6 @@ describe('Requirements Integration Tests', () => {
         expect(req3.name).toBe(`Requirement 3 for project ${projectId} in folder ${folderId}`);
         expect(req3.reference).toBeUndefined();
 
-
-
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
         requirementToBeDeleted.push(req3.id);
@@ -172,9 +155,7 @@ describe('Requirements Integration Tests', () => {
         if (!projectId) return;
 
         const result = await getRequirementFolderContentHandler({ project_id: projectId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
-        expect(GetRequirementFolderContentOutputSchema.safeParse(result.structuredContent).success).toBe(true);
+        assertResultMatchSchema(result, GetRequirementFolderContentOutputSchema);
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(4);
 
@@ -198,10 +179,6 @@ describe('Requirements Integration Tests', () => {
         expect(req4.name).toBe(`Requirement 4 for project ${projectId}`);
         expect(req4.reference).toBeUndefined();
         expect(req4.description).toBe('<p>Description for requirement 4</p><br><p>This requirement has an empty reference</p>');
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should get the content of a requirement folder', async () => {
@@ -211,9 +188,7 @@ describe('Requirements Integration Tests', () => {
         if (!folderId) return;
 
         const result = await getRequirementFolderContentHandler({ project_id: projectId, folder_id: folderId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
-        expect(GetRequirementFolderContentOutputSchema.safeParse(result.structuredContent).success).toBe(true);
+        assertResultMatchSchema(result, GetRequirementFolderContentOutputSchema);
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(3);
 
@@ -234,9 +209,6 @@ describe('Requirements Integration Tests', () => {
         expect(req3.reference).toBeUndefined();
         expect(req3.description).toBe('<p>Description for requirement 3</p><br><p>This requirement has no reference</p>');
 
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     afterAll(async () => {
