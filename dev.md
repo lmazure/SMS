@@ -88,7 +88,7 @@ SMS/
 └── vitest.config.ts      # Vitest configuration
 ```
 
-### Release
+## How to release
 
 1) Update the release number in:
     - `README.md` where is describe how to declare SMS in Claude Desktop config file

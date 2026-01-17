@@ -18,47 +18,50 @@ const GetRequirementFolderContentInputSchema = z.object({
     folder_id: z.number().optional().describe("The ID of the requirement folder to retrieve content for (optional, if not specified, the requirements of the project root will be retrieved)"),
 });
 
-const GetRequirementFolderContentOutputSchema = z.object({
+export const GetRequirementFolderContentOutputSchema = z.object({
     requirements: z.array(
         z.object({
             id: z.number().describe("The ID of the requirement"),
             name: z.string().describe("The name of the requirement"),
+            reference: z.string().optional().describe("The reference of the requirement (absent if the requirement has no reference)"),
             description: z.string().describe("The description of the requirement (rich text)"),
             created_by: z.string().describe("Who created the requirement"),
             created_on: z.string().describe("Creation timestamp"),
             last_modified_by: z.string().describe("Who last modified the requirement"),
             last_modified_on: z.string().describe("Last modification timestamp"),
-        })
+        }).strict()
     ),
-});
+}).strict();
 
 const CreateRequirementsInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the requirements"),
     parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new requirements (optional, if not specified, the requirements will be created at the root level)"),
     requirements: z.array(
         z.object({
-            name: z.string().describe("The name of the requirement"),
-            description: z.string().describe("The description of the requirement (rich text)"),
+            name: z.string().trim().min(1).describe("The name of the requirement"),
+            reference: z.string().trim().min(1).optional().describe("The reference of the requirement (absent if the requirement has no reference)"),
+            description: z.string().trim().min(1).describe("The description of the requirement (rich text)"),
         })
     ).min(1).describe("The list of requirements to create"),
-});
+}).strict();
 
-const CreateRequirementsOutputSchema = z.object({
+export const CreateRequirementsOutputSchema = z.object({
     requirements: z.array(
         z.object({
             id: z.number().describe("The ID of the created requirement"),
             name: z.string().describe("The name of the created requirement"),
-        })
+            reference: z.string().optional().describe("The reference of the created requirement (absent if the requirement has no reference)"),
+        }).strict()
     ),
-});
+}).strict();
 
 const DeleteRequirementInputSchema = z.object({
     id: z.number().describe("The ID of the requirement to delete"),
-});
+}).strict();
 
-const DeleteRequirementOutputSchema = z.object({
+export const DeleteRequirementOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the requirement"),
-});
+}).strict();
 
 // 'get_requirement_folder_content' tool
 export const getRequirementFolderContentHandler = async (args: z.infer<typeof GetRequirementFolderContentInputSchema>) => {
@@ -104,16 +107,12 @@ export const getRequirementFolderContentHandler = async (args: z.infer<typeof Ge
             return {
                 id: details.id,
                 name: details.name,
-                reference: details.current_version.reference,
-                version: details.current_version.version_number,
+                ...details.current_version.reference && { reference: details.current_version.reference },
                 description: details.current_version.description,
                 created_by: details.current_version.created_by,
                 created_on: details.current_version.created_on,
                 last_modified_by: details.current_version.last_modified_by,
                 last_modified_on: details.current_version.last_modified_on,
-                criticality: details.current_version.criticality,
-                category: details.current_version.category?.code,
-                status: details.current_version.status,
             };
         })
     );
@@ -139,6 +138,7 @@ export const createRequirementsHandler = async (args: z.infer<typeof CreateRequi
             _type: "requirement",
             current_version: {
                 _type: "requirement-version",
+                reference: req.reference,
                 name: req.name,
                 criticality: "UNDEFINED",
                 category: {
@@ -162,7 +162,8 @@ export const createRequirementsHandler = async (args: z.infer<typeof CreateRequi
 
         createdRequirements.push({
             id: response.id,
-            name: response.name,
+            name: req.name,
+            ...req.reference && { reference: req.reference },
         });
     }
 

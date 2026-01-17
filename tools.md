@@ -65,12 +65,14 @@ Creates one or more requirements in a specified SquashTM project.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new requirements (optional, if not specified, the requirements will be created at the root level)
 - `requirements` (array): List of requirements to create, each containing:
   - `name` (string): Requirement name
+  - `reference` (string, optional): Requirement reference
   - `description` (string): Requirement description (rich text)
 
 **Output:** An object containing:
 - `requirements` (array): List of requirements, where each requirement includes:
   - `id` (number): The requirement ID
   - `name` (string): The requirement name
+  - `reference` (string, optional): The requirement reference (absent if the requirement has no reference)
 
 ### `delete_requirement`
 
@@ -91,6 +93,7 @@ Retrieves the list of requirements within a specific requirement folder.
 **Output:** An object containing:
 - `requirements` (array): List of requirements, where each requirement includes:
   - `id` (number): The requirement ID
+  - `reference` (string, optional): The requirement reference (absent if the requirement has no reference)
   - `name` (string): The requirement name
   - `description` (string): The requirement description (rich text)
   - `created_by` (string): Who created the requirement

@@ -2,12 +2,19 @@
 
 # Next step
 
-- manage requirement reference
+- export all output schemas
+- add strict to all schemas
+- add .trim().min(1) to all required string fields
+- validate all outputs with schemas
+
 - manage test case reference
+- manage traceability
+- test requirement deletion
+- test test case deletion
+
 - add tests for folders with no description
 - add tests for projects with no description
 - add tests for projects with no label
-- manage test case steps
 - manage test case datasets
 - create dev documentation
     - explaining how to run a dev version of the MCP Server in Claude desktop
