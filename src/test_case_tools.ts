@@ -16,9 +16,9 @@ import {
 const GetTestCaseFolderContentInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to retrieve the test case folder content"),
     folder_id: z.number().optional().describe("The ID of the test case folder to retrieve content for (optional, if not specified, the test cases of the project root will be retrieved)"),
-});
+}).strict();
 
-const GetTestCaseFolderContentOutputSchema = z.object({
+export const GetTestCaseFolderContentOutputSchema = z.object({
     test_cases: z.array(
         z.object({
             id: z.number().describe("The ID of the test case"),
@@ -29,9 +29,9 @@ const GetTestCaseFolderContentOutputSchema = z.object({
             created_on: z.string().describe("Creation timestamp"),
             last_modified_by: z.string().describe("Who last modified the test case"),
             last_modified_on: z.string().describe("Last modification timestamp"),
-        })
+        }).strict()
     ),
-});
+}).strict();
 
 const CreateTestCasesInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the test cases"),
@@ -45,26 +45,26 @@ const CreateTestCasesInputSchema = z.object({
                 action: z.string().describe("The action to perform"),
                 expected_result: z.string().describe("The expected result"),
             })).optional().describe("List of test steps"),
-        })
+        }).strict()
     ).min(1).describe("The list of test cases to create"),
-});
+}).strict();
 
-const CreateTestCasesOutputSchema = z.object({
+export const CreateTestCasesOutputSchema = z.object({
     test_cases: z.array(
         z.object({
             id: z.number().describe("The ID of the created test case"),
             name: z.string().describe("The name of the created test case"),
-        })
+        }).strict()
     ),
-});
+}).strict();
 
 const DeleteTestCaseInputSchema = z.object({
     id: z.number().describe("The ID of the test case to delete"),
-});
+}).strict();
 
-const DeleteTestCaseOutputSchema = z.object({
+export const DeleteTestCaseOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the test case"),
-});
+}).strict();
 
 // 'get_test_case_folder_content' tool
 export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTestCaseFolderContentInputSchema>) => {

@@ -16,7 +16,7 @@ import {
 const GetRequirementFolderContentInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to retrieve the requirement folder content"),
     folder_id: z.number().optional().describe("The ID of the requirement folder to retrieve content for (optional, if not specified, the requirements of the project root will be retrieved)"),
-});
+}).strict();
 
 export const GetRequirementFolderContentOutputSchema = z.object({
     requirements: z.array(
