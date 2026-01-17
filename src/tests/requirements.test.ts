@@ -133,9 +133,19 @@ describe('Requirements Integration Tests', () => {
             ],
         });
 
+        // ensure that the structured (JSON) respect the output schema
         expect(result).toBeDefined();
         expect(result.structuredContent).toBeDefined();
         expect(CreateRequirementsOutputSchema.safeParse(result.structuredContent).success).toBe(true);
+
+        // ensure the text and the structured content are the same
+        expect(result.content).toBeDefined();
+        expect(result.content.length).toBe(1);
+        expect(result.content[0]).toBeDefined();
+        expect(result.content[0].text).toBeDefined();
+        const outputJson = JSON.parse(result.content[0].text);
+        expect(outputJson).toEqual(result.structuredContent);
+
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(3);
 
@@ -150,9 +160,7 @@ describe('Requirements Integration Tests', () => {
         expect(req3.name).toBe(`Requirement 3 for project ${projectId} in folder ${folderId}`);
         expect(req3.reference).toBeUndefined();
 
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
+
 
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
