@@ -30,6 +30,12 @@ export const GetTestCaseFolderContentOutputSchema = z.object({
             created_on: z.string().describe("Creation timestamp"),
             last_modified_by: z.string().optional().describe("Who last modified the test case (absent if the test case has not been modified since creation)"),
             last_modified_on: z.string().optional().describe("Last modification timestamp (absent if the test case has not been modified since creation)"),
+            steps: z.array(
+                z.object({
+                    action: z.string().describe("The action to perform"),
+                    expected_result: z.string().describe("The expected result"),
+                }).strict()
+            ).describe("List of test steps"),
         }).strict()
     ),
 }).strict();
@@ -46,7 +52,7 @@ const CreateTestCasesInputSchema = z.object({
             steps: z.array(z.object({
                 action: z.string().trim().min(1).describe("The action to perform"),
                 expected_result: z.string().trim().min(1).describe("The expected result"),
-            })).optional().describe("List of test steps"),
+            })).min(1).optional().describe("List of test steps"),
         }).strict()
     ).min(1).describe("The list of test cases to create"),
 }).strict();
@@ -120,6 +126,10 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 created_on: details.created_on,
                 ...(details.last_modified_by && { last_modified_by: details.last_modified_by }),
                 ...(details.last_modified_on && { last_modified_on: details.last_modified_on }),
+                steps: details.steps.map((step: any) => ({
+                    action: step.action,
+                    expected_result: step.expected_result,
+                })),
             };
         })
     );

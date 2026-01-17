@@ -64,6 +64,10 @@ export interface SquashTMTestCaseDetails {
     created_on: string;
     last_modified_by: string;
     last_modified_on: string;
+    steps: [{
+        action: string;
+        expected_result: string;
+    }]
 }
 
 export interface SquashTMRequirementDetails {
