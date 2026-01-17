@@ -1,10 +1,10 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createTestCaseFoldersHandler,
+    createTestCaseFolderHandler,
     getTestCaseFoldersTreeHandler,
     deleteTestCaseFolderHandler,
-    CreateFoldersOutputSchema,
+    CreateFolderOutputSchema,
     GetFoldersTreeOutputSchema,
     DeleteTestCaseFolderOutputSchema
 } from '../folder_tools.js';
@@ -39,7 +39,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        const result = await createTestCaseFoldersHandler({
+        const result = await createTestCaseFolderHandler({
             project_id: projectId,
             name: "Root TC Folder",
             description: "Description of the Root TC Folder",
@@ -61,7 +61,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
             ]
         });
 
-        assertResultMatchSchema(result, CreateFoldersOutputSchema);
+        assertResultMatchSchema(result, CreateFolderOutputSchema);
         expect(result.structuredContent.folder).toBeDefined();
         expect(result.structuredContent.folder.id).toBeDefined();
         expect(result.structuredContent.folder.name).toBe("Root TC Folder");

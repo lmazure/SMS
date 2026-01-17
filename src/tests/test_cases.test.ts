@@ -8,8 +8,8 @@ import {
     GetTestCaseFolderContentOutputSchema
 } from '../test_case_tools.js';
 import {
-    createTestCaseFoldersHandler,
-    CreateFoldersOutputSchema
+    createTestCaseFolderHandler,
+    CreateFolderOutputSchema
 } from '../folder_tools.js';
 import {
     createProjectHandler,
@@ -39,11 +39,11 @@ describe('Test Cases Integration Tests', () => {
 
         projectId = result.structuredContent.id;
 
-        const folderResult = await createTestCaseFoldersHandler({
+        const folderResult = await createTestCaseFolderHandler({
             project_id: (projectId as number),
             name: "Root Test Case Folder",
         });
-        assertResultMatchSchema(folderResult, CreateFoldersOutputSchema);
+        assertResultMatchSchema(folderResult, CreateFolderOutputSchema);
         expect(folderResult.structuredContent.folder).toBeDefined();
         expect(folderResult.structuredContent.folder.id).toBeDefined();
 

@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createRequirementFoldersHandler,
+    createRequirementFolderHandler,
     getRequirementFoldersTreeHandler,
     deleteRequirementFolderHandler,
-    CreateFoldersOutputSchema,
+    CreateFolderOutputSchema,
     GetFoldersTreeOutputSchema,
     DeleteRequirementFolderOutputSchema
 } from '../folder_tools.js';
@@ -38,7 +38,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        const result = await createRequirementFoldersHandler({
+        const result = await createRequirementFolderHandler({
             project_id: projectId,
             name: "Root Requirement Folder",
             description: "Description of the Root Requirement Folder",
@@ -60,7 +60,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
             ]
         });
 
-        assertResultMatchSchema(result, CreateFoldersOutputSchema);
+        assertResultMatchSchema(result, CreateFolderOutputSchema);
         expect(result.structuredContent.folder).toBeDefined();
         expect(result.structuredContent.folder.id).toBeDefined();
         expect(result.structuredContent.folder.name).toBe("Root Requirement Folder");

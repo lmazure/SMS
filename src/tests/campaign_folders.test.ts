@@ -1,10 +1,10 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createCampaignFoldersHandler,
+    createCampaignFolderHandler,
     getCampaignFoldersTreeHandler,
     deleteCampaignFolderHandler,
-    CreateFoldersOutputSchema,
+    CreateFolderOutputSchema,
     GetFoldersTreeOutputSchema,
     DeleteCampaignFolderOutputSchema
 } from '../folder_tools.js';
@@ -39,7 +39,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        const result = await createCampaignFoldersHandler({
+        const result = await createCampaignFolderHandler({
             project_id: projectId,
             name: "Root Campaign Folder",
             description: "Description of the Root Campaign Folder",
@@ -61,7 +61,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
             ]
         });
 
-        assertResultMatchSchema(result, CreateFoldersOutputSchema);
+        assertResultMatchSchema(result, CreateFolderOutputSchema);
         expect(result.structuredContent.folder).toBeDefined();
         expect(result.structuredContent.folder.id).toBeDefined();
         expect(result.structuredContent.folder.name).toBe("Root Campaign Folder");

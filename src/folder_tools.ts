@@ -61,9 +61,9 @@ const FolderStructureSchema: z.ZodType<any> = z.lazy(() => z.object({
     children: z.array(FolderStructureSchema).optional().describe("Subfolders"),
 }).describe("Folder structure").strict());
 
-const CreateRequirementFoldersInputSchema = z.object({
+const CreateRequirementFolderInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the requirement folder"),
-    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folder (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
     description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
@@ -75,11 +75,11 @@ const RecursiveCreatedFolderSchema: z.ZodType<any> = z.lazy(() => z.object({
     children: z.array(RecursiveCreatedFolderSchema).describe("Subfolders"),
 }).strict());
 
-export const CreateFoldersOutputSchema = z.object({
+export const CreateFolderOutputSchema = z.object({
     folder: RecursiveCreatedFolderSchema.describe("Created folder"),
 }).strict();
 
-export type CreateFoldersOutput = z.infer<typeof RecursiveCreatedFolderSchema>;
+export type CreateFolderOutput = z.infer<typeof RecursiveCreatedFolderSchema>;
 
 const DeleteRequirementFolderInputSchema = z.object({
     folder_id: z.number().describe("The ID of the requirement folder to delete")
@@ -89,9 +89,9 @@ export const DeleteRequirementFolderOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the requirement folder"),
 }).strict();
 
-const CreateTestCaseFoldersInputSchema = z.object({
+const CreateTestCaseFolderInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the test case folder"),
-    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folder (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
     description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
@@ -105,9 +105,9 @@ export const DeleteTestCaseFolderOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the test case folder"),
 }).strict();
 
-const CreateCampaignFoldersInputSchema = z.object({
+const CreateCampaignFolderInputSchema = z.object({
     project_id: z.number().describe("The ID of the project in which to create the campaign folder"),
-    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folders (optional, if not specified, the folders will be created at the root level)"),
+    parent_folder_id: z.number().optional().describe("The ID of an existing folder into which create the new folder (optional, if not specified, the folders will be created at the root level)"),
     name: z.string().describe("Name of the folder"),
     description: z.string().optional().describe("Description of the folder (rich text)"),
     children: z.array(FolderStructureSchema).optional().describe("Subfolders")
@@ -272,7 +272,7 @@ async function createFolderRecursive(
     folderType: "requirement-folder" | "test-case-folder" | "campaign-folder",
     endpoint: string,
     children?: FolderStructure[]
-): Promise<CreateFoldersOutput> {
+): Promise<CreateFolderOutput> {
     const payload = {
         _type: folderType,
         name: name,
@@ -319,10 +319,10 @@ async function createFolderRecursive(
     };
 }
 
-// 'create_requirement_folders' tool
-export const createRequirementFoldersHandler = async (args: z.infer<typeof CreateRequirementFoldersInputSchema>) => {
+// 'create_requirement_folder' tool
+export const createRequirementFolderHandler = async (args: z.infer<typeof CreateRequirementFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFileAndConsole(correlationId, "INFO", "create_requirement_folders " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "create_requirement_folder " + JSON.stringify(args));
 
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "requirement-folder" : "project";
@@ -342,7 +342,7 @@ export const createRequirementFoldersHandler = async (args: z.infer<typeof Creat
     };
 
     const returnedData = formatResponse(folderData);
-    logToFileAndConsole(correlationId, "INFO", "create_requirement_folders returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "create_requirement_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
@@ -366,10 +366,10 @@ export const deleteRequirementFolderHandler = async (args: z.infer<typeof Delete
     return returnedData;
 };
 
-// 'create_test_case_folders' tool
-export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTestCaseFoldersInputSchema>) => {
+// 'create_test_case_folder' tool
+export const createTestCaseFolderHandler = async (args: z.infer<typeof CreateTestCaseFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFileAndConsole(correlationId, "INFO", "create_test_case_folders " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "create_test_case_folder " + JSON.stringify(args));
 
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "test-case-folder" : "project";
@@ -389,7 +389,7 @@ export const createTestCaseFoldersHandler = async (args: z.infer<typeof CreateTe
     };
 
     const returnedData = formatResponse(folderData);
-    logToFileAndConsole(correlationId, "INFO", "create_test_case_folders returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "create_test_case_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
@@ -413,10 +413,10 @@ export const deleteTestCaseFolderHandler = async (args: z.infer<typeof DeleteTes
     return returnedData;
 };
 
-// 'create_campaign_folders' tool
-export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCampaignFoldersInputSchema>) => {
+// 'create_campaign_folder' tool
+export const createCampaignFolderHandler = async (args: z.infer<typeof CreateCampaignFolderInputSchema>) => {
     const correlationId = generateCorrelationId();
-    logToFileAndConsole(correlationId, "INFO", "create_campaign_folders " + JSON.stringify(args));
+    logToFileAndConsole(correlationId, "INFO", "create_campaign_folder " + JSON.stringify(args));
 
     const parentId = args.parent_folder_id || args.project_id;
     const parentType = args.parent_folder_id ? "campaign-folder" : "project";
@@ -436,7 +436,7 @@ export const createCampaignFoldersHandler = async (args: z.infer<typeof CreateCa
     };
 
     const returnedData = formatResponse(folderData);
-    logToFileAndConsole(correlationId, "INFO", "create_campaign_folders returned: " + JSON.stringify(returnedData, null, 2));
+    logToFileAndConsole(correlationId, "INFO", "create_campaign_folder returned: " + JSON.stringify(returnedData, null, 2));
     return returnedData;
 };
 
@@ -498,14 +498,14 @@ export function registerFolderTools(server: McpServer) {
     );
 
     server.registerTool(
-        "create_requirement_folders",
+        "create_requirement_folder",
         {
-            title: "Create Requirement Folders",
+            title: "Create Requirement Folder",
             description: "Create requirement folders recursively in SquashTM",
-            inputSchema: CreateRequirementFoldersInputSchema,
-            outputSchema: CreateFoldersOutputSchema,
+            inputSchema: CreateRequirementFolderInputSchema,
+            outputSchema: CreateFolderOutputSchema,
         },
-        createRequirementFoldersHandler
+        createRequirementFolderHandler
     );
 
     server.registerTool(
@@ -520,14 +520,14 @@ export function registerFolderTools(server: McpServer) {
     );
 
     server.registerTool(
-        "create_test_case_folders",
+        "create_test_case_folder",
         {
             title: "Create Test Case Folders",
             description: "Create test case folders recursively in SquashTM",
-            inputSchema: CreateTestCaseFoldersInputSchema,
-            outputSchema: CreateFoldersOutputSchema,
+            inputSchema: CreateTestCaseFolderInputSchema,
+            outputSchema: CreateFolderOutputSchema,
         },
-        createTestCaseFoldersHandler
+        createTestCaseFolderHandler
     );
 
     server.registerTool(
@@ -542,14 +542,14 @@ export function registerFolderTools(server: McpServer) {
     );
 
     server.registerTool(
-        "create_campaign_folders",
+        "create_campaign_folder",
         {
-            title: "Create Campaign Folders",
+            title: "Create Campaign Folder",
             description: "Create campaign folders recursively in SquashTM",
-            inputSchema: CreateCampaignFoldersInputSchema,
-            outputSchema: CreateFoldersOutputSchema,
+            inputSchema: CreateCampaignFolderInputSchema,
+            outputSchema: CreateFolderOutputSchema,
         },
-        createCampaignFoldersHandler
+        createCampaignFolderHandler
     );
 
     server.registerTool(

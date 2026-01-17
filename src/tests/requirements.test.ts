@@ -7,7 +7,7 @@ import {
     GetRequirementFolderContentOutputSchema,
 } from '../requirement_tools.js';
 import {
-    createRequirementFoldersHandler
+    createRequirementFolderHandler
 } from '../folder_tools.js';
 import {
     createProjectHandler,
@@ -37,7 +37,7 @@ describe('Requirements Integration Tests', () => {
 
         projectId = result.structuredContent.id;
 
-        const folderResult = await createRequirementFoldersHandler({
+        const folderResult = await createRequirementFolderHandler({
             project_id: (projectId as number),
             name: "Root Folder",
         });
