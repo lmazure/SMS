@@ -149,6 +149,7 @@ describe('Test Cases Integration Tests', () => {
                 {
                     name: `Test Case 1 for project ${projectId} in folder ${folderId}`,
                     reference: `REF-1-${projectId}-${folderId}`,
+                    prerequisite: '<p>Prerequisite for test case 1</p>',
                     description: '<p>Description for test case 1</p>',
                     steps: [
                         {
@@ -222,6 +223,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId}`);
         expect(tc1.reference).toBe(`REF-1-${projectId}`);
         expect(tc1.description).toBe('<p>Description for test case 1</p>');
+        expect(tc1.prerequisite).toBe('<p>Prerequisite for test case 1</p>');
         expect(tc1.steps).toBeDefined();
         expect(tc1.steps.length).toBe(2);
         expect(tc1.steps[0].action).toBe('<p>Action 1 for test case 1</p>');
@@ -232,6 +234,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId}`);
         expect(tc2.reference).toBe(`REF-2-${projectId}`);
         expect(tc2.description).toBe('<p>Description for test case 2</p>');
+        expect(tc2.prerequisite).toBeUndefined();
         expect(tc2.steps).toBeDefined();
         expect(tc2.steps.length).toBe(2);
         expect(tc2.steps[0].action).toBe('<p>Action 1 for test case 2</p>');
@@ -242,6 +245,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc3.name).toBe(`Test Case 3 for project ${projectId}`);
         expect(tc3.reference).toBeUndefined();
         expect(tc3.description).toBe('<p>Description for test case 3</p><br><p>This test case has no reference</p>');
+        expect(tc3.prerequisite).toBeUndefined();
         expect(tc3.steps).toBeDefined();
         expect(tc3.steps.length).toBe(1);
         expect(tc3.steps[0].action).toBe('<p>Action 1 for test case 3</p>');
@@ -250,6 +254,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc4.name).toBe(`Test Case 4 for project ${projectId}`);
         expect(tc4.reference).toBeUndefined();
         expect(tc4.description).toBe('<p>Description for test case 4</p><br><p>This test case has an empty reference</p>');
+        expect(tc4.prerequisite).toBeUndefined();
         expect(tc4.steps).toBeDefined();
         expect(tc4.steps.length).toBe(1);
         expect(tc4.steps[0].action).toBe('<p>Action 1 for test case 4</p>');
@@ -275,6 +280,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.name).toBe(`Test Case 1 for project ${projectId} in folder ${folderId}`);
         expect(tc1.reference).toBe(`REF-1-${projectId}-${folderId}`);
         expect(tc1.description).toBe('<p>Description for test case 1</p>');
+        expect(tc1.prerequisite).toBe('<p>Prerequisite for test case 1</p>');
         expect(tc1.steps).toBeDefined();
         expect(tc1.steps.length).toBe(2);
         expect(tc1.steps[0].action).toBe('<p>Action 1 for test case 1</p>');
@@ -285,6 +291,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId} in folder ${folderId}`);
         expect(tc2.reference).toBe(`REF-2-${projectId}-${folderId}`);
         expect(tc2.description).toBe('<p>Description for test case 2</p>');
+        expect(tc2.prerequisite).toBeUndefined();
         expect(tc2.steps).toBeDefined();
         expect(tc2.steps.length).toBe(1);
         expect(tc2.steps[0].action).toBe('<p>Action 1 for test case 2</p>');
@@ -293,6 +300,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc3.name).toBe(`Test Case 3 for project ${projectId} in folder ${folderId}`);
         expect(tc3.reference).toBeUndefined();
         expect(tc3.description).toBe('<p>Description for test case 3</p><br><p>This test case has no reference</p>');
+        expect(tc3.prerequisite).toBeUndefined();
         expect(tc3.steps).toBeDefined();
         expect(tc3.steps.length).toBe(1);
         expect(tc3.steps[0].action).toBe('<p>Action 1 for test case 3</p>');

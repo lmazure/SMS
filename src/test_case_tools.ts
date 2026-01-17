@@ -120,7 +120,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 id: details.id,
                 name: details.name,
                 ...(details.reference && { reference: details.reference }),
-                prerequisite: details.prerequisite,
+                ...(details.prerequisite && { prerequisite: details.prerequisite }),
                 description: details.description,
                 created_by: details.created_by,
                 created_on: details.created_on,
