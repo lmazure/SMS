@@ -57,12 +57,21 @@ export interface SquashTMFolderDetails {
 export interface SquashTMTestCaseDetails {
     id: number;
     name: string;
+    reference: string;
     description: string;
     prerequisite: string;
     created_by: string;
     created_on: string;
     last_modified_by: string;
     last_modified_on: string;
+    steps: [{
+        action: string;
+        expected_result: string;
+    }],
+    verified_requirements: [{
+        _type: string;
+        id: number;
+    }];
 }
 
 export interface SquashTMRequirementDetails {

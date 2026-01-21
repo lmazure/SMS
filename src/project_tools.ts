@@ -14,34 +14,34 @@ import {
 // Zod schemas for validation of the tool inputs and outputs
 const ListProjectsInputSchema = z.object({});
 
-const ListProjectsOutputSchema = z.object({
+export const ListProjectsOutputSchema = z.object({
     projects: z.array(
         z.object({
             id: z.number().describe("The ID of the project"),
             name: z.string().describe("The name of the project"),
             label: z.string().optional().describe("The label of the project"),
             description: z.string().optional().describe("The description of the project (rich text)"),
-        })
+        }).strict()
     ),
-});
+}).strict();
 
 const CreateProjectInputSchema = z.object({
-    name: z.string().describe("The name of the project to create"),
-    label: z.string().optional().describe("The label of the project to create"),
-    description: z.string().optional().describe("The description of the project to create (rich text)"),
-});
+    name: z.string().trim().min(1).describe("The name of the project to create"),
+    label: z.string().trim().min(1).optional().describe("The label of the project to create"),
+    description: z.string().trim().min(1).optional().describe("The description of the project to create (rich text)"),
+}).strict();
 
-const CreateProjectOutputSchema = z.object({
+export const CreateProjectOutputSchema = z.object({
     id: z.number().describe("The ID of the newly created project"),
-});
+}).strict();
 
 const DeleteProjectInputSchema = z.object({
     id: z.number().describe("The ID of the project to delete"),
-});
+}).strict();
 
-const DeleteProjectOutputSchema = z.object({
+export const DeleteProjectOutputSchema = z.object({
     message: z.string().describe("Message indicating success of the deletion of the project"),
-});
+}).strict();
 
 // 'list_projects' tool
 export const listProjectsHandler = async () => {

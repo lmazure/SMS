@@ -1,14 +1,19 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createTestCaseFoldersHandler,
+    createTestCaseFolderHandler,
     getTestCaseFoldersTreeHandler,
-    deleteTestCaseFolderHandler
+    deleteTestCaseFolderHandler,
+    CreateFolderOutputSchema,
+    GetFoldersTreeOutputSchema,
+    DeleteTestCaseFolderOutputSchema
 } from '../folder_tools.js';
 import {
     createProjectHandler,
-    deleteProjectHandler
+    deleteProjectHandler,
+    CreateProjectOutputSchema
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('Test Case Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();
@@ -24,8 +29,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
             label: projectLabel,
             description: projectDescription
         });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateProjectOutputSchema);
         expect(result.structuredContent.id).toBeDefined();
 
         projectId = result.structuredContent.id;
@@ -35,7 +39,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        const result = await createTestCaseFoldersHandler({
+        const result = await createTestCaseFolderHandler({
             project_id: projectId,
             name: "Root TC Folder",
             description: "Description of the Root TC Folder",
@@ -57,8 +61,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
             ]
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateFolderOutputSchema);
         expect(result.structuredContent.folder).toBeDefined();
         expect(result.structuredContent.folder.id).toBeDefined();
         expect(result.structuredContent.folder.name).toBe("Root TC Folder");
@@ -72,10 +75,6 @@ describe('Test Case Folder Hierarchy Tests', () => {
         expect(result.structuredContent.folder.children[1].children.length).toBe(1);
         expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild TC Folder");
         expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the test case folder tree and verify structure', async () => {
@@ -85,8 +84,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
         const result = await getTestCaseFoldersTreeHandler({
             project_id: projectId
         });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetFoldersTreeOutputSchema);
         expect(result.structuredContent.folders).toBeDefined();
 
         const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root TC Folder");
@@ -101,10 +99,6 @@ describe('Test Case Folder Hierarchy Tests', () => {
         expect(child2).toBeDefined();
         expect(child2.children).toHaveLength(1);
         expect(child2.children[0].name).toBe("Grandchild TC Folder");
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the test case folder', async () => {
@@ -123,13 +117,8 @@ describe('Test Case Folder Hierarchy Tests', () => {
             folder_id: rootFolder.id
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, DeleteTestCaseFolderOutputSchema);
         expect(result.structuredContent.message).toContain(`Test case folder ${rootFolder.id} deleted successfully`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should cleanup the project', async () => {

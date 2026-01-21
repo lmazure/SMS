@@ -1,13 +1,18 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createRequirementFoldersHandler,
+    createRequirementFolderHandler,
     getRequirementFoldersTreeHandler,
-    deleteRequirementFolderHandler
+    deleteRequirementFolderHandler,
+    CreateFolderOutputSchema,
+    GetFoldersTreeOutputSchema,
+    DeleteRequirementFolderOutputSchema
 } from '../folder_tools.js';
 import {
     createProjectHandler,
-    deleteProjectHandler
+    deleteProjectHandler,
+    CreateProjectOutputSchema
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('Requirement Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();
@@ -23,8 +28,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
             label: projectLabel,
             description: projectDescription
         });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateProjectOutputSchema);
         expect(result.structuredContent.id).toBeDefined();
 
         projectId = result.structuredContent.id;
@@ -34,7 +38,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        const result = await createRequirementFoldersHandler({
+        const result = await createRequirementFolderHandler({
             project_id: projectId,
             name: "Root Requirement Folder",
             description: "Description of the Root Requirement Folder",
@@ -56,8 +60,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
             ]
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateFolderOutputSchema);
         expect(result.structuredContent.folder).toBeDefined();
         expect(result.structuredContent.folder.id).toBeDefined();
         expect(result.structuredContent.folder.name).toBe("Root Requirement Folder");
@@ -71,10 +74,6 @@ describe('Requirement Folder Hierarchy Tests', () => {
         expect(result.structuredContent.folder.children[1].children.length).toBe(1);
         expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild Requirement Folder");
         expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the requirement folder tree and verify structure', async () => {
@@ -85,8 +84,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
             project_id: projectId
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetFoldersTreeOutputSchema);
         expect(result.structuredContent.folders).toBeDefined();
 
         const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Requirement Folder");
@@ -109,10 +107,6 @@ describe('Requirement Folder Hierarchy Tests', () => {
         expect(child2.children[0].id).toBeDefined();
         expect(child2.children[0].name).toBe("Grandchild Requirement Folder");
         expect(child2.children[0].description).toBe("Description of the Grandchild Requirement Folder");
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the requirement folder', async () => {
@@ -131,13 +125,8 @@ describe('Requirement Folder Hierarchy Tests', () => {
             folder_id: rootFolder.id
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, DeleteRequirementFolderOutputSchema);
         expect(result.structuredContent.message).toContain(`Requirement folder ${rootFolder.id} deleted successfully`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should cleanup the project', async () => {

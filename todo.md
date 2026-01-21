@@ -2,19 +2,19 @@
 
 # Next step
 
-- manage requirement reference
-- manage test case reference
+- manage test case datasets
+- test requirement deletion
+- test test case deletion
 - add tests for folders with no description
 - add tests for projects with no description
 - add tests for projects with no label
-- manage test case steps
-- manage test case datasets
 - create dev documentation
     - explaining how to run a dev version of the MCP Server in Claude desktop
     - (?) move the rationale for input output format in it
 
 # Later on
 
+- support call steps
 - add more tests  
   get the tests more detailled → all return fields should be checked
 - manage requirements / test cases traceability

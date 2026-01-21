@@ -1,14 +1,19 @@
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import {
-    createCampaignFoldersHandler,
+    createCampaignFolderHandler,
     getCampaignFoldersTreeHandler,
-    deleteCampaignFolderHandler
+    deleteCampaignFolderHandler,
+    CreateFolderOutputSchema,
+    GetFoldersTreeOutputSchema,
+    DeleteCampaignFolderOutputSchema
 } from '../folder_tools.js';
 import {
     createProjectHandler,
-    deleteProjectHandler
+    deleteProjectHandler,
+    CreateProjectOutputSchema
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('Campaign Folder Hierarchy Tests', () => {
     const timestamp: number = Date.now();
@@ -24,8 +29,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
             label: projectLabel,
             description: projectDescription
         });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateProjectOutputSchema);
         expect(result.structuredContent.id).toBeDefined();
 
         projectId = result.structuredContent.id;
@@ -35,7 +39,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
         expect(projectId).toBeDefined();
         if (!projectId) return;
 
-        const result = await createCampaignFoldersHandler({
+        const result = await createCampaignFolderHandler({
             project_id: projectId,
             name: "Root Campaign Folder",
             description: "Description of the Root Campaign Folder",
@@ -57,8 +61,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
             ]
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, CreateFolderOutputSchema);
         expect(result.structuredContent.folder).toBeDefined();
         expect(result.structuredContent.folder.id).toBeDefined();
         expect(result.structuredContent.folder.name).toBe("Root Campaign Folder");
@@ -72,10 +75,6 @@ describe('Campaign Folder Hierarchy Tests', () => {
         expect(result.structuredContent.folder.children[1].children.length).toBe(1);
         expect(result.structuredContent.folder.children[1].children[0].name).toBe("Grandchild Campaign Folder");
         expect(result.structuredContent.folder.children[1].children[0].id).toBeDefined();
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should retrieve the campaign folder tree and verify structure', async () => {
@@ -86,8 +85,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
             project_id: projectId
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetFoldersTreeOutputSchema);
         expect(result.structuredContent.folders).toBeDefined();
 
         const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Campaign Folder");
@@ -102,10 +100,6 @@ describe('Campaign Folder Hierarchy Tests', () => {
         expect(child2).toBeDefined();
         expect(child2.children).toHaveLength(1);
         expect(child2.children[0].name).toBe("Grandchild Campaign Folder");
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should delete the campaign folder', async () => {
@@ -124,13 +118,8 @@ describe('Campaign Folder Hierarchy Tests', () => {
             folder_id: rootFolder.id
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, DeleteCampaignFolderOutputSchema);
         expect(result.structuredContent.message).toContain(`Campaign folder ${rootFolder.id} deleted successfully`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     it('should cleanup the project', async () => {

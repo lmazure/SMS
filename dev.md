@@ -87,8 +87,55 @@ SMS/
 ├── tsconfig.json         # TypeScript configuration
 └── vitest.config.ts      # Vitest configuration
 ```
+## Architecture
 
-### Release
+Many tools are simple wrappers around SquashTM REST API.
+
+```mermaid
+sequenceDiagram
+    participant Client as MCP Client
+    participant SMS as SMS (MCP Server)
+    participant API as SquashTM REST API
+
+    Client->>SMS: call tool
+    activate SMS
+    Note over SMS: transform request
+    SMS->>API: GET/POST/PATCH/DELETE endpoint
+    activate API
+    API-->>SMS: return result
+    deactivate API
+    Note over SMS: transform result
+    SMS-->>Client: return result
+    deactivate SMS
+```
+
+Some tools are completing the information of each entity returned by SquashTM REST API.
+
+```mermaid
+sequenceDiagram
+    participant Client as MCP Client
+    participant SMS as SMS (MCP Server)
+    participant API as SquashTM REST API
+
+    Client->>SMS: call tool
+    activate SMS
+    Note over SMS: transform request
+    SMS->>API: GET endpoint 1
+    activate API
+    API-->>SMS: return result
+    deactivate API
+    loop for each returned entity
+        SMS->>API: GET additional endpoint 2
+        activate API
+        API-->>SMS: return entity details
+        deactivate API
+        Note over SMS: complete entity information
+    end
+    SMS-->>Client: return result
+    deactivate SMS
+```
+
+## How to release
 
 1) Update the release number in:
     - `README.md` where is describe how to declare SMS in Claude Desktop config file

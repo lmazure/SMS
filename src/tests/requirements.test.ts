@@ -2,15 +2,18 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import {
     createRequirementsHandler,
     deleteRequirementHandler,
-    getRequirementFolderContentHandler
+    getRequirementFolderContentHandler,
+    CreateRequirementsOutputSchema,
+    GetRequirementFolderContentOutputSchema,
 } from '../requirement_tools.js';
 import {
-    createRequirementFoldersHandler
+    createRequirementFolderHandler
 } from '../folder_tools.js';
 import {
     createProjectHandler,
     deleteProjectHandler
 } from '../project_tools.js';
+import { assertResultMatchSchema } from './test_utils.js';
 
 describe('Requirements Integration Tests', () => {
     const timestamp: number = Date.now();
@@ -34,7 +37,7 @@ describe('Requirements Integration Tests', () => {
 
         projectId = result.structuredContent.id;
 
-        const folderResult = await createRequirementFoldersHandler({
+        const folderResult = await createRequirementFolderHandler({
             project_id: (projectId as number),
             name: "Root Folder",
         });
@@ -55,32 +58,49 @@ describe('Requirements Integration Tests', () => {
             requirements: [
                 {
                     name: `Requirement 1 for project ${projectId}`,
+                    reference: `REF-1-${projectId}`,
                     description: '<p>Description for requirement 1</p>',
                 },
                 {
                     name: `Requirement 2 for project ${projectId}`,
+                    reference: `REF-2-${projectId}`,
                     description: '<p>Description for requirement 2</p>',
+                },
+                {
+                    name: `Requirement 3 for project ${projectId}`,
+                    description: '<p>Description for requirement 3</p><br><p>This requirement has no reference</p>',
+                },
+                {
+                    name: `Requirement 4 for project ${projectId}`,
+                    reference: ``,
+                    description: '<p>Description for requirement 4</p><br><p>This requirement has an empty reference</p>',
                 },
             ],
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
-        expect(result.structuredContent.requirements).toBeDefined();
-        expect(result.structuredContent.requirements.length).toBe(2);
+        assertResultMatchSchema(result, CreateRequirementsOutputSchema);
 
-        const [req1, req2] = result.structuredContent.requirements;
+        expect(result.structuredContent.requirements).toBeDefined();
+        expect(result.structuredContent.requirements.length).toBe(4);
+
+        const [req1, req2, req3, req4] = result.structuredContent.requirements;
         expect(req1.id).toBeGreaterThan(0);
         expect(req1.name).toBe(`Requirement 1 for project ${projectId}`);
+        expect(req1.reference).toBe(`REF-1-${projectId}`);
         expect(req2.id).toBeGreaterThan(0);
         expect(req2.name).toBe(`Requirement 2 for project ${projectId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
+        expect(req2.reference).toBe(`REF-2-${projectId}`);
+        expect(req3.id).toBeGreaterThan(0);
+        expect(req3.name).toBe(`Requirement 3 for project ${projectId}`);
+        expect(req3.reference).toBeUndefined();
+        expect(req4.id).toBeGreaterThan(0);
+        expect(req4.name).toBe(`Requirement 4 for project ${projectId}`);
+        expect(req4.reference).toBeUndefined();
 
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
+        requirementToBeDeleted.push(req3.id);
+        requirementToBeDeleted.push(req4.id);
     });
 
     it('should create requirements in a folder', async () => {
@@ -95,32 +115,40 @@ describe('Requirements Integration Tests', () => {
             requirements: [
                 {
                     name: `Requirement 1 for project ${projectId} in folder ${folderId}`,
+                    reference: `REF-1-${projectId}-${folderId}`,
                     description: '<p>Description for requirement 1</p>',
                 },
                 {
                     name: `Requirement 2 for project ${projectId} in folder ${folderId}`,
+                    reference: `REF-2-${projectId}-${folderId}`,
                     description: '<p>Description for requirement 2</p>',
+                },
+                {
+                    name: `Requirement 3 for project ${projectId} in folder ${folderId}`,
+                    description: '<p>Description for requirement 3</p><br><p>This requirement has no reference</p>',
                 },
             ],
         });
 
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
-        expect(result.structuredContent.requirements).toBeDefined();
-        expect(result.structuredContent.requirements.length).toBe(2);
+        assertResultMatchSchema(result, CreateRequirementsOutputSchema);
 
-        const [req1, req2] = result.structuredContent.requirements;
+        expect(result.structuredContent.requirements).toBeDefined();
+        expect(result.structuredContent.requirements.length).toBe(3);
+
+        const [req1, req2, req3] = result.structuredContent.requirements;
         expect(req1.id).toBeGreaterThan(0);
         expect(req1.name).toBe(`Requirement 1 for project ${projectId} in folder ${folderId}`);
+        expect(req1.reference).toBe(`REF-1-${projectId}-${folderId}`);
         expect(req2.id).toBeGreaterThan(0);
         expect(req2.name).toBe(`Requirement 2 for project ${projectId} in folder ${folderId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
+        expect(req2.reference).toBe(`REF-2-${projectId}-${folderId}`);
+        expect(req3.id).toBeGreaterThan(0);
+        expect(req3.name).toBe(`Requirement 3 for project ${projectId} in folder ${folderId}`);
+        expect(req3.reference).toBeUndefined();
 
         requirementToBeDeleted.push(req1.id);
         requirementToBeDeleted.push(req2.id);
+        requirementToBeDeleted.push(req3.id);
     });
 
     it('should get the content of the project root', async () => {
@@ -128,23 +156,30 @@ describe('Requirements Integration Tests', () => {
         if (!projectId) return;
 
         const result = await getRequirementFolderContentHandler({ project_id: projectId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetRequirementFolderContentOutputSchema);
         expect(result.structuredContent.requirements).toBeDefined();
-        expect(result.structuredContent.requirements.length).toBe(2);
+        expect(result.structuredContent.requirements.length).toBe(4);
 
         const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) =>
             a.name.localeCompare(b.name)
         );
-        const [req1, req2] = requirements;
+        const [req1, req2, req3, req4] = requirements;
         expect(req1.id).toBeGreaterThan(0);
         expect(req1.name).toBe(`Requirement 1 for project ${projectId}`);
+        expect(req1.reference).toBe(`REF-1-${projectId}`);
+        expect(req1.description).toBe('<p>Description for requirement 1</p>');
         expect(req2.id).toBeGreaterThan(0);
         expect(req2.name).toBe(`Requirement 2 for project ${projectId}`);
-
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
+        expect(req2.reference).toBe(`REF-2-${projectId}`);
+        expect(req2.description).toBe('<p>Description for requirement 2</p>');
+        expect(req3.id).toBeGreaterThan(0);
+        expect(req3.name).toBe(`Requirement 3 for project ${projectId}`);
+        expect(req3.reference).toBeUndefined();
+        expect(req3.description).toBe('<p>Description for requirement 3</p><br><p>This requirement has no reference</p>');
+        expect(req4.id).toBeGreaterThan(0);
+        expect(req4.name).toBe(`Requirement 4 for project ${projectId}`);
+        expect(req4.reference).toBeUndefined();
+        expect(req4.description).toBe('<p>Description for requirement 4</p><br><p>This requirement has an empty reference</p>');
     });
 
     it('should get the content of a requirement folder', async () => {
@@ -154,23 +189,27 @@ describe('Requirements Integration Tests', () => {
         if (!folderId) return;
 
         const result = await getRequirementFolderContentHandler({ project_id: projectId, folder_id: folderId });
-        expect(result).toBeDefined();
-        expect(result.structuredContent).toBeDefined();
+        assertResultMatchSchema(result, GetRequirementFolderContentOutputSchema);
         expect(result.structuredContent.requirements).toBeDefined();
-        expect(result.structuredContent.requirements.length).toBe(2);
+        expect(result.structuredContent.requirements.length).toBe(3);
 
         const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) =>
             a.name.localeCompare(b.name)
         );
-        const [req1, req2] = requirements;
+        const [req1, req2, req3] = requirements;
         expect(req1.id).toBeGreaterThan(0);
         expect(req1.name).toBe(`Requirement 1 for project ${projectId} in folder ${folderId}`);
+        expect(req1.reference).toBe(`REF-1-${projectId}-${folderId}`);
+        expect(req1.description).toBe('<p>Description for requirement 1</p>');
         expect(req2.id).toBeGreaterThan(0);
         expect(req2.name).toBe(`Requirement 2 for project ${projectId} in folder ${folderId}`);
+        expect(req2.reference).toBe(`REF-2-${projectId}-${folderId}`);
+        expect(req2.description).toBe('<p>Description for requirement 2</p>');
+        expect(req3.id).toBeGreaterThan(0);
+        expect(req3.name).toBe(`Requirement 3 for project ${projectId} in folder ${folderId}`);
+        expect(req3.reference).toBeUndefined();
+        expect(req3.description).toBe('<p>Description for requirement 3</p><br><p>This requirement has no reference</p>');
 
-        // ensure the text and the structured content are the same
-        const outputJson = JSON.parse(result.content[0].text);
-        expect(outputJson).toEqual(result.structuredContent);
     });
 
     afterAll(async () => {

@@ -65,12 +65,14 @@ Creates one or more requirements in a specified SquashTM project.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new requirements (optional, if not specified, the requirements will be created at the root level)
 - `requirements` (array): List of requirements to create, each containing:
   - `name` (string): Requirement name
+  - `reference` (string, optional): Requirement reference
   - `description` (string): Requirement description (rich text)
 
 **Output:** An object containing:
 - `requirements` (array): List of requirements, where each requirement includes:
   - `id` (number): The requirement ID
   - `name` (string): The requirement name
+  - `reference` (string, optional): The requirement reference (absent if the requirement has no reference)
 
 ### `delete_requirement`
 
@@ -91,6 +93,7 @@ Retrieves the list of requirements within a specific requirement folder.
 **Output:** An object containing:
 - `requirements` (array): List of requirements, where each requirement includes:
   - `id` (number): The requirement ID
+  - `reference` (string, optional): The requirement reference (absent if the requirement has no reference)
   - `name` (string): The requirement name
   - `description` (string): The requirement description (rich text)
   - `created_by` (string): Who created the requirement
@@ -98,22 +101,22 @@ Retrieves the list of requirements within a specific requirement folder.
   - `last_modified_by` (string): Who last modified the requirement
   - `last_modified_on` (string): Last modification timestamp
 
-### `create_requirement_folders`
+### `create_requirement_folder`
 
-Creates requirement folders recursively.
+Creates requirement folder.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folder
 - `name` (string): Name of the folder
 - `description` (string, optional): Description of the folder (rich text)
-- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
+- `children` (array): Array of subfolders, each containing `name`, `id`, and `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
   - `name` (string): Name of the folder
   - `id` (number): ID of the folder
-  - `children` (array, optional): Subfolders
+  - `children` (array): Subfolders
 
 ### `delete_requirement_folder`
 
@@ -157,8 +160,13 @@ Retrieves the list of test cases within a specific test case folder. Only items 
 **Output:** An array of test case objects, each containing:
 - `id` (number): The test case ID
 - `name` (string): The test case name
+- `reference` (string, optional): The test case reference (absent if the test case has no reference)
 - `prerequisite` (string): The test case prerequisite (rich text)
 - `description` (string): The test case description (rich text)
+- `steps` (array): List of test steps, each containing:
+  - `action` (string): What action to perform (rich text)
+  - `expected_result` (string): Expected outcome (rich text)
+- `verified_requirement_ids` (array): List of requirement IDs verified by this test case
 - `created_by` (string): Who created the test case
 - `created_on` (string): Creation timestamp
 - `last_modified_by` (string): Who last modified the test case
@@ -173,16 +181,19 @@ Creates one or more test cases in a specified SquashTM project.
 - `parent_folder_id` (number, optional): The ID of an existing folder into which create the new test cases (optional, if not specified, the test cases will be created at the root level)
 - `test_cases` (array): List of test cases to create, each containing:
   - `name` (string): Test case name
+  - `reference` (string, optional): Test case reference (absent if the test case has no reference)
   - `description` (string): Test case description (rich text)
   - `prerequisite` (string, optional): Test case prerequisite (rich text)
   - `steps` (array, optional): One or more test steps, each with:
     - `action` (string): What action to perform (rich text)
     - `expected_result` (string): Expected outcome (rich text)
+  - `verified_requirement_ids` (array): List of requirement IDs verified by this test case
 
 **Output:** An object containing:
 - `test_cases` (array): List of test cases, where each test case includes:
   - `id` (number): The test case ID
   - `name` (string): The test case name
+  - `reference` (string, optional): The test case reference (absent if the test case has no reference)
 
 ### `delete_test_case`
 
@@ -192,22 +203,22 @@ Creates one or more test cases in a specified SquashTM project.
 **Output:** An object containing:
 - `message` (string): Message indicating success of the deletion of the test case
 
-### `create_test_case_folders`
+### `create_test_case_folder`
 
-Creates test case folders recursively.
+Creates test case folder.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folder
 - `name` (string): Name of the folder
 - `description` (string, optional): Description of the folder (rich text)
-- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
+- `children` (array): Array of subfolders, each containing `name`, `id`, and `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
   - `name` (string): Name of the folder
   - `id` (number): ID of the folder
-  - `children` (array, optional): Subfolders
+  - `children` (array): Subfolders
 
 ### `delete_test_case_folder`
 
@@ -239,22 +250,22 @@ Retrieves a detailed tree of campaign folders for a specified project.
   - `modified_on` (string, optional): Last modification timestamp (absent if the folder has never been modified)
   - `children` (array): Nested child folders
 
-### `create_campaign_folders`
+### `create_campaign_folder`
 
-Creates campaign folders recursively.
+Creates campaign folder.
 
 **Input:**
 - `project_id` (number): The ID of the project in which to create the folder
-- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folders
+- `parent_folder_id` (number, optional): The ID of an existing folder into which create the new folder
 - `name` (string): Name of the folder
 - `description` (string, optional): Description of the folder (rich text)
-- `children` (array, optional): Array of subfolders, each containing `name`, optional `description`, and optional `children`
+- `children` (array): Array of subfolders, each containing `name`, `id`, and `children`
 
 **Output:** An object containing:
 - `folder` (object): The created folder structure with:
   - `name` (string): Name of the folder
   - `id` (number): ID of the folder
-  - `children` (array, optional): Subfolders
+  - `children` (array): Subfolders
 
 ### `delete_campaign_folder`
 
