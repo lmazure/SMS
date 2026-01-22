@@ -122,6 +122,12 @@ export interface SquashTMDataset {
     }[];
 }
 
+export interface SquashTMParameter {
+    id: number;
+    name: string;
+    description: string;
+}
+
 export interface SquashTMPaginatedResponse<T> {
     _embedded: {
         [key: string]: T[];

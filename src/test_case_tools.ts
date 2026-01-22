@@ -4,7 +4,8 @@ import {
     makeSquashRequest,
     SquashTMTestCaseDetails,
     SquashTMPaginatedResponse,
-    SquashTMDataset
+    SquashTMDataset,
+    SquashTMParameter
 } from "./squashtm_rest_api.js";
 import {
     generateCorrelationId,
@@ -64,11 +65,11 @@ const CreateTestCasesInputSchema = z.object({
             })).min(1).optional().describe("List of test steps"),
             verified_requirement_ids: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
             datasets: z.object({
-                parameter_names: z.array(z.string().trim().min(1)).min(1),
+                parameter_names: z.array(z.string().trim().min(1).describe("The name of the parameter")).min(1).describe("The list of parameter names"),
                 datasets: z.array(z.object({
-                    name: z.string().trim().min(1),
-                    parameters_values: z.array(z.string()).min(1)
-                })).min(1)
+                    name: z.string().trim().min(1).describe("The name of the dataset"),
+                    parameters_values: z.array(z.string().describe("The value of the parameter")).min(1).describe("The values of the parameters, in the same order as parameter_names")
+                })).min(1).describe("The list of datasets")
             }).optional().describe("datasets to add to the test case"),
         }).strict()
     ).min(1).describe("The list of test cases to create"),
@@ -271,7 +272,7 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
                         id: response.id
                     }
                 };
-                const paramResponse = await makeSquashRequest<any>(
+                const paramResponse = await makeSquashRequest<SquashTMParameter>(
                     correlationId,
                     "parameters",
                     "POST",
@@ -298,7 +299,7 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
                     parameter_values: parameterValues
                 };
 
-                await makeSquashRequest<any>(
+                await makeSquashRequest<SquashTMDataset>(
                     correlationId,
                     "datasets",
                     "POST",

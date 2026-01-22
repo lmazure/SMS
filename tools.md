@@ -171,6 +171,11 @@ Retrieves the list of test cases within a specific test case folder. Only items 
 - `created_on` (string): Creation timestamp
 - `last_modified_by` (string): Who last modified the test case
 - `last_modified_on` (string): Last modification timestamp
+- `datasets` (object, optional): Datasets associated with the test case
+  - `parameter_names` (array of strings): Names of the parameters
+  - `datasets` (array of objects): List of datasets, each containing:
+    - `name` (string): Name of the dataset
+    - `parameters_values` (array of strings): Values for each parameter, in order
 
 ### `create_test_cases`
 
@@ -188,6 +193,11 @@ Creates one or more test cases in a specified SquashTM project.
     - `action` (string): What action to perform (rich text)
     - `expected_result` (string): Expected outcome (rich text)
   - `verified_requirement_ids` (array): List of requirement IDs verified by this test case
+  - `datasets` (object, optional): Datasets to add to the test case
+    - `parameter_names` (array of strings): The list of parameter names
+    - `datasets` (array of objects): The list of datasets
+      - `name` (string): The name of the dataset
+      - `parameters_values` (array of strings): The values of the parameters, in the same order as parameter_names
 
 **Output:** An object containing:
 - `test_cases` (array): List of test cases, where each test case includes:
