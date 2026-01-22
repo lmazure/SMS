@@ -55,6 +55,13 @@ const CreateTestCasesInputSchema = z.object({
                 expected_result: z.string().trim().min(1).describe("The expected result"),
             })).min(1).optional().describe("List of test steps"),
             verified_requirement_ids: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
+            datasets: z.object({
+                parameter_names: z.array(z.string().trim().min(1)).min(1),
+                datasets: z.array(z.object({
+                    name: z.string().trim().min(1),
+                    parameters_values: z.array(z.string()).min(1)
+                })).min(1)
+            }).optional().describe("datasets to add to the test case"),
         }).strict()
     ).min(1).describe("The list of test cases to create"),
 }).strict();
@@ -186,6 +193,54 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
                 `test-cases/${response.id}/coverages/${tc.verified_requirement_ids.join(",")}`,
                 "POST",
             );
+        }
+
+        if (tc.datasets) {
+            const paramIdMap = new Map<string, number>();
+            for (const paramName of tc.datasets.parameter_names) {
+                const paramPayload = {
+                    _type: "parameter",
+                    name: paramName,
+                    description: "",
+                    test_case: {
+                        _type: "test-case",
+                        id: response.id
+                    }
+                };
+                const paramResponse = await makeSquashRequest<any>(
+                    correlationId,
+                    "parameters",
+                    "POST",
+                    paramPayload
+                );
+                paramIdMap.set(paramName, paramResponse.id);
+            }
+
+            for (const dataset of tc.datasets.datasets) {
+                const parameterValues = tc.datasets.parameter_names.map((name, index) => ({
+                    parameter_test_case_id: response.id,
+                    parameter_id: paramIdMap.get(name),
+                    parameter_name: name,
+                    parameter_value: dataset.parameters_values[index]
+                }));
+
+                const datasetPayload = {
+                    _type: "dataset",
+                    name: dataset.name,
+                    test_case: {
+                        _type: "test-case",
+                        id: response.id
+                    },
+                    parameter_values: parameterValues
+                };
+
+                await makeSquashRequest<any>(
+                    correlationId,
+                    "datasets",
+                    "POST",
+                    datasetPayload
+                );
+            }
         }
 
         createdTestCases.push({

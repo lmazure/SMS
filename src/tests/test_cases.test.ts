@@ -380,6 +380,49 @@ describe('Test Cases Integration Tests', () => {
 
     });
 
+    it('should create test cases with datasets', async () => {
+        expect(projectId).toBeDefined();
+        if (!projectId) return;
+
+        const result = await createTestCasesHandler({
+            project_id: projectId,
+            test_cases: [
+                {
+                    name: `Test Case with Datasets for project ${projectId}`,
+                    description: '<p>Description for test case with datasets</p>',
+                    steps: [
+                        {
+                            action: '<p>Action 1</p>',
+                            expected_result: '<p>Expected result 1</p>',
+                        },
+                    ],
+                    verified_requirement_ids: [],
+                    datasets: {
+                        parameter_names: ["param1", "param2"],
+                        datasets: [
+                            {
+                                name: "Dataset 1",
+                                parameters_values: ["val1_1", "val1_2"]
+                            },
+                            {
+                                name: "Dataset 2",
+                                parameters_values: ["val2_1", "val2_2"]
+                            }
+                        ]
+                    }
+                },
+            ],
+        });
+
+        assertResultMatchSchema(result, CreateTestCasesOutputSchema);
+        expect(result.structuredContent.test_cases).toBeDefined();
+        expect(result.structuredContent.test_cases.length).toBe(1);
+        const tc = result.structuredContent.test_cases[0];
+        expect(tc.name).toBe(`Test Case with Datasets for project ${projectId}`);
+
+        testCaseToBeDeleted.push(tc.id);
+    });
+
     afterAll(async () => {
         if (!projectId) return;
         for (const requirementId of requirementToBeDeleted) {

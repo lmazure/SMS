@@ -1,8 +1,47 @@
 # Before merging the branch
 
-# Next step
+# Next steps
 
-- manage test case datasets
+## in the agent session
+
+- add the parameter description
+- complete get_test_cases to get the datasets
+- update tools.md
+- add missing description to the zod schemas
+- define the SquashTM input/output schema
+
+to test use this payload:
+```json
+[
+                {
+                    "name": "Test Case with Datasets for project ${projectId}'",
+                    "description": "<p>Description for test case with datasets</p>",
+                    "steps": [
+                        {
+                            "action": "<p>Action 1</p>",
+                            "expected_result": "<p>Expected result 1</p>"
+                        }
+                    ],
+                    "verified_requirement_ids": [],
+                    "datasets": {
+                        "parameter_names": ["param1", "param2"],
+                        "datasets": [
+                            {
+                                "name": "Dataset 1",
+                                "parameters_values": ["val1_1", "val1_2"]
+                            },
+                            {
+                                "name": "Dataset 2",
+                                "parameters_values": ["val2_1", "val2_2"]
+                            }
+                        ]
+                    }
+                }
+            ]
+```
+
+## in the branch
+
 - test requirement deletion
 - test test case deletion
 - add tests for folders with no description
