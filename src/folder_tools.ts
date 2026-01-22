@@ -38,7 +38,7 @@ const ReturnedFolderSchema: z.ZodType<any> = z.lazy(() =>
     }).strict()
 );
 
-type ReturnedFolder = z.infer<typeof ReturnedFolderSchema>;
+export type ReturnedFolder = z.infer<typeof ReturnedFolderSchema>;
 
 export const GetFoldersTreeOutputSchema = z.object({
     folders: z.array(ReturnedFolderSchema).describe("List of folders"),

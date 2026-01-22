@@ -14,6 +14,10 @@ import {
     deleteProjectHandler
 } from '../project_tools.js';
 import { assertResultMatchSchema } from './test_utils.js';
+import z from 'zod';
+
+type GetRequirementFolderContentOutput = z.infer<typeof GetRequirementFolderContentOutputSchema>;
+type ReturnedRequirement = GetRequirementFolderContentOutput['requirements'][number];
 
 describe('Requirements Integration Tests', () => {
     const timestamp: number = Date.now();
@@ -160,7 +164,7 @@ describe('Requirements Integration Tests', () => {
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(4);
 
-        const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) =>
+        const requirements = result.structuredContent.requirements.toSorted((a: ReturnedRequirement, b: ReturnedRequirement) =>
             a.name.localeCompare(b.name)
         );
         const [req1, req2, req3, req4] = requirements;
@@ -193,7 +197,7 @@ describe('Requirements Integration Tests', () => {
         expect(result.structuredContent.requirements).toBeDefined();
         expect(result.structuredContent.requirements.length).toBe(3);
 
-        const requirements = result.structuredContent.requirements.toSorted((a: { name: string; }, b: { name: string; }) =>
+        const requirements = result.structuredContent.requirements.toSorted((a: ReturnedRequirement, b: ReturnedRequirement) =>
             a.name.localeCompare(b.name)
         );
         const [req1, req2, req3] = requirements;

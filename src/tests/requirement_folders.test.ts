@@ -5,7 +5,8 @@ import {
     deleteRequirementFolderHandler,
     CreateFolderOutputSchema,
     GetFoldersTreeOutputSchema,
-    DeleteRequirementFolderOutputSchema
+    DeleteRequirementFolderOutputSchema,
+    ReturnedFolder
 } from '../folder_tools.js';
 import {
     createProjectHandler,
@@ -87,19 +88,19 @@ describe('Requirement Folder Hierarchy Tests', () => {
         assertResultMatchSchema(result, GetFoldersTreeOutputSchema);
         expect(result.structuredContent.folders).toBeDefined();
 
-        const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Requirement Folder");
+        const rootFolder = result.structuredContent.folders.find((f: ReturnedFolder) => f.name === "Root Requirement Folder");
         expect(rootFolder).toBeDefined();
         expect(rootFolder.id).toBeDefined();
         expect(rootFolder.description).toBe("Description of the Root Requirement Folder");
         expect(rootFolder.children).toHaveLength(2);
 
-        const child1 = rootFolder.children.find((f: any) => f.name === "Child Requirement Folder 1");
+        const child1 = rootFolder.children.find((f: ReturnedFolder) => f.name === "Child Requirement Folder 1");
         expect(child1).toBeDefined();
         expect(child1.id).toBeDefined();
         expect(child1.description).toBe("Description of the Child Requirement Folder 1");
         expect(child1.children).toHaveLength(0);
 
-        const child2 = rootFolder.children.find((f: any) => f.name === "Child Requirement Folder 2");
+        const child2 = rootFolder.children.find((f: ReturnedFolder) => f.name === "Child Requirement Folder 2");
         expect(child2).toBeDefined();
         expect(child2.id).toBeDefined();
         expect(child2.description).toBe("Description of the Child Requirement Folder 2");
@@ -117,7 +118,7 @@ describe('Requirement Folder Hierarchy Tests', () => {
         const treeResult = await getRequirementFoldersTreeHandler({ project_id: projectId });
         expect(treeResult).toBeDefined();
         expect(treeResult.structuredContent).toBeDefined();
-        const rootFolder = treeResult.structuredContent.folders.find((f: any) => f.name === "Root Requirement Folder");
+        const rootFolder = treeResult.structuredContent.folders.find((f: ReturnedFolder) => f.name === "Root Requirement Folder");
         expect(rootFolder).toBeDefined();
 
         // Delete it

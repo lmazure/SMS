@@ -6,7 +6,8 @@ import {
     deleteTestCaseFolderHandler,
     CreateFolderOutputSchema,
     GetFoldersTreeOutputSchema,
-    DeleteTestCaseFolderOutputSchema
+    DeleteTestCaseFolderOutputSchema,
+    ReturnedFolder
 } from '../folder_tools.js';
 import {
     createProjectHandler,
@@ -87,15 +88,15 @@ describe('Test Case Folder Hierarchy Tests', () => {
         assertResultMatchSchema(result, GetFoldersTreeOutputSchema);
         expect(result.structuredContent.folders).toBeDefined();
 
-        const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root TC Folder");
+        const rootFolder = result.structuredContent.folders.find((f: ReturnedFolder) => f.name === "Root TC Folder");
         expect(rootFolder).toBeDefined();
         expect(rootFolder.children).toHaveLength(2);
 
-        const child1 = rootFolder.children.find((f: any) => f.name === "Child TC Folder 1");
+        const child1 = rootFolder.children.find((f: ReturnedFolder) => f.name === "Child TC Folder 1");
         expect(child1).toBeDefined();
         expect(child1.children).toHaveLength(0);
 
-        const child2 = rootFolder.children.find((f: any) => f.name === "Child TC Folder 2");
+        const child2 = rootFolder.children.find((f: ReturnedFolder) => f.name === "Child TC Folder 2");
         expect(child2).toBeDefined();
         expect(child2.children).toHaveLength(1);
         expect(child2.children[0].name).toBe("Grandchild TC Folder");
@@ -109,7 +110,7 @@ describe('Test Case Folder Hierarchy Tests', () => {
         const treeResult = await getTestCaseFoldersTreeHandler({ project_id: projectId });
         expect(treeResult).toBeDefined();
         expect(treeResult.structuredContent).toBeDefined();
-        const rootFolder = treeResult.structuredContent.folders.find((f: any) => f.name === "Root TC Folder");
+        const rootFolder = treeResult.structuredContent.folders.find((f: ReturnedFolder) => f.name === "Root TC Folder");
         expect(rootFolder).toBeDefined();
 
         // Delete it
