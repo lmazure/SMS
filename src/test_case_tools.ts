@@ -3,7 +3,8 @@ import { z } from "zod";
 import {
     makeSquashRequest,
     SquashTMTestCaseDetails,
-    SquashTMPaginatedResponse
+    SquashTMPaginatedResponse,
+    SquashTMDataset
 } from "./squashtm_rest_api.js";
 import {
     generateCorrelationId,
@@ -37,6 +38,13 @@ export const GetTestCaseFolderContentOutputSchema = z.object({
                 }).strict()
             ).describe("List of test steps"),
             verified_requirements: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
+            datasets: z.object({
+                parameter_names: z.array(z.string().describe("Names of the parameters")),
+                datasets: z.array(z.object({
+                    name: z.string().describe("Name of the dataset"),
+                    parameters_values: z.array(z.string()).describe("Values for each parameter, in order")
+                }))
+            }).optional().describe("Datasets associated with the test case"),
         }).strict()
     ),
 }).strict();
@@ -125,7 +133,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 `test-cases/${tc.id}`,
                 "GET"
             );
-            return {
+            const baseDetails = {
                 id: details.id,
                 name: details.name,
                 ...(details.reference && { reference: details.reference }),
@@ -142,6 +150,62 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 verified_requirements: details.verified_requirements
                     .filter((req: any) => req._type === "requirement-version")
                     .map((req: any) => req.id),
+                datasets: undefined as any
+            };
+
+            const datasetsResponse = await makeSquashRequest<SquashTMPaginatedResponse<SquashTMDataset>>(
+                correlationId,
+                `test-cases/${tc.id}/datasets`,
+                "GET"
+            );
+
+            if (datasetsResponse._embedded && datasetsResponse._embedded.datasets && datasetsResponse._embedded.datasets.length > 0) {
+                const datasetsInfo = datasetsResponse._embedded.datasets;
+                // Assuming all datasets have the same parameters structure, we take the first one to get names
+                // The API returns 'parameters' array in dataset object which contains definitions.
+                // We can also rely on parameter_values having parameter_name.
+
+                // Let's use the first dataset to extract parameter names order
+                const firstDataset = datasetsInfo[0];
+                let parameterNames: string[] = [];
+
+                if (firstDataset.parameters && firstDataset.parameters.length > 0) {
+                    parameterNames = firstDataset.parameters.map(p => p.name);
+                } else if (firstDataset.parameter_values && firstDataset.parameter_values.length > 0) {
+                    // Fallback to parameter_values order if parameters definition is missing
+                    parameterNames = firstDataset.parameter_values.map(pv => pv.parameter_name);
+                }
+
+                if (parameterNames.length > 0) {
+                    const formattedDatasets = datasetsInfo.map(ds => {
+                        // Map values based on parameter names order
+                        // Create a map for quick lookup
+                        const valueMap = new Map<string, string>();
+                        ds.parameter_values.forEach(pv => {
+                            valueMap.set(pv.parameter_name, pv.parameter_value);
+                        });
+
+                        const orderedValues = parameterNames.map(name => valueMap.get(name) || "");
+
+                        return {
+                            name: ds.name,
+                            parameters_values: orderedValues
+                        };
+                    });
+
+                    return {
+                        ...baseDetails,
+                        datasets: {
+                            parameter_names: parameterNames,
+                            datasets: formattedDatasets
+                        }
+                    };
+                }
+            }
+
+            return {
+                ...baseDetails,
+                datasets: undefined
             };
         })
     );

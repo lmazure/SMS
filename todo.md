@@ -10,34 +10,34 @@
 - add missing description to the zod schemas
 - define the SquashTM input/output schema
 
-to test use this payload:
+to test use this payload (merge this at the bottom of this file) (maybe the examples should be be moved in the README abd later on in rules.ms or skills.md):
 ```json
 [
+    {
+        "name": "Test Case with Datasets for project ${projectId}'",
+        "description": "<p>Description for test case with datasets</p>",
+        "steps": [
+            {
+                "action": "<p>Action 1</p>",
+                "expected_result": "<p>Expected result 1</p>"
+            }
+        ],
+        "verified_requirement_ids": [],
+        "datasets": {
+            "parameter_names": ["param1", "param2"],
+            "datasets": [
                 {
-                    "name": "Test Case with Datasets for project ${projectId}'",
-                    "description": "<p>Description for test case with datasets</p>",
-                    "steps": [
-                        {
-                            "action": "<p>Action 1</p>",
-                            "expected_result": "<p>Expected result 1</p>"
-                        }
-                    ],
-                    "verified_requirement_ids": [],
-                    "datasets": {
-                        "parameter_names": ["param1", "param2"],
-                        "datasets": [
-                            {
-                                "name": "Dataset 1",
-                                "parameters_values": ["val1_1", "val1_2"]
-                            },
-                            {
-                                "name": "Dataset 2",
-                                "parameters_values": ["val2_1", "val2_2"]
-                            }
-                        ]
-                    }
+                    "name": "Dataset 1",
+                    "parameters_values": ["val1_1", "val1_2"]
+                },
+                {
+                    "name": "Dataset 2",
+                    "parameters_values": ["val2_1", "val2_2"]
                 }
             ]
+        }
+    }
+]
 ```
 
 ## in the branch

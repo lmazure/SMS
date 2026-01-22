@@ -423,6 +423,24 @@ describe('Test Cases Integration Tests', () => {
         testCaseToBeDeleted.push(tc.id);
     });
 
+    it('get test case with datasets', async () => {
+        expect(projectId).toBeDefined();
+        if (!projectId) return;
+
+        const result = await getTestCaseFolderContentHandler({ project_id: projectId });
+        assertResultMatchSchema(result, GetTestCaseFolderContentOutputSchema);
+        expect(result.structuredContent.test_cases).toBeDefined();
+        const tc = result.structuredContent.test_cases.find((t: { name: string; }) => t.name === `Test Case with Datasets for project ${projectId}`);
+        expect(tc).toBeDefined();
+        expect(tc.datasets).toBeDefined();
+        expect(tc.datasets.parameter_names).toEqual(["param1", "param2"]);
+        expect(tc.datasets.datasets.length).toBe(2);
+        expect(tc.datasets.datasets[0].name).toBe("Dataset 1");
+        expect(tc.datasets.datasets[0].parameters_values).toEqual(["val1_1", "val1_2"]);
+        expect(tc.datasets.datasets[1].name).toBe("Dataset 2");
+        expect(tc.datasets.datasets[1].parameters_values).toEqual(["val2_1", "val2_2"]);
+    });
+
     afterAll(async () => {
         if (!projectId) return;
         for (const requirementId of requirementToBeDeleted) {
