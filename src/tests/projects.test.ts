@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import {
     listProjectsHandler,
     createProjectHandler,
@@ -8,6 +8,10 @@ import {
     DeleteProjectOutputSchema
 } from '../project_tools.js';
 import { assertResultMatchSchema } from './test_utils.js';
+import z from 'zod';
+
+type GetTestCaseFolderContentOutput = z.infer<typeof ListProjectsOutputSchema>;
+type ReturnedProject = GetTestCaseFolderContentOutput['projects'][number];
 
 describe('SquashTM Integration Tests', () => {
     // Generate a unique project name to avoid collisions
@@ -40,10 +44,10 @@ describe('SquashTM Integration Tests', () => {
 
         expect(result.structuredContent.projects).toBeDefined();
         expect(result.structuredContent.projects.length).toBeGreaterThan(0);
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeDefined();
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId).name).toBe(projectName);
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId).label).toBe(projectLabel);
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId).description).toBe(projectDescription);
+        expect(result.structuredContent.projects.find((p: ReturnedProject) => p.id === projectId)).toBeDefined();
+        expect(result.structuredContent.projects.find((p: ReturnedProject) => p.id === projectId).name).toBe(projectName);
+        expect(result.structuredContent.projects.find((p: ReturnedProject) => p.id === projectId).label).toBe(projectLabel);
+        expect(result.structuredContent.projects.find((p: ReturnedProject) => p.id === projectId).description).toBe(projectDescription);
     });
 
     it('should delete the project', async () => {
@@ -62,6 +66,6 @@ describe('SquashTM Integration Tests', () => {
         const result = await listProjectsHandler();
         assertResultMatchSchema(result, ListProjectsOutputSchema);
         expect(result.structuredContent.projects).toBeDefined();
-        expect(result.structuredContent.projects.find((p: any) => p.id === projectId)).toBeUndefined();
+        expect(result.structuredContent.projects.find((p: ReturnedProject) => p.id === projectId)).toBeUndefined();
     });
 });

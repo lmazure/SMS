@@ -107,6 +107,27 @@ export interface FolderStructure {
     children?: FolderStructure[];
 }
 
+export interface SquashTMDataset {
+    id: number;
+    name: string;
+    parameters: {
+        id: number;
+        name: string;
+    }[];
+    parameter_values: {
+        parameter_test_case_id: number;
+        parameter_value: string;
+        parameter_name: string;
+        parameter_id: number;
+    }[];
+}
+
+export interface SquashTMParameter {
+    id: number;
+    name: string;
+    description: string;
+}
+
 export interface SquashTMPaginatedResponse<T> {
     _embedded: {
         [key: string]: T[];

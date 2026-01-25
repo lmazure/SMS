@@ -1,8 +1,15 @@
 # Before merging the branch
 
-# Next step
+# Next steps
 
-- manage test case datasets
+## in the agent session
+
+
+## in the branch
+
+# Later on
+
+- use a schema instead of `const response = await makeSquashRequest<any>(...)`
 - test requirement deletion
 - test test case deletion
 - add tests for folders with no description
@@ -11,9 +18,6 @@
 - create dev documentation
     - explaining how to run a dev version of the MCP Server in Claude desktop
     - (?) move the rationale for input output format in it
-
-# Later on
-
 - support call steps
 - add more tests  
   get the tests more detailled → all return fields should be checked
@@ -58,7 +62,21 @@ example of payload when creating test cases
         "action": "do it",
         "expected_result": "it is done"
       }
-    ]
+    ],
+        "verified_requirement_ids": [],
+        "datasets": {
+            "parameter_names": ["param1", "param2"],
+            "datasets": [
+                {
+                    "name": "Dataset 1",
+                    "parameters_values": ["val1_1", "val1_2"]
+                },
+                {
+                    "name": "Dataset 2",
+                    "parameters_values": ["val2_1", "val2_2"]
+                }
+            ]
+        }
   },
   {
     "name": "test beta",

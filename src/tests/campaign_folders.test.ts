@@ -6,7 +6,8 @@ import {
     deleteCampaignFolderHandler,
     CreateFolderOutputSchema,
     GetFoldersTreeOutputSchema,
-    DeleteCampaignFolderOutputSchema
+    DeleteCampaignFolderOutputSchema,
+    ReturnedFolder
 } from '../folder_tools.js';
 import {
     createProjectHandler,
@@ -88,15 +89,15 @@ describe('Campaign Folder Hierarchy Tests', () => {
         assertResultMatchSchema(result, GetFoldersTreeOutputSchema);
         expect(result.structuredContent.folders).toBeDefined();
 
-        const rootFolder = result.structuredContent.folders.find((f: any) => f.name === "Root Campaign Folder");
+        const rootFolder = result.structuredContent.folders.find((f: ReturnedFolder) => f.name === "Root Campaign Folder");
         expect(rootFolder).toBeDefined();
         expect(rootFolder.children).toHaveLength(2);
 
-        const child1 = rootFolder.children.find((f: any) => f.name === "Child Campaign Folder 1");
+        const child1 = rootFolder.children.find((f: ReturnedFolder) => f.name === "Child Campaign Folder 1");
         expect(child1).toBeDefined();
         expect(child1.children).toHaveLength(0);
 
-        const child2 = rootFolder.children.find((f: any) => f.name === "Child Campaign Folder 2");
+        const child2 = rootFolder.children.find((f: ReturnedFolder) => f.name === "Child Campaign Folder 2");
         expect(child2).toBeDefined();
         expect(child2.children).toHaveLength(1);
         expect(child2.children[0].name).toBe("Grandchild Campaign Folder");
@@ -110,7 +111,7 @@ describe('Campaign Folder Hierarchy Tests', () => {
         const treeResult = await getCampaignFoldersTreeHandler({ project_id: projectId });
         expect(treeResult).toBeDefined();
         expect(treeResult.structuredContent).toBeDefined();
-        const rootFolder = treeResult.structuredContent.folders.find((f: any) => f.name === "Root Campaign Folder");
+        const rootFolder = treeResult.structuredContent.folders.find((f: ReturnedFolder) => f.name === "Root Campaign Folder");
         expect(rootFolder).toBeDefined();
 
         // Delete it

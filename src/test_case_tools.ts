@@ -3,7 +3,9 @@ import { z } from "zod";
 import {
     makeSquashRequest,
     SquashTMTestCaseDetails,
-    SquashTMPaginatedResponse
+    SquashTMPaginatedResponse,
+    SquashTMDataset,
+    SquashTMParameter
 } from "./squashtm_rest_api.js";
 import {
     generateCorrelationId,
@@ -37,6 +39,13 @@ export const GetTestCaseFolderContentOutputSchema = z.object({
                 }).strict()
             ).describe("List of test steps"),
             verified_requirements: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
+            datasets: z.object({
+                parameter_names: z.array(z.string().describe("Names of the parameters")),
+                datasets: z.array(z.object({
+                    name: z.string().describe("Name of the dataset"),
+                    parameters_values: z.array(z.string()).describe("Values for each parameter, in order")
+                }))
+            }).optional().describe("Datasets associated with the test case"),
         }).strict()
     ),
 }).strict();
@@ -55,6 +64,13 @@ const CreateTestCasesInputSchema = z.object({
                 expected_result: z.string().trim().min(1).describe("The expected result"),
             })).min(1).optional().describe("List of test steps"),
             verified_requirement_ids: z.array(z.number()).describe("Ids of the requirements verified by this test case"),
+            datasets: z.object({
+                parameter_names: z.array(z.string().trim().min(1).describe("The name of the parameter")).min(1).describe("The list of parameter names"),
+                datasets: z.array(z.object({
+                    name: z.string().trim().min(1).describe("The name of the dataset"),
+                    parameters_values: z.array(z.string().describe("The value of the parameter")).min(1).describe("The values of the parameters, in the same order as parameter_names")
+                })).min(1).describe("The list of datasets")
+            }).optional().describe("datasets to add to the test case"),
         }).strict()
     ).min(1).describe("The list of test cases to create"),
 }).strict();
@@ -118,7 +134,7 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 `test-cases/${tc.id}`,
                 "GET"
             );
-            return {
+            const baseDetails = {
                 id: details.id,
                 name: details.name,
                 ...(details.reference && { reference: details.reference }),
@@ -135,6 +151,62 @@ export const getTestCaseFolderContentHandler = async (args: z.infer<typeof GetTe
                 verified_requirements: details.verified_requirements
                     .filter((req: any) => req._type === "requirement-version")
                     .map((req: any) => req.id),
+                datasets: undefined as any
+            };
+
+            const datasetsResponse = await makeSquashRequest<SquashTMPaginatedResponse<SquashTMDataset>>(
+                correlationId,
+                `test-cases/${tc.id}/datasets`,
+                "GET"
+            );
+
+            if (datasetsResponse._embedded && datasetsResponse._embedded.datasets && datasetsResponse._embedded.datasets.length > 0) {
+                const datasetsInfo = datasetsResponse._embedded.datasets;
+                // Assuming all datasets have the same parameters structure, we take the first one to get names
+                // The API returns 'parameters' array in dataset object which contains definitions.
+                // We can also rely on parameter_values having parameter_name.
+
+                // Let's use the first dataset to extract parameter names order
+                const firstDataset = datasetsInfo[0];
+                let parameterNames: string[] = [];
+
+                if (firstDataset.parameters && firstDataset.parameters.length > 0) {
+                    parameterNames = firstDataset.parameters.map(p => p.name);
+                } else if (firstDataset.parameter_values && firstDataset.parameter_values.length > 0) {
+                    // Fallback to parameter_values order if parameters definition is missing
+                    parameterNames = firstDataset.parameter_values.map(pv => pv.parameter_name);
+                }
+
+                if (parameterNames.length > 0) {
+                    const formattedDatasets = datasetsInfo.map(ds => {
+                        // Map values based on parameter names order
+                        // Create a map for quick lookup
+                        const valueMap = new Map<string, string>();
+                        ds.parameter_values.forEach(pv => {
+                            valueMap.set(pv.parameter_name, pv.parameter_value);
+                        });
+
+                        const orderedValues = parameterNames.map(name => valueMap.get(name) || "");
+
+                        return {
+                            name: ds.name,
+                            parameters_values: orderedValues
+                        };
+                    });
+
+                    return {
+                        ...baseDetails,
+                        datasets: {
+                            parameter_names: parameterNames,
+                            datasets: formattedDatasets
+                        }
+                    };
+                }
+            }
+
+            return {
+                ...baseDetails,
+                datasets: undefined
             };
         })
     );
@@ -186,6 +258,54 @@ export const createTestCasesHandler = async (args: z.infer<typeof CreateTestCase
                 `test-cases/${response.id}/coverages/${tc.verified_requirement_ids.join(",")}`,
                 "POST",
             );
+        }
+
+        if (tc.datasets) {
+            const paramIdMap = new Map<string, number>();
+            for (const paramName of tc.datasets.parameter_names) {
+                const paramPayload = {
+                    _type: "parameter",
+                    name: paramName,
+                    description: "",
+                    test_case: {
+                        _type: "test-case",
+                        id: response.id
+                    }
+                };
+                const paramResponse = await makeSquashRequest<SquashTMParameter>(
+                    correlationId,
+                    "parameters",
+                    "POST",
+                    paramPayload
+                );
+                paramIdMap.set(paramName, paramResponse.id);
+            }
+
+            for (const dataset of tc.datasets.datasets) {
+                const parameterValues = tc.datasets.parameter_names.map((name, index) => ({
+                    parameter_test_case_id: response.id,
+                    parameter_id: paramIdMap.get(name),
+                    parameter_name: name,
+                    parameter_value: dataset.parameters_values[index]
+                }));
+
+                const datasetPayload = {
+                    _type: "dataset",
+                    name: dataset.name,
+                    test_case: {
+                        _type: "test-case",
+                        id: response.id
+                    },
+                    parameter_values: parameterValues
+                };
+
+                await makeSquashRequest<SquashTMDataset>(
+                    correlationId,
+                    "datasets",
+                    "POST",
+                    datasetPayload
+                );
+            }
         }
 
         createdTestCases.push({

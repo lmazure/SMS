@@ -4,7 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { fileURLToPath } from 'url';
 
 // Create server instance
-const SMS_VERSION = "0.0.10.dev";
+const SMS_VERSION = "0.0.10";
 const server = new McpServer({
     name: "SquashTM",
     version: SMS_VERSION,

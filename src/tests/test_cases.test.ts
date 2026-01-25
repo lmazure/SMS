@@ -23,6 +23,10 @@ import {
     deleteRequirementHandler
 } from '../requirement_tools.js';
 import { assertResultMatchSchema } from './test_utils.js';
+import z from 'zod';
+
+type GetTestCaseFolderContentOutput = z.infer<typeof GetTestCaseFolderContentOutputSchema>;
+type ReturnedTestCase = GetTestCaseFolderContentOutput['test_cases'][number];
 
 describe('Test Cases Integration Tests', () => {
     const timestamp: number = Date.now();
@@ -273,7 +277,7 @@ describe('Test Cases Integration Tests', () => {
         expect(result.structuredContent.test_cases).toBeDefined();
         expect(result.structuredContent.test_cases.length).toBe(4);
 
-        const testCases = result.structuredContent.test_cases.toSorted((a: { name: string; }, b: { name: string; }) =>
+        const testCases = result.structuredContent.test_cases.toSorted((a: ReturnedTestCase, b: ReturnedTestCase) =>
             a.name.localeCompare(b.name)
         );
         const [tc1, tc2, tc3, tc4] = testCases;
@@ -291,6 +295,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.verified_requirements).toBeDefined();
         expect(tc1.verified_requirements.length).toBe(1);
         expect(tc1.verified_requirements[0]).toBe(requirementId);
+        expect(tc1.datasets).toBeUndefined();
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId}`);
         expect(tc2.reference).toBe(`REF-2-${projectId}`);
@@ -304,6 +309,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc2.steps[1].expected_result).toBe('<p>Expected result 2 for test case 2</p>');
         expect(tc2.verified_requirements).toBeDefined();
         expect(tc2.verified_requirements.length).toBe(0);
+        expect(tc2.datasets).toBeUndefined();
         expect(tc3.id).toBeGreaterThan(0);
         expect(tc3.name).toBe(`Test Case 3 for project ${projectId}`);
         expect(tc3.reference).toBeUndefined();
@@ -313,6 +319,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc3.steps.length).toBe(1);
         expect(tc3.steps[0].action).toBe('<p>Action 1 for test case 3</p>');
         expect(tc3.steps[0].expected_result).toBe('<p>Expected result 1 for test case 3</p>');
+        expect(tc3.datasets).toBeUndefined();
         expect(tc4.id).toBeGreaterThan(0);
         expect(tc4.name).toBe(`Test Case 4 for project ${projectId}`);
         expect(tc4.reference).toBeUndefined();
@@ -324,6 +331,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc4.steps[0].expected_result).toBe('<p>Expected result 1 for test case 4</p>');
         expect(tc4.verified_requirements).toBeDefined();
         expect(tc4.verified_requirements.length).toBe(0);
+        expect(tc4.datasets).toBeUndefined();
     });
 
     it('should get the content of a test case folder', async () => {
@@ -337,7 +345,7 @@ describe('Test Cases Integration Tests', () => {
         expect(result.structuredContent.test_cases).toBeDefined();
         expect(result.structuredContent.test_cases.length).toBe(3);
 
-        const testCases = result.structuredContent.test_cases.toSorted((a: { name: string; }, b: { name: string; }) =>
+        const testCases = result.structuredContent.test_cases.toSorted((a: ReturnedTestCase, b: ReturnedTestCase) =>
             a.name.localeCompare(b.name)
         );
         const [tc1, tc2, tc3] = testCases;
@@ -355,6 +363,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc1.verified_requirements).toBeDefined();
         expect(tc1.verified_requirements.length).toBe(1);
         expect(tc1.verified_requirements[0]).toBe(requirementId);
+        expect(tc1.datasets).toBeUndefined();
         expect(tc2.id).toBeGreaterThan(0);
         expect(tc2.name).toBe(`Test Case 2 for project ${projectId} in folder ${testCaseFolderId}`);
         expect(tc2.reference).toBe(`REF-2-${projectId}-${testCaseFolderId}`);
@@ -367,6 +376,7 @@ describe('Test Cases Integration Tests', () => {
         expect(tc2.verified_requirements).toBeDefined();
         expect(tc2.verified_requirements.length).toBe(1);
         expect(tc2.verified_requirements[0]).toBe(requirementId);
+        expect(tc2.datasets).toBeUndefined();
         expect(tc3.id).toBeGreaterThan(0);
         expect(tc3.name).toBe(`Test Case 3 for project ${projectId} in folder ${testCaseFolderId}`);
         expect(tc3.reference).toBeUndefined();
@@ -377,7 +387,69 @@ describe('Test Cases Integration Tests', () => {
         expect(tc3.steps[0].action).toBe('<p>Action 1 for test case 3</p>');
         expect(tc3.steps[0].expected_result).toBe('<p>Expected result 1 for test case 3</p>');
         expect(tc3.verified_requirements).toBeDefined();
+        expect(tc3.verified_requirements.length).toBe(0);
+        expect(tc3.datasets).toBeUndefined();
+    });
 
+    it('should create test cases with datasets', async () => {
+        expect(projectId).toBeDefined();
+        if (!projectId) return;
+
+        const result = await createTestCasesHandler({
+            project_id: projectId,
+            test_cases: [
+                {
+                    name: `Test Case with Datasets for project ${projectId}`,
+                    description: '<p>Description for test case with datasets</p>',
+                    steps: [
+                        {
+                            action: '<p>Action 1</p>',
+                            expected_result: '<p>Expected result 1</p>',
+                        },
+                    ],
+                    verified_requirement_ids: [],
+                    datasets: {
+                        parameter_names: ["param1", "param2"],
+                        datasets: [
+                            {
+                                name: "Dataset 1",
+                                parameters_values: ["val1_1", "val1_2"]
+                            },
+                            {
+                                name: "Dataset 2",
+                                parameters_values: ["val2_1", "val2_2"]
+                            }
+                        ]
+                    }
+                },
+            ],
+        });
+
+        assertResultMatchSchema(result, CreateTestCasesOutputSchema);
+        expect(result.structuredContent.test_cases).toBeDefined();
+        expect(result.structuredContent.test_cases.length).toBe(1);
+        const tc = result.structuredContent.test_cases[0];
+        expect(tc.name).toBe(`Test Case with Datasets for project ${projectId}`);
+
+        testCaseToBeDeleted.push(tc.id);
+    });
+
+    it('get test case with datasets', async () => {
+        expect(projectId).toBeDefined();
+        if (!projectId) return;
+
+        const result = await getTestCaseFolderContentHandler({ project_id: projectId });
+        assertResultMatchSchema(result, GetTestCaseFolderContentOutputSchema);
+        expect(result.structuredContent.test_cases).toBeDefined();
+        const tc = result.structuredContent.test_cases.find((t: ReturnedTestCase) => t.name === `Test Case with Datasets for project ${projectId}`);
+        expect(tc).toBeDefined();
+        expect(tc.datasets).toBeDefined();
+        expect(tc.datasets.parameter_names).toEqual(["param1", "param2"]);
+        expect(tc.datasets.datasets.length).toBe(2);
+        expect(tc.datasets.datasets[0].name).toBe("Dataset 1");
+        expect(tc.datasets.datasets[0].parameters_values).toEqual(["val1_1", "val1_2"]);
+        expect(tc.datasets.datasets[1].name).toBe("Dataset 2");
+        expect(tc.datasets.datasets[1].parameters_values).toEqual(["val2_1", "val2_2"]);
     });
 
     afterAll(async () => {
