@@ -269,11 +269,13 @@ function generateMarkdown(tools: Tool[]): string {
             markdown += `${tool.description}\n\n`;
         }
 
-        // Input Schema Section
-        markdown += '### Input Schema\n\n';
+        // Input Schema Section (collapsible)
+        markdown += '<details>\n';
+        markdown += '<summary>Click to expand Input Schema</summary>\n\n';
         markdown += '```json\n';
         markdown += JSON.stringify(tool.inputSchema, null, 2);
         markdown += '\n```\n\n';
+        markdown += '</details>\n\n';
 
         // Generate a table of input parameters if properties exist
         if (tool.inputSchema.properties) {
@@ -290,12 +292,14 @@ function generateMarkdown(tools: Tool[]): string {
             markdown += '\n';
         }
 
-        // Output Schema Section (if present)
+        // Output Schema Section (if present, collapsible)
         if (tool.outputSchema) {
-            markdown += '### Output Schema\n\n';
+            markdown += '<details>\n';
+            markdown += '<summary>Click to expand Output Schema</summary>\n\n';
             markdown += '```json\n';
             markdown += JSON.stringify(tool.outputSchema, null, 2);
             markdown += '\n```\n\n';
+            markdown += '</details>\n\n';
 
             // Generate a table of output parameters if properties exist
             if (tool.outputSchema.properties) {
