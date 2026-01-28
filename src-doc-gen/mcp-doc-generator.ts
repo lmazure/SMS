@@ -248,7 +248,7 @@ function collectParameters(
 }
 
 function generateMarkdown(tools: Tool[]): string {
-    let markdown = '# MCP Server Tools\n\n';
+    let markdown = '# SMS Tools\n\n';
     markdown += `This document lists all available tools in the MCP server.\n\n`;
     markdown += `**Total Tools:** ${tools.length}\n\n`;
 
@@ -269,17 +269,18 @@ function generateMarkdown(tools: Tool[]): string {
             markdown += `${tool.description}\n\n`;
         }
 
-        // Input Schema Section (collapsible)
-        markdown += '<details>\n';
-        markdown += '<summary>Click to expand Input Schema</summary>\n\n';
-        markdown += '```json\n';
-        markdown += JSON.stringify(tool.inputSchema, null, 2);
-        markdown += '\n```\n\n';
-        markdown += '</details>\n\n';
-
         // Generate a table of input parameters if properties exist
         if (tool.inputSchema.properties) {
             markdown += '### Input Parameters\n\n';
+
+            // Input Schema Section (collapsible)
+            markdown += '<details>\n';
+            markdown += '<summary>Click to see schema</summary>\n\n';
+            markdown += '```json\n';
+            markdown += JSON.stringify(tool.inputSchema, null, 2);
+            markdown += '\n```\n\n';
+            markdown += '</details><br>\n\n';
+
             markdown += '| Parameter | Type | Required | Description |\n';
             markdown += '|-----------|------|----------|-------------|\n';
 
@@ -292,29 +293,28 @@ function generateMarkdown(tools: Tool[]): string {
             markdown += '\n';
         }
 
-        // Output Schema Section (if present, collapsible)
-        if (tool.outputSchema) {
+        // Generate a table of output parameters if properties exist
+        if (tool.outputSchema?.properties) {
+            markdown += '### Output Parameters\n\n';
+
+            // Output Schema Section (collapsible)
             markdown += '<details>\n';
-            markdown += '<summary>Click to expand Output Schema</summary>\n\n';
+            markdown += '<summary>Click to see schema</summary>\n\n';
             markdown += '```json\n';
             markdown += JSON.stringify(tool.outputSchema, null, 2);
             markdown += '\n```\n\n';
-            markdown += '</details>\n\n';
+            markdown += '</details><br>\n\n';
 
-            // Generate a table of output parameters if properties exist
-            if (tool.outputSchema.properties) {
-                markdown += '### Output Parameters\n\n';
-                markdown += '| Parameter | Type | Required | Description |\n';
-                markdown += '|-----------|------|----------|-------------|\n';
+            markdown += '| Parameter | Type | Required | Description |\n';
+            markdown += '|-----------|------|----------|-------------|\n';
 
-                const outputRows = collectParameters(tool.outputSchema);
+            const outputRows = collectParameters(tool.outputSchema);
 
-                for (const row of outputRows) {
-                    markdown += `| \`${row.path}\` | \`${row.type}\` | ${row.required} | ${row.description} |\n`;
-                }
-
-                markdown += '\n';
+            for (const row of outputRows) {
+                markdown += `| \`${row.path}\` | \`${row.type}\` | ${row.required} | ${row.description} |\n`;
             }
+
+            markdown += '\n';
         }
 
         markdown += '---\n\n';
@@ -343,7 +343,7 @@ async function main() {
         console.log('Generating Markdown...');
         const markdown = generateMarkdown(tools);
 
-        const outputFile = 'MCP_TOOLS.md';
+        const outputFile = 'tools.md';
         writeFileSync(outputFile, markdown);
         console.log(`Documentation generated: ${outputFile}`);
 

@@ -9,7 +9,7 @@
 
 - `create_requirement_folder` and others should support description for children foldersb (or the doc is wrong…)
 - modify .agent/skills/generate-release/SKILL.md to ask for the merge commit message
-- modify .agent/skills/generate-release/SKILL.md to generate the doc and commit it
+- modify .agent/skills/generate-release/SKILL.md to generate the doc (`npm run generate-docs`) and commit it
 
 # Later on
 
