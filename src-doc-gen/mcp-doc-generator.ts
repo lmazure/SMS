@@ -129,12 +129,78 @@ class MCPClient {
     }
 }
 
+function formatType(schema: any): string {
+    if (!schema) return 'any';
+
+    if (schema.type === 'array') {
+        if (schema.items) {
+            const itemType = formatType(schema.items);
+            return `array of ${itemType}`;
+        }
+        return 'array';
+    }
+
+    if (schema.type === 'object') {
+        return 'object';
+    }
+
+    return schema.type || 'any';
+}
+
+interface ParameterRow {
+    path: string;
+    type: string;
+    required: string;
+    description: string;
+}
+
+function collectParameters(schema: any, parentPath: string = '', parentRequired: string[] = []): ParameterRow[] {
+    const rows: ParameterRow[] = [];
+
+    if (schema.type === 'object' && schema.properties) {
+        const required = schema.required || [];
+
+        for (const [propName, propSchema] of Object.entries(schema.properties)) {
+            const prop = propSchema as any;
+            const path = parentPath ? `${parentPath}.${propName}` : propName;
+            const type = formatType(prop);
+            const isRequired = required.includes(propName) ? 'Yes' : 'No';
+            const description = prop.description || '-';
+
+            rows.push({ path, type, required: isRequired, description });
+
+            // Recursively handle nested objects
+            if (prop.type === 'object' && prop.properties) {
+                rows.push(...collectParameters(prop, path, prop.required || []));
+            }
+
+            // Handle arrays of objects
+            if (prop.type === 'array' && prop.items) {
+                if (prop.items.type === 'object' && prop.items.properties) {
+                    rows.push(...collectParameters(prop.items, `${path}[]`, prop.items.required || []));
+                }
+            }
+        }
+    }
+
+    return rows;
+}
+
 function generateMarkdown(tools: Tool[]): string {
     let markdown = '# MCP Server Tools\n\n';
     markdown += `This document lists all available tools in the MCP server.\n\n`;
     markdown += `**Total Tools:** ${tools.length}\n\n`;
-    markdown += '---\n\n';
 
+    // Generate Table of Contents
+    markdown += '## Table of Contents\n\n';
+    for (const tool of tools) {
+        const anchor = tool.name;
+        const shortDesc = tool.description ? ` - ${tool.description}` : '';
+        markdown += `- [${tool.name}](#${anchor})${shortDesc}\n`;
+    }
+    markdown += '\n---\n\n';
+
+    // Generate tool documentation
     for (const tool of tools) {
         markdown += `## ${tool.name}\n\n`;
 
@@ -153,15 +219,10 @@ function generateMarkdown(tools: Tool[]): string {
             markdown += '| Parameter | Type | Required | Description |\n';
             markdown += '|-----------|------|----------|-------------|\n';
 
-            const required = tool.inputSchema.required || [];
+            const rows = collectParameters(tool.inputSchema);
 
-            for (const [paramName, paramSchema] of Object.entries(tool.inputSchema.properties)) {
-                const schema = paramSchema as any;
-                const type = schema.type || 'any';
-                const isRequired = required.includes(paramName) ? 'Yes' : 'No';
-                const description = schema.description || '-';
-
-                markdown += `| \`${paramName}\` | \`${type}\` | ${isRequired} | ${description} |\n`;
+            for (const row of rows) {
+                markdown += `| \`${row.path}\` | \`${row.type}\` | ${row.required} | ${row.description} |\n`;
             }
 
             markdown += '\n';
