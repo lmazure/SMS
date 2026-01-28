@@ -24,6 +24,12 @@ interface Tool {
         required?: string[];
         [key: string]: any;
     };
+    outputSchema?: {
+        type: string;
+        properties?: Record<string, any>;
+        required?: string[];
+        [key: string]: any;
+    };
 }
 
 class MCPClient {
@@ -208,24 +214,48 @@ function generateMarkdown(tools: Tool[]): string {
             markdown += `${tool.description}\n\n`;
         }
 
+        // Input Schema Section
         markdown += '### Input Schema\n\n';
         markdown += '```json\n';
         markdown += JSON.stringify(tool.inputSchema, null, 2);
         markdown += '\n```\n\n';
 
-        // Generate a table of parameters if properties exist
+        // Generate a table of input parameters if properties exist
         if (tool.inputSchema.properties) {
-            markdown += '### Parameters\n\n';
+            markdown += '### Input Parameters\n\n';
             markdown += '| Parameter | Type | Required | Description |\n';
             markdown += '|-----------|------|----------|-------------|\n';
 
-            const rows = collectParameters(tool.inputSchema);
+            const inputRows = collectParameters(tool.inputSchema);
 
-            for (const row of rows) {
+            for (const row of inputRows) {
                 markdown += `| \`${row.path}\` | \`${row.type}\` | ${row.required} | ${row.description} |\n`;
             }
 
             markdown += '\n';
+        }
+
+        // Output Schema Section (if present)
+        if (tool.outputSchema) {
+            markdown += '### Output Schema\n\n';
+            markdown += '```json\n';
+            markdown += JSON.stringify(tool.outputSchema, null, 2);
+            markdown += '\n```\n\n';
+
+            // Generate a table of output parameters if properties exist
+            if (tool.outputSchema.properties) {
+                markdown += '### Output Parameters\n\n';
+                markdown += '| Parameter | Type | Required | Description |\n';
+                markdown += '|-----------|------|----------|-------------|\n';
+
+                const outputRows = collectParameters(tool.outputSchema);
+
+                for (const row of outputRows) {
+                    markdown += `| \`${row.path}\` | \`${row.type}\` | ${row.required} | ${row.description} |\n`;
+                }
+
+                markdown += '\n';
+            }
         }
 
         markdown += '---\n\n';
