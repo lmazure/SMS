@@ -11,7 +11,9 @@
     "build": "tsc",
     "prepare": "npm run build",
     "test": "vitest run",
-    "inspect": "npx @modelcontextprotocol/inspector node build/index.js"
+    "inspect": "npx @modelcontextprotocol/inspector node build/index.js",
+    "build:doc-gen": "tsc -p tsconfig.doc-gen.json",
+    "generate-docs": "npm run build && npm run build:doc-gen && node build-doc-gen/mcp-doc-generator.js"
   },
   "files": [
     "build",

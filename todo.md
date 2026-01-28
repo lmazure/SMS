@@ -9,6 +9,9 @@
 
 # Later on
 
+- add "npm run docs" to generate the documentation (=tools.md)
+- modify .agent/skills/generate-release/SKILL.md to ask for the merge commit message
+- modify .agent/skills/generate-release/SKILL.md to generate the doc and commit it
 - use a schema instead of `const response = await makeSquashRequest<any>(...)`
 - test requirement deletion
 - test test case deletion
@@ -34,10 +37,7 @@
     - complete/update README.md in case a tool is modified
     - complete/update unit tests in case a tool is modified
 - complete create_test_cases tool with
-    - reference - probably optional - not present in the doc!!
     - importance, type, and nature - probably optional
-    - datasets
-    - verified requirements
 
 # Bugs
 

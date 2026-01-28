@@ -3,6 +3,7 @@ node_modules/
 
 # Production
 build/
+build-doc-gen/
 
 # Environment
 .env
