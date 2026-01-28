@@ -135,12 +135,37 @@ class MCPClient {
     }
 }
 
-function formatType(schema: any): string {
+function resolveRef(ref: string, rootSchema: any): any {
+    // Handle JSON Pointer references like "#/properties/folders/items"
+    if (!ref.startsWith('#/')) {
+        return null;
+    }
+
+    const path = ref.substring(2).split('/');
+    let current = rootSchema;
+
+    for (const segment of path) {
+        if (!current || typeof current !== 'object') {
+            return null;
+        }
+        current = current[segment];
+    }
+
+    return current;
+}
+
+function formatType(schema: any, rootSchema: any = null): string {
     if (!schema) return 'any';
+
+    // Handle $ref
+    if (schema.$ref) {
+        // For recursive references, just indicate it's recursive
+        return 'object (recursive)';
+    }
 
     if (schema.type === 'array') {
         if (schema.items) {
-            const itemType = formatType(schema.items);
+            const itemType = formatType(schema.items, rootSchema);
             return `array of ${itemType}`;
         }
         return 'array';
@@ -160,8 +185,17 @@ interface ParameterRow {
     description: string;
 }
 
-function collectParameters(schema: any, parentPath: string = '', parentRequired: string[] = []): ParameterRow[] {
+function collectParameters(
+    schema: any,
+    parentPath: string = '',
+    parentRequired: string[] = [],
+    rootSchema: any = null,
+    visitedRefs: Set<string> = new Set()
+): ParameterRow[] {
     const rows: ParameterRow[] = [];
+
+    // Use rootSchema if not provided (for top-level call)
+    const root = rootSchema || schema;
 
     if (schema.type === 'object' && schema.properties) {
         const required = schema.required || [];
@@ -169,21 +203,42 @@ function collectParameters(schema: any, parentPath: string = '', parentRequired:
         for (const [propName, propSchema] of Object.entries(schema.properties)) {
             const prop = propSchema as any;
             const path = parentPath ? `${parentPath}.${propName}` : propName;
-            const type = formatType(prop);
+
+            const type = formatType(prop, root);
             const isRequired = required.includes(propName) ? 'Yes' : 'No';
             const description = prop.description || '-';
 
             rows.push({ path, type, required: isRequired, description });
 
-            // Recursively handle nested objects
-            if (prop.type === 'object' && prop.properties) {
-                rows.push(...collectParameters(prop, path, prop.required || []));
+            // Recursively handle nested objects (but not if they have $ref, which would be recursive)
+            if (prop.type === 'object' && prop.properties && !prop.$ref) {
+                rows.push(...collectParameters(prop, path, prop.required || [], root, visitedRefs));
             }
 
             // Handle arrays of objects
             if (prop.type === 'array' && prop.items) {
-                if (prop.items.type === 'object' && prop.items.properties) {
-                    rows.push(...collectParameters(prop.items, `${path}[]`, prop.items.required || []));
+                let items = prop.items;
+
+                // Handle $ref in array items - only resolve once to avoid infinite recursion
+                if (items.$ref) {
+                    // Check if we've already visited this $ref
+                    if (visitedRefs.has(items.$ref)) {
+                        // Skip - already documented
+                        continue;
+                    }
+
+                    // Mark this $ref as visited
+                    const newVisitedRefs = new Set(visitedRefs);
+                    newVisitedRefs.add(items.$ref);
+
+                    // Resolve the reference
+                    const resolved = resolveRef(items.$ref, root);
+                    if (resolved && resolved.type === 'object' && resolved.properties) {
+                        rows.push(...collectParameters(resolved, `${path}[]`, resolved.required || [], root, newVisitedRefs));
+                    }
+                } else if (items.type === 'object' && items.properties) {
+                    // Not a $ref, just a regular nested object
+                    rows.push(...collectParameters(items, `${path}[]`, items.required || [], root, visitedRefs));
                 }
             }
         }
