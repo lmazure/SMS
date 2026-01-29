@@ -7,12 +7,10 @@
 
 ## in the branch
 
-- `create_requirement_folder` and others should support description for children foldersb (or the doc is wrong…)
-- modify .agent/skills/generate-release/SKILL.md to ask for the merge commit message
-- modify .agent/skills/generate-release/SKILL.md to generate the doc (`npm run generate-docs`) and commit it
 
 # Later on
 
+- `create_requirement_folder` and others should support description for children folders (or the doc is wrong…)
 - use a schema instead of `const response = await makeSquashRequest<any>(...)`
 - test requirement deletion
 - test test case deletion
