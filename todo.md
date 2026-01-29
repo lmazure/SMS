@@ -7,8 +7,10 @@
 
 ## in the branch
 
+
 # Later on
 
+- `create_requirement_folder` and others should support description for children folders (or the doc is wrong…)
 - use a schema instead of `const response = await makeSquashRequest<any>(...)`
 - test requirement deletion
 - test test case deletion
@@ -34,10 +36,7 @@
     - complete/update README.md in case a tool is modified
     - complete/update unit tests in case a tool is modified
 - complete create_test_cases tool with
-    - reference - probably optional - not present in the doc!!
     - importance, type, and nature - probably optional
-    - datasets
-    - verified requirements
 
 # Bugs
 
