@@ -1,4 +1,4 @@
-# MCP Server Tools
+# SMS Tools
 
 This document lists all available tools in the MCP server.
 
