@@ -77,14 +77,20 @@ Example of a complete configuration file (mine…):
 
 ```
 SMS/
-├── src/                  # Source TypeScript files
-│   └── tests/            # Test files   
-├── build/                # Compiled JavaScript (generated)
-├── dev.md                # Development documentation
+├── .agent/               # Agent configuration
+├── build/                # Compiled JavaScript for MCP Server
+├── build-doc-gen/        # Compiled JavaScript for documentation generation
+├── dev.md                # Development documentation (this file)
+├── node_modules/         # Node.js dependencies
+├── package-lock.json     # Dependencies and scripts
 ├── package.json          # Dependencies and scripts
 ├── README.md             # Project documentation
-├── tools.md              # Description of tools provided by this MCP Server
-├── tsconfig.json         # TypeScript configuration
+├── src/                  # MCP Server Source TypeScript files
+│   └── tests/            # MCP Server Test files   
+├── src-doc-gen/          # Source TypeScript files for documentation generation
+├── tools.md              # (Generated) description of tools provided by this MCP Server
+├── tsconfig.doc-gen.json # TypeScript configuration for documentation generation
+├── tsconfig.json         # TypeScript configuration for MCP Server
 └── vitest.config.ts      # Vitest configuration
 ```
 ## Architecture
@@ -137,19 +143,4 @@ sequenceDiagram
 
 ## How to release
 
-1) Update the release number in:
-    - `README.md` where is describe how to declare SMS in Claude Desktop config file
-    - `package.json`
-    - `src/index.ts` where is created the `McpServer` instance
-2) Push the last commits on GitHub
-3) Merge (and squash) the issue branch on the `main` branch
-4) Tag the release:
-    ```bash
-    git switch main
-    git pull
-    git tag -a v0.0.4 -m "Release v0.0.4"
-    ```
-5) Push the tag on GitHub:
-    ```bash
-    git push origin v0.0.4
-    ```
+The release process is described in this [skill](./.agent/skills/generate-release/SKILL.md).
